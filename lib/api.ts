@@ -1,6 +1,12 @@
 // ── Client API centralisé ────────────────────────────────────────────────────
+// Uses api-proxy.php workaround for DreamHost (mod_rewrite not available)
+// Falls back to /api/v1 for local development
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:8000/api/v1';
+export const PROXY_ENABLED = API_BASE.includes('dreamhosters.com') || API_BASE.includes('api-proxy.php');
+export const PROXY_URL = PROXY_ENABLED
+  ? API_BASE.replace('/api/v1', '/api-proxy.php')
+  : null;
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -107,12 +113,67 @@ function getToken(): string | null {
   return localStorage.getItem('mudawwana_token');
 }
 
+/**
+ * Translates API path to proxy URL when using the proxy
+ * Examples:
+ *   /codes -> api-proxy.php?endpoint=codes
+ *   /codes?page=1 -> api-proxy.php?endpoint=codes&page=1
+ *   /codes/legal-code -> api-proxy.php?endpoint=codes&slug=legal-code
+ *   /articles/article-1 -> api-proxy.php?endpoint=articles&slug=article-1
+ */
+function pathToProxyUrl(path: string): string {
+  const [pathPart, queryPart] = path.split('?');
+  const pathSegments = pathPart.split('/').filter(Boolean);
+
+  if (!pathSegments.length) return path;
+
+  // Determine endpoint from path
+  let endpoint = '';
+  let slug = '';
+
+  if (pathSegments[0] === 'codes') {
+    endpoint = 'codes';
+    if (pathSegments[1] && !['articles', 'pdfs'].includes(pathSegments[1])) {
+      slug = pathSegments[1];
+    }
+  } else if (pathSegments[0] === 'articles') {
+    endpoint = 'articles';
+    if (pathSegments[1]) {
+      slug = pathSegments[1];
+    }
+  } else if (pathSegments[0] === 'books') {
+    endpoint = 'books';
+    if (pathSegments[1]) {
+      slug = pathSegments[1];
+    }
+  } else {
+    // Not a proxy-supported endpoint
+    return path;
+  }
+
+  // Build proxy URL
+  let proxyPath = `${PROXY_URL}?endpoint=${endpoint}`;
+  if (slug) proxyPath += `&slug=${encodeURIComponent(slug)}`;
+  if (queryPart) proxyPath += `&${queryPart}`;
+
+  return proxyPath;
+}
+
 async function apiFetch<T>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
   const token = getToken();
-  const res = await fetch(`${API_BASE}${path}`, {
+
+  // Determine URL: use proxy for supported endpoints, regular API for others
+  let url = path;
+  if (PROXY_ENABLED && (path.startsWith('/codes') || path.startsWith('/articles') || path.startsWith('/books'))) {
+    url = pathToProxyUrl(path);
+  } else {
+    url = `${API_BASE}${path}`;
+  }
+
+  const res = await fetch(url, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
