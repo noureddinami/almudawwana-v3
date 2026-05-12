@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1f2937;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#111827;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" fill="url(#grad)"/>
+
+  <!-- Book icon -->
+  <g fill="white" opacity="0.95">
+    <!-- Left page -->
+    <rect x="80" y="120" width="140" height="280" fill="none" stroke="currentColor" stroke-width="20" rx="10"/>
+    <!-- Right page -->
+    <rect x="292" y="120" width="140" height="280" fill="none" stroke="currentColor" stroke-width="20" rx="10"/>
+    <!-- Spine -->
+    <line x1="220" y1="120" x2="220" y2="400" stroke="white" stroke-width="12"/>
+
+    <!-- Arabic letter ا (Alef) -->
+    <text x="256" y="300" font-size="120" font-weight="bold" text-anchor="middle" dominant-baseline="middle" fill="white" font-family="serif">ا</text>
+  </g>
+</svg>
