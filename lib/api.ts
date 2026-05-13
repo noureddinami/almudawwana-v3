@@ -202,6 +202,16 @@ async function apiFetch<T>(
     url = `${API_BASE}${path}`;
   }
 
+  // Debug logging for /me endpoint
+  if (path === '/me') {
+    console.log('[API] /me request:', {
+      token: token ? `${token.substring(0, 20)}...` : 'NO TOKEN',
+      url: url,
+      hasToken: !!token,
+      tokenLength: token?.length ?? 0,
+    });
+  }
+
   const res = await fetch(url, {
     ...options,
     headers: {
