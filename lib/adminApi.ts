@@ -34,6 +34,11 @@ async function adminFetch<T>(path: string, options: RequestInit = {}): Promise<T
         url += `&${queryString}`;
       }
     }
+
+    // DreamHost strips the Authorization header — send token as query parameter fallback
+    if (token) {
+      url += `&token=${encodeURIComponent(token)}`;
+    }
   }
 
   const res = await fetch(url, {
