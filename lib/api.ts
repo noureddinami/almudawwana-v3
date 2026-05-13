@@ -171,6 +171,9 @@ function pathToProxyUrl(path: string): string {
     if (pathSegments[1] && !finalQueryPart?.includes('action=')) {
       finalQueryPart = `action=${pathSegments[1]}`;
     }
+  } else if (pathSegments[0] === 'me') {
+    endpoint = 'me';
+    // Get current user - no additional parameters needed
   } else {
     // Not a proxy-supported endpoint
     return path;
@@ -193,7 +196,7 @@ async function apiFetch<T>(
 
   // Determine URL: use proxy for supported endpoints, regular API for others
   let url = path;
-  if (PROXY_ENABLED && (path.startsWith('/codes') || path.startsWith('/articles') || path.startsWith('/books') || path.startsWith('/search') || path.startsWith('/auth'))) {
+  if (PROXY_ENABLED && (path.startsWith('/codes') || path.startsWith('/articles') || path.startsWith('/books') || path.startsWith('/search') || path.startsWith('/auth') || path === '/me')) {
     url = pathToProxyUrl(path);
   } else {
     url = `${API_BASE}${path}`;
