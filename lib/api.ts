@@ -213,8 +213,13 @@ async function apiFetch<T>(
 
   // Determine URL: use proxy for supported endpoints, regular API for others
   let url = path;
+  const isProtectedEndpoint = path.startsWith('/admin') || path === '/me';
   if (PROXY_ENABLED && (path.startsWith('/codes') || path.startsWith('/articles') || path.startsWith('/books') || path.startsWith('/search') || path.startsWith('/auth') || path.startsWith('/admin') || path === '/me')) {
     url = pathToProxyUrl(path);
+    // Add token as query parameter for protected endpoints (DreamHost strips Authorization header)
+    if (isProtectedEndpoint && token) {
+      url += `&token=${encodeURIComponent(token)}`;
+    }
   } else {
     url = `${API_BASE}${path}`;
   }
