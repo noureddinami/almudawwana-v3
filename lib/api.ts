@@ -127,6 +127,7 @@ function getToken(): string | null {
  *   /codes -> api-proxy.php?endpoint=codes
  *   /codes?page=1 -> api-proxy.php?endpoint=codes&page=1
  *   /codes/legal-code -> api-proxy.php?endpoint=codes&slug=legal-code
+ *   /codes/legal-code/articles -> api-proxy.php?endpoint=codes&slug=legal-code&sub=articles
  *   /articles/article-1 -> api-proxy.php?endpoint=articles&slug=article-1
  */
 function pathToProxyUrl(path: string): string {
@@ -138,11 +139,16 @@ function pathToProxyUrl(path: string): string {
   // Determine endpoint from path
   let endpoint = '';
   let slug = '';
+  let subResource = '';
 
   if (pathSegments[0] === 'codes') {
     endpoint = 'codes';
-    if (pathSegments[1] && !['articles', 'pdfs'].includes(pathSegments[1])) {
+    if (pathSegments[1]) {
       slug = pathSegments[1];
+      // Check if there's a sub-resource like /articles or /pdfs
+      if (pathSegments[2] && ['articles', 'pdfs'].includes(pathSegments[2])) {
+        subResource = pathSegments[2];
+      }
     }
   } else if (pathSegments[0] === 'articles') {
     endpoint = 'articles';
@@ -162,6 +168,7 @@ function pathToProxyUrl(path: string): string {
   // Build proxy URL
   let proxyPath = `${PROXY_URL}?endpoint=${endpoint}`;
   if (slug) proxyPath += `&slug=${encodeURIComponent(slug)}`;
+  if (subResource) proxyPath += `&sub=${encodeURIComponent(subResource)}`;
   if (queryPart) proxyPath += `&${queryPart}`;
 
   return proxyPath;
