@@ -160,6 +160,9 @@ function pathToProxyUrl(path: string): string {
     if (pathSegments[1]) {
       slug = pathSegments[1];
     }
+  } else if (pathSegments[0] === 'search') {
+    endpoint = 'search';
+    // Search parameters are passed via query string, not path segments
   } else {
     // Not a proxy-supported endpoint
     return path;
@@ -182,7 +185,7 @@ async function apiFetch<T>(
 
   // Determine URL: use proxy for supported endpoints, regular API for others
   let url = path;
-  if (PROXY_ENABLED && (path.startsWith('/codes') || path.startsWith('/articles') || path.startsWith('/books'))) {
+  if (PROXY_ENABLED && (path.startsWith('/codes') || path.startsWith('/articles') || path.startsWith('/books') || path.startsWith('/search'))) {
     url = pathToProxyUrl(path);
   } else {
     url = `${API_BASE}${path}`;
