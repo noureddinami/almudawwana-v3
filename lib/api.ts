@@ -134,6 +134,8 @@ function getToken(): string | null {
  *   /codes/legal-code -> api-proxy.php?endpoint=codes&slug=legal-code
  *   /codes/legal-code/articles -> api-proxy.php?endpoint=codes&slug=legal-code&sub=articles
  *   /articles/article-1 -> api-proxy.php?endpoint=articles&slug=article-1
+ *   /admin/codes -> api-proxy.php?endpoint=admin&slug=codes
+ *   /admin/codes?page=1 -> api-proxy.php?endpoint=admin&slug=codes&page=1
  */
 function pathToProxyUrl(path: string): string {
   const [pathPart, queryPart] = path.split('?');
@@ -179,6 +181,16 @@ function pathToProxyUrl(path: string): string {
   } else if (pathSegments[0] === 'me') {
     endpoint = 'me';
     // Get current user - no additional parameters needed
+  } else if (pathSegments[0] === 'admin') {
+    endpoint = 'admin';
+    // Handle /admin/{resource} -> endpoint=admin&slug={resource}
+    if (pathSegments[1]) {
+      slug = pathSegments[1];
+      // Check if there's a sub-resource like /stats
+      if (pathSegments[2]) {
+        subResource = pathSegments[2];
+      }
+    }
   } else {
     // Not a proxy-supported endpoint
     return path;
@@ -201,7 +213,7 @@ async function apiFetch<T>(
 
   // Determine URL: use proxy for supported endpoints, regular API for others
   let url = path;
-  if (PROXY_ENABLED && (path.startsWith('/codes') || path.startsWith('/articles') || path.startsWith('/books') || path.startsWith('/search') || path.startsWith('/auth') || path === '/me')) {
+  if (PROXY_ENABLED && (path.startsWith('/codes') || path.startsWith('/articles') || path.startsWith('/books') || path.startsWith('/search') || path.startsWith('/auth') || path.startsWith('/admin') || path === '/me')) {
     url = pathToProxyUrl(path);
   } else {
     url = `${API_BASE}${path}`;
