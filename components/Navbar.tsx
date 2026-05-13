@@ -138,11 +138,6 @@ export default function Navbar() {
               {user ? (
                 <>
                   <span className="text-sm text-slate-500 max-w-[100px] truncate">{user.full_name ?? user.email}</span>
-                  {(user.role === 'admin' || user.role === 'moderator') && (
-                    <Link href="/admin" className="text-sm text-blue-600 hover:text-blue-800 font-medium px-2">
-                      الإدارة
-                    </Link>
-                  )}
                   <button onClick={handleLogout}
                     className="flex items-center gap-1 text-sm text-slate-400 hover:text-red-600 px-2">
                     <LogOut className="w-4 h-4" />
@@ -219,12 +214,6 @@ export default function Navbar() {
                 {user ? (
                   <div className="space-y-1">
                     <p className="text-xs text-slate-400 px-3 pb-1 truncate">{user.full_name ?? user.email}</p>
-                    {(user.role === 'admin' || user.role === 'moderator') && (
-                      <Link href="/admin" onClick={() => setMenuOpen(false)}
-                        className="flex px-3 py-2.5 text-sm text-blue-600 font-medium rounded-lg hover:bg-blue-50">
-                        لوحة الإدارة
-                      </Link>
-                    )}
                     <button onClick={handleLogout}
                       className="flex w-full items-center gap-2 px-3 py-2.5 text-sm text-red-600
                                  hover:bg-red-50 rounded-lg transition-colors">
