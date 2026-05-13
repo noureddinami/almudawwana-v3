@@ -332,9 +332,22 @@ export const articles = {
 export function saveToken(token: string) {
   localStorage.setItem('mudawwana_token', token);
 }
+
+export function saveUser(user: User) {
+  localStorage.setItem('mudawwana_user', JSON.stringify(user));
+}
+
+export function getUser(): User | null {
+  if (typeof window === 'undefined') return null;
+  const user = localStorage.getItem('mudawwana_user');
+  return user ? JSON.parse(user) : null;
+}
+
 export function clearToken() {
   localStorage.removeItem('mudawwana_token');
+  localStorage.removeItem('mudawwana_user');
 }
+
 export function hasToken(): boolean {
   return !!getToken();
 }

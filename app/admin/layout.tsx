@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { auth, clearToken, User } from '@/lib/api';
+import { auth, clearToken, User, getUser, saveUser } from '@/lib/api';
 import {
   LayoutDashboard, Users, BookOpen, FileText, LogOut, Menu, X,
   ChevronRight, Scale, Upload, MessageSquare, Tag,
@@ -30,20 +30,34 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const token = localStorage.getItem('mudawwana_token');
     if (!token) { router.replace('/login'); return; }
 
-    auth.me()
-      .then((r: any) => {
-        const u: User = r.user ?? r;
-        if (u.role !== 'admin' && u.role !== 'moderator') {
-          router.replace('/');
-          return;
-        }
-        setUser(u);
-        setLoading(false);
-      })
-      .catch(() => {
-        clearToken();
-        router.replace('/login');
-      });
+    // Try to get user from localStorage first
+    let u = getUser();
+    if (!u) {
+      // If not in localStorage, try to fetch from /me
+      auth.me()
+        .then((r: any) => {
+          u = r.user ?? r;
+          if (u.role !== 'admin' && u.role !== 'moderator') {
+            router.replace('/');
+            return;
+          }
+          saveUser(u);
+          setUser(u);
+          setLoading(false);
+        })
+        .catch(() => {
+          clearToken();
+          router.replace('/login');
+        });
+    } else {
+      // User found in localStorage
+      if (u.role !== 'admin' && u.role !== 'moderator') {
+        router.replace('/');
+        return;
+      }
+      setUser(u);
+      setLoading(false);
+    }
   }, [router]);
 
   if (loading) {

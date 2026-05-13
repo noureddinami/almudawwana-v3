@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { auth, saveToken, API_BASE } from '@/lib/api';
+import { auth, saveToken, saveUser, API_BASE } from '@/lib/api';
 import { Scale, Eye, EyeOff, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -32,8 +32,15 @@ export default function LoginPage() {
     try {
       const { token, user } = await auth.login(email, password);
       saveToken(token);
+      saveUser(user);
       toast.success(`مرحباً ${user.full_name ?? user.email} 👋`);
-      router.push('/');
+
+      // Redirect to admin panel if user is admin
+      if (user.role === 'admin' || user.role === 'moderator') {
+        router.push('/admin');
+      } else {
+        router.push('/');
+      }
       router.refresh();
     } catch (err: any) {
       toast.error(err.message ?? 'بيانات الدخول غير صحيحة');
