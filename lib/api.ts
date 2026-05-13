@@ -4,16 +4,21 @@
 
 // Determine API URL based on environment
 // In production (Vercel): use DreamHost by default unless NEXT_PUBLIC_API_URL is set
-// In development (localhost): use local API
+// In development (localhost): use local PHP server
 const isProduction = typeof window !== 'undefined' && window.location.hostname.includes('vercel');
 const defaultUrl = isProduction
   ? 'https://almodawana.dreamhosters.com/api/v1'  // Production default
-  : 'http://127.0.0.1:8000/api/v1';                // Development default
+  : 'http://localhost:8080';                      // Development default - PHP server
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? defaultUrl;
-export const PROXY_ENABLED = API_BASE.includes('dreamhosters.com') || API_BASE.includes('api-proxy.php');
+
+// Determine if we need to use the proxy endpoint
+// PROXY is needed when API_BASE points to our PHP proxy (DreamHost or localhost:8080)
+export const PROXY_ENABLED = API_BASE.includes('dreamhosters.com') || API_BASE.includes('api-proxy.php') || API_BASE.includes(':8080');
+
+// Construct the full proxy URL if needed
 export const PROXY_URL = PROXY_ENABLED
-  ? API_BASE.replace('/api/v1', '/api-proxy.php')
+  ? (API_BASE.includes('api-proxy.php') ? API_BASE : API_BASE + '/api-proxy.php')
   : null;
 
 // ── Types ────────────────────────────────────────────────────────────────────
