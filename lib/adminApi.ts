@@ -1,6 +1,6 @@
 // ── Admin API (Bearer token, auth:sanctum + role:admin,moderator) ─────────────
 
-import { API_BASE, Code, Article, PaginatedResponse, User } from './api';
+import { API_BASE, Code, Article, PaginatedResponse, User, PROXY_ENABLED, PROXY_URL } from './api';
 
 function getToken(): string | null {
   if (typeof window === 'undefined') return null;
@@ -10,7 +10,31 @@ function getToken(): string | null {
 async function adminFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getToken();
   const isFormData = options.body instanceof FormData;
-  const res = await fetch(`${API_BASE}/admin${path}`, {
+
+  // Use proxy for admin endpoints when available
+  let url = `${API_BASE}/admin${path}`;
+  if (PROXY_ENABLED && path.startsWith('/')) {
+    // Route through proxy: /admin/codes?page=1 -> api-proxy.php?endpoint=admin&slug=codes&page=1
+    const pathParts = path.split('/').filter(Boolean);
+    if (pathParts.length > 0) {
+      url = `${PROXY_URL}?endpoint=admin`;
+      if (pathParts[0]) {
+        url += `&slug=${pathParts[0]}`;
+      }
+      // Add remaining path parts if any
+      const remaining = pathParts.slice(1);
+      if (remaining.length > 0) {
+        url += `&sub=${remaining.join('/')}`;
+      }
+      // Add query params
+      const queryIndex = path.indexOf('?');
+      if (queryIndex !== -1) {
+        url += `&${path.substring(queryIndex + 1)}`;
+      }
+    }
+  }
+
+  const res = await fetch(url, {
     ...options,
     headers: {
       ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
