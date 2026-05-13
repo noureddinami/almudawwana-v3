@@ -140,6 +140,7 @@ function pathToProxyUrl(path: string): string {
   let endpoint = '';
   let slug = '';
   let subResource = '';
+  let finalQueryPart = queryPart || '';
 
   if (pathSegments[0] === 'codes') {
     endpoint = 'codes';
@@ -163,6 +164,13 @@ function pathToProxyUrl(path: string): string {
   } else if (pathSegments[0] === 'search') {
     endpoint = 'search';
     // Search parameters are passed via query string, not path segments
+  } else if (pathSegments[0] === 'auth') {
+    endpoint = 'auth';
+    // Auth parameters are passed via POST body or query string, not path segments
+    // Handle /auth/login -> action=login
+    if (pathSegments[1] && !finalQueryPart?.includes('action=')) {
+      finalQueryPart = `action=${pathSegments[1]}`;
+    }
   } else {
     // Not a proxy-supported endpoint
     return path;
@@ -172,7 +180,7 @@ function pathToProxyUrl(path: string): string {
   let proxyPath = `${PROXY_URL}?endpoint=${endpoint}`;
   if (slug) proxyPath += `&slug=${encodeURIComponent(slug)}`;
   if (subResource) proxyPath += `&sub=${encodeURIComponent(subResource)}`;
-  if (queryPart) proxyPath += `&${queryPart}`;
+  if (finalQueryPart) proxyPath += `&${finalQueryPart}`;
 
   return proxyPath;
 }
@@ -185,7 +193,7 @@ async function apiFetch<T>(
 
   // Determine URL: use proxy for supported endpoints, regular API for others
   let url = path;
-  if (PROXY_ENABLED && (path.startsWith('/codes') || path.startsWith('/articles') || path.startsWith('/books') || path.startsWith('/search'))) {
+  if (PROXY_ENABLED && (path.startsWith('/codes') || path.startsWith('/articles') || path.startsWith('/books') || path.startsWith('/search') || path.startsWith('/auth'))) {
     url = pathToProxyUrl(path);
   } else {
     url = `${API_BASE}${path}`;
