@@ -2,7 +2,15 @@
 // Uses api-proxy.php workaround for DreamHost (mod_rewrite not available)
 // Falls back to /api/v1 for local development
 
-export const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:8000/api/v1';
+// Determine API URL based on environment
+// In production (Vercel): use DreamHost by default unless NEXT_PUBLIC_API_URL is set
+// In development (localhost): use local API
+const isProduction = typeof window !== 'undefined' && window.location.hostname.includes('vercel');
+const defaultUrl = isProduction
+  ? 'https://almodawana.dreamhosters.com/api/v1'  // Production default
+  : 'http://127.0.0.1:8000/api/v1';                // Development default
+
+export const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? defaultUrl;
 export const PROXY_ENABLED = API_BASE.includes('dreamhosters.com') || API_BASE.includes('api-proxy.php');
 export const PROXY_URL = PROXY_ENABLED
   ? API_BASE.replace('/api/v1', '/api-proxy.php')
