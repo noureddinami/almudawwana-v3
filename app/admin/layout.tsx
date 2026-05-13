@@ -30,34 +30,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const token = localStorage.getItem('mudawwana_token');
     if (!token) { router.replace('/login'); return; }
 
-    // Try to get user from localStorage first
-    let u = getUser();
+    // Get user from localStorage (set after successful login)
+    const u = getUser();
     if (!u) {
-      // If not in localStorage, try to fetch from /me
-      auth.me()
-        .then((r: any) => {
-          u = r.user ?? r;
-          if (u.role !== 'admin' && u.role !== 'moderator') {
-            router.replace('/');
-            return;
-          }
-          saveUser(u);
-          setUser(u);
-          setLoading(false);
-        })
-        .catch(() => {
-          clearToken();
-          router.replace('/login');
-        });
-    } else {
-      // User found in localStorage
-      if (u.role !== 'admin' && u.role !== 'moderator') {
-        router.replace('/');
-        return;
-      }
-      setUser(u);
-      setLoading(false);
+      // No user in localStorage - login was not successful or expired
+      clearToken();
+      router.replace('/login');
+      return;
     }
+
+    // Verify user is admin
+    if (u.role !== 'admin' && u.role !== 'moderator') {
+      clearToken();
+      router.replace('/');
+      return;
+    }
+
+    // All good - user is authenticated admin
+    setUser(u);
+    setLoading(false);
   }, [router]);
 
   if (loading) {
