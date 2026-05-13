@@ -14,8 +14,11 @@ async function adminFetch<T>(path: string, options: RequestInit = {}): Promise<T
   // Use proxy for admin endpoints when available
   let url = `${API_BASE}/admin${path}`;
   if (PROXY_ENABLED && path.startsWith('/')) {
-    // Route through proxy: /admin/codes?page=1 -> api-proxy.php?endpoint=admin&slug=codes&page=1
-    const pathParts = path.split('/').filter(Boolean);
+    // Separate path from query string
+    const [pathOnly, queryString] = path.split('?');
+
+    // Route through proxy: /codes?page=1 -> api-proxy.php?endpoint=admin&slug=codes&page=1
+    const pathParts = pathOnly.split('/').filter(Boolean);
     if (pathParts.length > 0) {
       url = `${PROXY_URL}?endpoint=admin`;
       if (pathParts[0]) {
@@ -27,9 +30,8 @@ async function adminFetch<T>(path: string, options: RequestInit = {}): Promise<T
         url += `&sub=${remaining.join('/')}`;
       }
       // Add query params
-      const queryIndex = path.indexOf('?');
-      if (queryIndex !== -1) {
-        url += `&${path.substring(queryIndex + 1)}`;
+      if (queryString) {
+        url += `&${queryString}`;
       }
     }
   }
