@@ -1,7 +1,8 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Amiri, Noto_Naskh_Arabic, Reem_Kufi } from 'next/font/google';
 import './globals.css';
 import { Toaster } from 'react-hot-toast';
+import BottomNav from '@/components/BottomNav';
 
 /* ── Amiri : corps des articles juridiques ─────────────────── */
 const amiri = Amiri({
@@ -26,6 +27,14 @@ const reemKufi = Reem_Kufi({
   weight: ['400', '500', '600', '700'],
   display: 'swap',
 });
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',  // Extends into notch/safe areas
+};
 
 export const metadata: Metadata = {
   title: 'المدوّنة — موسوعتك القانونية',
@@ -58,7 +67,7 @@ export default function RootLayout({
       className={`${amiri.variable} ${notoNaskh.variable} ${reemKufi.variable} h-full`}
     >
       <head>
-        <meta name="theme-color" content="#1f2937" />
+        <meta name="theme-color" content="#1e40af" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -68,6 +77,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full bg-slate-50 text-slate-900 font-naskh antialiased">
         {children}
+        <BottomNav />
         <Toaster
           position="top-center"
           toastOptions={{

@@ -11,9 +11,44 @@
   box-sizing: border-box;
 }
 
+/* ── Mobile-first : aspect natif ───────────────────────────── */
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  /* Overscroll natif iOS */
+  overscroll-behavior-y: none;
+}
+
 /* Police par défaut : Noto Naskh (UI) */
 body {
   font-family: var(--font-naskh), 'Noto Naskh Arabic', 'Segoe UI', Tahoma, Arial, sans-serif;
+  /* Safe area pour les encoches (iPhone X+) */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  /* Empêcher le bounce Safari */
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Padding bottom pour la bottom nav mobile (56px = h-14) */
+@media (max-width: 639px) {
+  body { padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px)); }
+}
+
+/* Touch targets minimum 44px sur mobile */
+@media (max-width: 639px) {
+  a, button, [role="button"], select, input[type="submit"] {
+    min-height: 44px;
+  }
+  /* Empêcher le highlight bleu/gris au tap */
+  * { -webkit-tap-highlight-color: transparent; }
+}
+
+/* Feedback tactile actif sur boutons et liens (mobile) */
+@media (max-width: 639px) {
+  a:active, button:active, [role="button"]:active {
+    transform: scale(0.97);
+    opacity: 0.85;
+  }
 }
 
 /* ── Classes utilitaires ────────────────────────────────────── */
@@ -36,11 +71,21 @@ body {
   word-spacing: 0.05em;
 }
 
-/* ── Scrollbar discrète ─────────────────────────────────────── */
-::-webkit-scrollbar          { width: 5px; height: 5px; }
-::-webkit-scrollbar-track    { background: #f1f5f9; }
-::-webkit-scrollbar-thumb    { background: #cbd5e1; border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+/* Sur mobile, augmenter la lisibilité */
+@media (max-width: 639px) {
+  .text-arabic {
+    line-height: 2.4;
+    font-size: 1rem;
+  }
+}
+
+/* ── Scrollbar discrète (desktop uniquement) ──────────────── */
+@media (min-width: 640px) {
+  ::-webkit-scrollbar          { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track    { background: #f1f5f9; }
+  ::-webkit-scrollbar-thumb    { background: #cbd5e1; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+}
 
 /* ── Sélection de texte ─────────────────────────────────────── */
 ::selection {
@@ -49,4 +94,10 @@ body {
 }
 
 /* ── Transitions globales ───────────────────────────────────── */
-a, button { transition: color 0.15s, background-color 0.15s, border-color 0.15s; }
+a, button { transition: color 0.15s, background-color 0.15s, border-color 0.15s, transform 0.1s; }
+
+/* ── PWA standalone mode adjustments ────────────────────────── */
+@media (display-mode: standalone) {
+  /* Padding haut pour la status bar iOS en standalone */
+  header nav.sticky { top: env(safe-area-inset-top, 0px); }
+}

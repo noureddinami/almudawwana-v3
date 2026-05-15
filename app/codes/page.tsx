@@ -1,5 +1,7 @@
+export const dynamic = 'force-dynamic'
+
 import Link from 'next/link';
-import { codes } from '@/lib/api';
+import { createPublicClient } from '@/lib/supabase/server';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { FileText, Scale, ChevronLeft, Search, BookOpen } from 'lucide-react';
@@ -18,11 +20,13 @@ const TYPE_META: Record<string, { label: string; plural: string; cls: string; do
 
 async function getAllCodes() {
   try {
-    const r = await codes.listAll();
-    return r.data ?? [];
-  } catch {
-    return [];
-  }
+    const supabase = createPublicClient()
+    const { data } = await supabase
+      .from('codes')
+      .select('id, slug, title_ar, title_fr, type, status, total_articles, promulgation_date')
+      .order('title_ar')
+    return data ?? []
+  } catch { return [] }
 }
 
 export default async function CodesPage() {
@@ -116,7 +120,7 @@ export default async function CodesPage() {
                 {items.map((code: any) => (
                   <Link
                     key={code.id}
-                    href={`/codes/${code.slug}`}
+                    href={`/codes/${code.id}`}
                     className="group bg-white rounded-2xl border border-slate-200 shadow-sm
                                hover:shadow-md hover:border-blue-300 transition-all duration-200 p-5
                                flex flex-col"

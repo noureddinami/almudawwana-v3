@@ -5,7 +5,7 @@ export default function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="border-t border-slate-200 bg-white mt-12">
+    <footer className="border-t border-slate-200 bg-white mt-12 hidden sm:block">
 
       {/* ── Disclaimer légal ───────────────────────────────────── */}
       <div className="bg-amber-50 border-b border-amber-100">

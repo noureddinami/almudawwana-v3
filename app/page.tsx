@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { codes, notes, RecentNote } from '@/lib/api';
+import { RecentNote } from '@/lib/api';
+import { createPublicClient } from '@/lib/supabase/server';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import {
@@ -9,32 +10,43 @@ import {
   Sparkles, Clock,
 } from 'lucide-react';
 
-// export const revalidate - removed for testing
+export const dynamic = 'force-dynamic'
 
 async function getCodes() {
   try {
-    const r = await codes.list();
-    return r.data ?? [];
-  } catch {
-    return [];
-  }
+    const supabase = createPublicClient()
+    const { data } = await supabase
+      .from('codes')
+      .select('id, slug, title_ar, title_fr, type, status, total_articles, promulgation_date, created_at')
+      .order('title_ar')
+    return data ?? []
+  } catch { return [] }
 }
 
 async function getLatestCodes() {
   try {
-    const r = await codes.latest(3);
-    return r.data ?? [];
-  } catch {
-    return [];
-  }
+    const supabase = createPublicClient()
+    const { data } = await supabase
+      .from('codes')
+      .select('id, slug, title_ar, title_fr, type, status, total_articles, created_at')
+      .order('created_at', { ascending: false })
+      .limit(3)
+    return data ?? []
+  } catch { return [] }
 }
 
-async function getRecentNotes() {
+async function getRecentNotes(): Promise<RecentNote[]> {
   try {
-    return await notes.recent();
-  } catch {
-    return [];
-  }
+    const supabase = createPublicClient()
+    const { data } = await supabase
+      .from('commentaries')
+      .select('id, content_ar, created_at, article:articles(id, slug, number, code:codes(slug, title_ar))')
+      .eq('type', 'annotation')
+      .eq('status', 'approved')
+      .order('created_at', { ascending: false })
+      .limit(6)
+    return (data as any[]) ?? []
+  } catch { return [] }
 }
 
 function timeAgo(dateStr: string): string {
@@ -72,62 +84,64 @@ export default async function HomePage() {
       <Navbar />
 
       {/* ── Hero ─────────────────────────────────────────────── */}
-      <section className="bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 text-white pt-20 pb-24 px-4 relative overflow-hidden">
+      <section className="bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 text-white
+                          pt-10 pb-12 sm:pt-20 sm:pb-24 px-4 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-10 right-10 w-72 h-72 bg-white rounded-full blur-3xl" />
           <div className="absolute bottom-0 left-20 w-96 h-64 bg-blue-300 rounded-full blur-3xl" />
         </div>
 
         <div className="max-w-4xl mx-auto text-center relative">
-          <div className="flex justify-center mb-6">
-            <div className="w-24 h-24 bg-white/10 rounded-3xl flex items-center justify-center
+          {/* Icon — plus petit sur mobile */}
+          <div className="flex justify-center mb-4 sm:mb-6">
+            <div className="w-16 h-16 sm:w-24 sm:h-24 bg-white/10 rounded-2xl sm:rounded-3xl flex items-center justify-center
                             backdrop-blur-sm shadow-2xl border border-white/20">
-              <Scale className="w-12 h-12 text-white" />
+              <Scale className="w-8 h-8 sm:w-12 sm:h-12 text-white" />
             </div>
           </div>
 
-          <div className="inline-block bg-white/10 border border-white/20 text-blue-100 text-xs
-                          px-4 py-1.5 rounded-full mb-4 backdrop-blur-sm">
+          <div className="inline-block bg-white/10 border border-white/20 text-blue-100 text-[11px] sm:text-xs
+                          px-3 py-1 sm:px-4 sm:py-1.5 rounded-full mb-3 sm:mb-4 backdrop-blur-sm">
             موسوعتك القانونية المغربية — مجانية وشاملة
           </div>
 
-          <h1 className="font-kufi text-6xl font-bold mb-4 tracking-wide">المدوّنة</h1>
-          <p className="text-blue-100 text-xl mb-3 leading-relaxed">
+          <h1 className="font-kufi text-4xl sm:text-6xl font-bold mb-3 sm:mb-4 tracking-wide">المدوّنة</h1>
+          <p className="text-blue-100 text-base sm:text-xl mb-2 sm:mb-3 leading-relaxed">
             الوصول السهل إلى القانون المغربي
           </p>
-          <p className="text-blue-200 text-base max-w-2xl mx-auto leading-relaxed">
+          <p className="text-blue-200 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed px-2">
             ابحث وتصفّح أكثر من{' '}
-            <span className="font-bold text-white text-lg">{totalArticles.toLocaleString('ar-MA')}</span>{' '}
-            مادة قانونية من القوانين والمدونات المغربية الرسمية، بواجهة عربية واضحة ومريحة
+            <span className="font-bold text-white text-base sm:text-lg">{totalArticles.toLocaleString('ar-MA')}</span>{' '}
+            مادة قانونية من القوانين والمدونات المغربية الرسمية
           </p>
 
           {/* Search CTA */}
-          <div className="mt-8 max-w-xl mx-auto">
+          <div className="mt-6 sm:mt-8 max-w-xl mx-auto">
             <Link
               href="/search"
-              className="flex items-center gap-3 w-full px-5 py-4 bg-white/10 border border-white/25
+              className="flex items-center gap-3 w-full px-4 py-3.5 sm:px-5 sm:py-4 bg-white/10 border border-white/25
                          rounded-2xl text-right text-blue-100 hover:bg-white/20 transition-all
-                         backdrop-blur-sm group shadow-lg"
+                         backdrop-blur-sm group shadow-lg active:scale-[0.98]"
             >
               <Search className="w-5 h-5 text-blue-200 group-hover:text-white shrink-0" />
-              <span className="text-sm">ابحث في القوانين المغربية... الفصل، المادة، العقوبة...</span>
-              <span className="mr-auto text-xs bg-white/20 px-2 py-1 rounded-lg text-blue-100 shrink-0">
+              <span className="text-sm flex-1">ابحث في القوانين المغربية...</span>
+              <span className="text-xs bg-white/20 px-2 py-1 rounded-lg text-blue-100 shrink-0">
                 ابحث الآن
               </span>
             </Link>
           </div>
 
-          {/* Stats */}
-          <div className="mt-10 flex flex-wrap justify-center gap-4 text-sm">
+          {/* Stats — grille 2x2 sur mobile, ligne sur desktop */}
+          <div className="mt-6 sm:mt-10 grid grid-cols-2 sm:flex sm:flex-wrap sm:justify-center gap-2.5 sm:gap-4 text-sm">
             {[
               { value: codesList.length.toString(), label: 'قانون ومدونة' },
               { value: totalArticles.toLocaleString('ar-MA'), label: 'مادة قانونية' },
               { value: '٣', label: 'أوضاع بحث' },
               { value: 'مجاني', label: 'وصول حر للجميع' },
             ].map((s, i) => (
-              <div key={i} className="bg-white/10 backdrop-blur-sm px-6 py-3 rounded-xl border border-white/15 min-w-[110px]">
-                <div className="font-bold text-2xl text-white font-kufi">{s.value}</div>
-                <div className="text-blue-200 text-xs mt-0.5">{s.label}</div>
+              <div key={i} className="bg-white/10 backdrop-blur-sm px-4 py-2.5 sm:px-6 sm:py-3 rounded-xl border border-white/15 sm:min-w-[110px]">
+                <div className="font-bold text-xl sm:text-2xl text-white font-kufi">{s.value}</div>
+                <div className="text-blue-200 text-[10px] sm:text-xs mt-0.5">{s.label}</div>
               </div>
             ))}
           </div>
@@ -135,10 +149,10 @@ export default async function HomePage() {
       </section>
 
       {/* ── 1. القوانين المتاحة (6 premiers) ────────────────── */}
-      <section id="codes" className="max-w-6xl mx-auto px-4 py-12 w-full">
+      <section id="codes" className="max-w-6xl mx-auto px-4 py-8 sm:py-12 w-full">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="font-kufi text-2xl font-bold text-slate-900">القوانين المتاحة</h2>
+            <h2 className="font-kufi text-xl sm:text-2xl font-bold text-slate-900">القوانين المتاحة</h2>
             <p className="text-slate-500 text-sm mt-1">
               {codesList.length} قانون ومدونة — المصدر: الجريدة الرسمية المغربية
             </p>
@@ -156,21 +170,21 @@ export default async function HomePage() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
               {codesList.slice(0, 6).map((code: any) => {
                 const badge = typeLabel(code.type);
                 return (
                   <Link
                     key={code.id}
-                    href={`/codes/${code.slug}`}
-                    className="group bg-white rounded-2xl border border-slate-200 shadow-sm
-                               hover:shadow-md hover:border-blue-300 transition-all duration-200 p-6
-                               flex flex-col"
+                    href={`/codes/${code.id}`}
+                    className="group bg-white rounded-xl sm:rounded-2xl border border-slate-200 shadow-sm
+                               hover:shadow-md hover:border-blue-300 transition-all duration-200
+                               p-4 sm:p-6 flex flex-col active:scale-[0.98]"
                   >
-                    <div className="flex items-start gap-4 flex-1">
-                      <div className="w-11 h-11 bg-blue-50 rounded-xl flex items-center justify-center
+                    <div className="flex items-start gap-3 sm:gap-4 flex-1">
+                      <div className="w-10 h-10 sm:w-11 sm:h-11 bg-blue-50 rounded-xl flex items-center justify-center
                                       group-hover:bg-blue-100 transition-colors shrink-0">
-                        <FileText className="w-5 h-5 text-blue-600" />
+                        <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="font-bold text-slate-900 text-base leading-snug
@@ -256,7 +270,7 @@ export default async function HomePage() {
               ) : latestCodes.map((code: any) => {
                 const badge = typeLabel(code.type);
                 return (
-                  <Link key={code.id} href={`/codes/${code.slug}`}
+                  <Link key={code.id} href={`/codes/${code.id}`}
                     className="flex items-start gap-4 bg-white rounded-2xl border border-slate-200
                                hover:border-blue-300 hover:shadow-md p-4 transition-all group">
                     <div className="w-10 h-10 bg-blue-50 group-hover:bg-blue-100 rounded-xl
@@ -328,16 +342,16 @@ export default async function HomePage() {
       </section>
 
       {/* ── 2. لماذا المدوّنة؟ ───────────────────────────────── */}
-      <section id="features" className="bg-white border-y border-slate-100 py-16 px-4">
+      <section id="features" className="bg-white border-y border-slate-100 py-10 sm:py-16 px-4">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="font-kufi text-3xl font-bold text-slate-900 mb-3">لماذا المدوّنة؟</h2>
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="font-kufi text-2xl sm:text-3xl font-bold text-slate-900 mb-3">لماذا المدوّنة؟</h2>
             <p className="text-slate-500 text-base max-w-xl mx-auto leading-relaxed">
               كل ما تحتاجه للبحث في القانون المغربي في مكان واحد، بشكل مرتب وسهل الاستخدام
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
             {[
               {
                 icon: Search,
@@ -386,12 +400,12 @@ export default async function HomePage() {
                 slate:  'bg-slate-100 text-slate-600',
               };
               return (
-                <div key={i} className="bg-slate-50 rounded-2xl border border-slate-200 p-6
+                <div key={i} className="bg-slate-50 rounded-xl sm:rounded-2xl border border-slate-200 p-4 sm:p-6
                                          hover:border-blue-200 hover:shadow-sm transition-all duration-200">
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${colorMap[f.color]}`}>
-                    <Icon className="w-6 h-6" />
+                  <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center mb-3 sm:mb-4 ${colorMap[f.color]}`}>
+                    <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
                   </div>
-                  <h3 className="font-bold text-slate-900 text-base mb-2 leading-snug">{f.title}</h3>
+                  <h3 className="font-bold text-slate-900 text-sm sm:text-base mb-1.5 sm:mb-2 leading-snug">{f.title}</h3>
                   <p className="text-slate-500 text-sm leading-relaxed">{f.desc}</p>
                 </div>
               );
@@ -401,10 +415,10 @@ export default async function HomePage() {
       </section>
 
       {/* ── 3. ثلاثة أوضاع للبحث ────────────────────────────── */}
-      <section id="search" className="bg-gradient-to-br from-slate-900 to-blue-950 text-white py-16 px-4">
+      <section id="search" className="bg-gradient-to-br from-slate-900 to-blue-950 text-white py-10 sm:py-16 px-4">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="font-kufi text-3xl font-bold mb-3">ثلاثة أوضاع للبحث</h2>
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="font-kufi text-2xl sm:text-3xl font-bold mb-3">ثلاثة أوضاع للبحث</h2>
             <p className="text-slate-300 text-base max-w-xl mx-auto">
               ابحث بالطريقة التي تناسبك — سواء كنت تعرف ما تبحث عنه أم لا
             </p>

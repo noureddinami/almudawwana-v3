@@ -22,6 +22,7 @@ export default function Navbar() {
   const [user, setUser]         = useState<User | null>(null);
   const [searchQ, setSearchQ]   = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   useEffect(() => {
     if (hasToken()) {
@@ -31,7 +32,7 @@ export default function Navbar() {
     }
   }, []);
 
-  useEffect(() => { setMenuOpen(false); }, [pathname]);
+  useEffect(() => { setMenuOpen(false); setMobileSearchOpen(false); }, [pathname]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,6 +40,7 @@ export default function Navbar() {
       router.push(`/search?q=${encodeURIComponent(searchQ.trim())}`);
       setSearchQ('');
       setMenuOpen(false);
+      setMobileSearchOpen(false);
     }
   };
 
@@ -71,7 +73,7 @@ export default function Navbar() {
 
   return (
     <header dir="rtl">
-      {/* Bandeau */}
+      {/* Bandeau disclaimer — desktop uniquement */}
       <div className="bg-blue-900 text-blue-100 text-center py-1.5 text-xs hidden sm:block">
         📋 النصوص الرسمية متاحة على{' '}
         <a href="https://www.sgg.gov.ma" target="_blank" rel="noopener noreferrer"
@@ -79,21 +81,21 @@ export default function Navbar() {
         {' '}— المدوّنة للمعلومات العامة فقط
       </div>
 
-      <nav className="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-50">
+      <nav className="bg-white/95 backdrop-blur-lg border-b border-slate-200 shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center h-16 gap-3">
+          <div className="flex items-center h-14 sm:h-16 gap-3">
 
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 shrink-0">
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                 <Scale className="w-4 h-4 text-white" />
               </div>
-              <span className="font-kufi text-xl font-bold text-slate-900 tracking-wide hidden sm:block">
+              <span className="font-kufi text-lg sm:text-xl font-bold text-slate-900 tracking-wide">
                 المدوّنة
               </span>
             </Link>
 
-            {/* Divider */}
+            {/* Divider desktop */}
             <div className="hidden lg:block w-px h-6 bg-slate-200 mx-1" />
 
             {/* Nav links (desktop) */}
@@ -115,8 +117,18 @@ export default function Navbar() {
               ))}
             </div>
 
+            {/* Mobile: search toggle button */}
+            <button
+              className="sm:hidden mr-auto p-2 text-slate-500 hover:text-blue-600
+                         rounded-xl hover:bg-slate-50 transition-colors"
+              onClick={() => setMobileSearchOpen(o => !o)}
+              aria-label="بحث"
+            >
+              <Search className="w-5 h-5" />
+            </button>
+
             {/* Search (desktop) */}
-            <form onSubmit={handleSearch} className="hidden md:flex max-w-xs w-full">
+            <form onSubmit={handleSearch} className="hidden sm:flex max-w-xs w-full">
               <div className="relative w-full">
                 <input
                   type="text" value={searchQ}
@@ -159,9 +171,9 @@ export default function Navbar() {
               )}
             </div>
 
-            {/* Mobile toggle */}
+            {/* Desktop hamburger (tablet: lg breakpoint) */}
             <button
-              className="lg:hidden mr-auto text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+              className="hidden sm:block lg:hidden text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
               onClick={() => setMenuOpen(o => !o)}
               aria-label="القائمة"
             >
@@ -169,28 +181,31 @@ export default function Navbar() {
             </button>
           </div>
 
-          {/* Mobile menu */}
+          {/* ── Mobile search bar (slide down) ─────────────────── */}
+          <div className={`sm:hidden overflow-hidden transition-all duration-200 ease-in-out
+            ${mobileSearchOpen ? 'max-h-20 opacity-100 pb-3' : 'max-h-0 opacity-0'}`}>
+            <form onSubmit={handleSearch} className="flex gap-2">
+              <input
+                type="text" value={searchQ} onChange={e => setSearchQ(e.target.value)}
+                placeholder="ابحث في القوانين..."
+                autoFocus={mobileSearchOpen}
+                className="flex-1 px-4 py-2.5 text-sm border border-slate-200 rounded-xl bg-slate-50
+                           focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button type="submit"
+                className="px-4 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium
+                           active:bg-blue-700">
+                بحث
+              </button>
+            </form>
+          </div>
+
+          {/* ── Tablet menu (sm–lg) ────────────────────────────── */}
           <div className={`
-            lg:hidden overflow-hidden transition-all duration-200 ease-in-out
+            hidden sm:block lg:hidden overflow-hidden transition-all duration-200 ease-in-out
             ${menuOpen ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'}
           `}>
             <div className="py-3 border-t border-slate-100 pb-4 space-y-1">
-
-              {/* Search */}
-              <form onSubmit={handleSearch} className="flex gap-2 pb-3">
-                <input
-                  type="text" value={searchQ} onChange={e => setSearchQ(e.target.value)}
-                  placeholder="ابحث..."
-                  className="flex-1 px-3 py-2 text-sm border border-slate-300 rounded-lg bg-slate-50
-                             focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <button type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium">
-                  بحث
-                </button>
-              </form>
-
-              {/* Nav links */}
               <div className="border-t border-slate-100 pt-2">
                 {NAV_LINKS.map(link => (
                   <a
@@ -207,34 +222,6 @@ export default function Navbar() {
                     {link.label}
                   </a>
                 ))}
-              </div>
-
-              {/* Auth */}
-              <div className="border-t border-slate-100 pt-3">
-                {user ? (
-                  <div className="space-y-1">
-                    <p className="text-xs text-slate-400 px-3 pb-1 truncate">{user.full_name ?? user.email}</p>
-                    <button onClick={handleLogout}
-                      className="flex w-full items-center gap-2 px-3 py-2.5 text-sm text-red-600
-                                 hover:bg-red-50 rounded-lg transition-colors">
-                      <LogOut className="w-4 h-4" />
-                      تسجيل الخروج
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex gap-2 px-1">
-                    <Link href="/login" onClick={() => setMenuOpen(false)}
-                      className="flex-1 text-center py-2.5 text-sm text-blue-600 font-medium
-                                 border border-blue-200 rounded-xl hover:bg-blue-50">
-                      الدخول
-                    </Link>
-                    <Link href="/register" onClick={() => setMenuOpen(false)}
-                      className="flex-1 text-center py-2.5 text-sm text-white bg-blue-600
-                                 rounded-xl hover:bg-blue-700 font-medium">
-                      انشئ حسابك
-                    </Link>
-                  </div>
-                )}
               </div>
             </div>
           </div>

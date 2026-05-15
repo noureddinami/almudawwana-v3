@@ -1,11 +1,11 @@
+export const dynamic = 'force-dynamic'
+
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { articles as articlesApi, codes } from '@/lib/api';
+import { createPublicClient } from '@/lib/supabase/server';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Search, ChevronLeft, BookOpen, Hash, AlignLeft, Tags } from 'lucide-react';
-
-// export const revalidate - removed for testing
 
 type Tab = 'text' | 'article' | 'keywords';
 
@@ -20,46 +20,153 @@ interface Props {
   }>;
 }
 
-async function getCodes() {
-  try {
-    const first = await codes.list(1);
-    let list = first.data ?? [];
-    for (let p = 2; p <= (first.last_page ?? 1); p++) {
-      const next = await codes.list(p);
-      list = list.concat(next.data ?? []);
-    }
-    return list.filter((c: any) => c.total_articles > 0);
-  } catch {
-    return [];
+/* ─── Data helpers ─────────────────────────────────────────────────────────── */
+
+async function getAllCodes() {
+  const supabase = createPublicClient()
+  const { data } = await supabase
+    .from('codes')
+    .select('id, slug, title_ar, total_articles')
+    .order('title_ar')
+  return data ?? []
+}
+
+/**
+ * Tab 1 — recherche par texte (50 % des mots doivent apparaître)
+ */
+async function searchByText(query: string, codeId: string | null, page: number, perPage: number) {
+  const supabase = createPublicClient()
+  const words = query.split(/[\s,،.;:]+/).filter(w => w.length >= 2)
+  if (!words.length) return null
+
+  const threshold = Math.ceil(words.length * 0.5)
+
+  // Récupérer les articles contenant au moins un mot
+  const orFilter = words.map(w => `content_ar.ilike.%${w}%`).join(',')
+  let q = supabase
+    .from('articles')
+    .select('id, number, number_int, slug, content_ar, status, view_count, code_id, code:codes(id, slug, title_ar)')
+    .or(orFilter)
+    .order('view_count', { ascending: false })
+    .limit(1000)
+
+  if (codeId) q = q.eq('code_id', codeId)
+
+  const { data: articles } = await q
+  if (!articles) return null
+
+  // Filtrer côté serveur : garder ceux qui contiennent >= threshold mots
+  const filtered = articles.filter(a => {
+    const content = a.content_ar?.toLowerCase() ?? ''
+    const matchCount = words.filter(w => content.includes(w.toLowerCase())).length
+    return matchCount >= threshold
+  })
+
+  // Trier par nombre de mots matchés (desc), puis par view_count
+  filtered.sort((a, b) => {
+    const aMatch = words.filter(w => (a.content_ar?.toLowerCase() ?? '').includes(w.toLowerCase())).length
+    const bMatch = words.filter(w => (b.content_ar?.toLowerCase() ?? '').includes(w.toLowerCase())).length
+    if (bMatch !== aMatch) return bMatch - aMatch
+    return (b.view_count ?? 0) - (a.view_count ?? 0)
+  })
+
+  const total = filtered.length
+  const from = (page - 1) * perPage
+  return {
+    data: filtered.slice(from, from + perPage),
+    current_page: page,
+    last_page: Math.ceil(total / perPage) || 1,
+    total,
   }
 }
 
-async function doSearch(params: {
-  tab: Tab;
-  q: string;
-  kw: string;
-  code: string;
-  page: number;
-}) {
-  try {
-    const { tab, q, kw, code, page } = params;
-    if (tab === 'keywords' && kw) {
-      return await articlesApi.searchKeywords(kw, page, 20, code || undefined);
-    }
-    if ((tab === 'text' || tab === 'article') && q) {
-      return await articlesApi.search(q, page, 20, code || undefined);
-    }
-    return null;
-  } catch {
-    return null;
+/**
+ * Tab 2 — recherche par numéro d'article dans un code
+ * Renvoie le numéro exact + ses frères (ex: 1 → 1, 1-1, 1.1, 1-2…)
+ */
+async function searchByNumber(number: string, codeId: string | null, page: number, perPage: number) {
+  const supabase = createPublicClient()
+  const num = number.trim().replace(/[^\d\-–.مكرر\s]/gu, '')
+  if (!num) return null
+
+  const from = (page - 1) * perPage
+  const to = from + perPage - 1
+
+  // Exact match + siblings : "1" → 1, 1-1, 1.1, 1-2, 1.2 etc.
+  const orFilter = `number.eq.${num},number.like.${num}-%,number.like.${num}.%`
+
+  let q = supabase
+    .from('articles')
+    .select('id, number, number_int, slug, content_ar, status, view_count, code_id, code:codes(id, slug, title_ar)', { count: 'exact' })
+    .or(orFilter)
+    .order('number_int', { ascending: true, nullsFirst: false })
+    .order('number', { ascending: true })
+
+  if (codeId) q = q.eq('code_id', codeId)
+
+  const { data, count } = await q.range(from, to)
+
+  return {
+    data: data ?? [],
+    current_page: page,
+    last_page: Math.ceil((count ?? 0) / perPage) || 1,
+    total: count ?? 0,
   }
 }
 
-function truncateAround(text: string, query: string, max = 280): string {
+/**
+ * Tab 3 — recherche par mots-clés (60 % des mots-clés doivent apparaître)
+ */
+async function searchByKeywords(kwString: string, codeId: string | null, page: number, perPage: number) {
+  const supabase = createPublicClient()
+  const keywords = kwString.split(/[,،\-\s]+/).map(w => w.trim()).filter(w => w.length >= 2)
+  if (!keywords.length) return null
+
+  const threshold = Math.ceil(keywords.length * 0.6)
+
+  const orFilter = keywords.map(w => `content_ar.ilike.%${w}%`).join(',')
+  let q = supabase
+    .from('articles')
+    .select('id, number, number_int, slug, content_ar, status, view_count, code_id, code:codes(id, slug, title_ar)')
+    .or(orFilter)
+    .order('view_count', { ascending: false })
+    .limit(1000)
+
+  if (codeId) q = q.eq('code_id', codeId)
+
+  const { data: articles } = await q
+  if (!articles) return null
+
+  // Filtrer : garder ceux qui contiennent >= 60 % des mots-clés
+  const filtered = articles.filter(a => {
+    const content = a.content_ar?.toLowerCase() ?? ''
+    const matchCount = keywords.filter(w => content.includes(w.toLowerCase())).length
+    return matchCount >= threshold
+  })
+
+  filtered.sort((a, b) => {
+    const aMatch = keywords.filter(w => (a.content_ar?.toLowerCase() ?? '').includes(w.toLowerCase())).length
+    const bMatch = keywords.filter(w => (b.content_ar?.toLowerCase() ?? '').includes(w.toLowerCase())).length
+    if (bMatch !== aMatch) return bMatch - aMatch
+    return (b.view_count ?? 0) - (a.view_count ?? 0)
+  })
+
+  const total = filtered.length
+  const from = (page - 1) * perPage
+  return {
+    data: filtered.slice(from, from + perPage),
+    current_page: page,
+    last_page: Math.ceil(total / perPage) || 1,
+    total,
+  }
+}
+
+/* ─── UI helpers ───────────────────────────────────────────────────────────── */
+
+function truncateAround(text: string, queryWords: string[], max = 280): string {
   if (!text) return '';
-  const words = query.split(/[\s,،]+/).filter(w => w.length > 1);
   let idx = -1;
-  for (const w of words) {
+  for (const w of queryWords) {
     const i = text.indexOf(w);
     if (i !== -1 && (idx === -1 || i < idx)) idx = i;
   }
@@ -79,25 +186,7 @@ function buildTabHref(tab: Tab, params: { q: string; kw: string; code: string })
   return `/search?${p}`;
 }
 
-function CodeSelect({ codesList, selected, name = 'code' }: {
-  codesList: any[];
-  selected: string;
-  name?: string;
-}) {
-  return (
-    <select
-      name={name}
-      defaultValue={selected}
-      className="text-sm border border-slate-300 rounded-xl px-3 py-3 bg-white
-                 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-    >
-      <option value="">— جميع القوانين —</option>
-      {codesList.map((c: any) => (
-        <option key={c.slug} value={c.slug}>{c.title_ar}</option>
-      ))}
-    </select>
-  );
-}
+/* ─── Main component ──────────────────────────────────────────────────────── */
 
 export default async function SearchPage({ searchParams }: Props) {
   const {
@@ -108,37 +197,59 @@ export default async function SearchPage({ searchParams }: Props) {
     page: pageParam,
   } = await searchParams;
 
-  const tab: Tab = (tabParam as Tab) || 'text';
+  const tab: Tab = (['text', 'article', 'keywords'].includes(tabParam ?? '') ? tabParam : 'text') as Tab;
   const q        = qParam?.trim() ?? '';
   const kw       = kwParam?.trim() ?? '';
-  const code     = codeParam ?? '';
-  const page     = Number(pageParam ?? 1);
+  const codeSlug = codeParam ?? '';
+  const page     = Math.max(1, Number(pageParam ?? 1));
+  const perPage  = 20;
 
-  const [result, codesList] = await Promise.all([
-    doSearch({ tab, q, kw, code, page }),
-    getCodes(),
-  ]);
+  // Charger les codes pour le dropdown
+  const codesList = await getAllCodes();
+
+  // Résoudre le code_id depuis le slug (ou id)
+  let codeId: string | null = null;
+  let selectedCodeName = '';
+  if (codeSlug) {
+    const found = codesList.find(c => c.id === codeSlug || c.slug === codeSlug);
+    if (found) {
+      codeId = found.id;
+      selectedCodeName = found.title_ar;
+    }
+  }
+
+  // Exécuter la recherche
+  let result: { data: any[]; current_page: number; last_page: number; total: number } | null = null;
+
+  if (tab === 'text' && q) {
+    result = await searchByText(q, codeId, page, perPage);
+  } else if (tab === 'article' && q) {
+    result = await searchByNumber(q, codeId, page, perPage);
+  } else if (tab === 'keywords' && kw) {
+    result = await searchByKeywords(kw, codeId, page, perPage);
+  }
 
   const hits       = result?.data ?? [];
   const pagination = result
     ? { current: result.current_page, last: result.last_page, total: result.total }
     : null;
 
-  const activeQuery   = tab === 'keywords' ? kw : q;
-  const selectedCodeName = codesList.find((c: any) => c.slug === code)?.title_ar ?? '';
+  const activeQuery = tab === 'keywords' ? kw : q;
+  const queryWords  = (tab === 'keywords' ? kw : q)
+    .split(/[,،\-\s]+/)
+    .filter((w: string) => w.length >= 2);
 
   const tabs: { id: Tab; label: string; icon: ReactNode }[] = [
     { id: 'text',     label: 'بحث بالنص',              icon: <AlignLeft className="w-4 h-4" /> },
-    { id: 'article',  label: 'بحث برقم الفصل',          icon: <Hash className="w-4 h-4" /> },
+    { id: 'article',  label: 'بحث برقم المادة',         icon: <Hash className="w-4 h-4" /> },
     { id: 'keywords', label: 'بحث بكلمات مفتاحية',      icon: <Tags className="w-4 h-4" /> },
   ];
 
-  // Build pagination URLs
   const paginationBase = () => {
     const p = new URLSearchParams({ tab });
     if (tab === 'keywords') { if (kw) p.set('kw', kw); }
     else { if (q) p.set('q', q); }
-    if (code) p.set('code', code);
+    if (codeSlug) p.set('code', codeSlug);
     return p;
   };
 
@@ -147,7 +258,6 @@ export default async function SearchPage({ searchParams }: Props) {
       <Navbar />
 
       <div className="max-w-4xl mx-auto px-4 py-8 flex-1 w-full">
-
         <h1 className="font-kufi text-2xl font-bold text-slate-900 mb-6">
           البحث في القوانين
         </h1>
@@ -157,7 +267,7 @@ export default async function SearchPage({ searchParams }: Props) {
           {tabs.map(t => (
             <a
               key={t.id}
-              href={buildTabHref(t.id, { q, kw, code })}
+              href={buildTabHref(t.id, { q, kw, code: codeSlug })}
               className={`flex-1 flex items-center justify-center gap-2 text-sm font-medium
                           py-2.5 px-3 rounded-lg transition-all
                           ${tab === t.id
@@ -197,6 +307,9 @@ export default async function SearchPage({ searchParams }: Props) {
                 بحث
               </button>
             </div>
+            <p className="text-xs text-slate-400">
+              يعرض المواد التي تحتوي على 50% على الأقل من الكلمات المُدخلة.
+            </p>
             {!q && (
               <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-sm text-blue-800">
                 <p className="font-medium mb-2 text-xs text-blue-600">أمثلة :</p>
@@ -220,7 +333,17 @@ export default async function SearchPage({ searchParams }: Props) {
             <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-3 items-end">
               <div className="space-y-1">
                 <label className="text-xs font-medium text-slate-500">القانون</label>
-                <CodeSelect codesList={codesList} selected={code} />
+                <select
+                  name="code"
+                  defaultValue={codeSlug}
+                  className="text-sm border border-slate-300 rounded-xl px-3 py-3 bg-white
+                             focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                >
+                  <option value="">— جميع القوانين —</option>
+                  {codesList.map((c) => (
+                    <option key={c.id} value={c.id}>{c.title_ar}</option>
+                  ))}
+                </select>
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-medium text-slate-500">رقم الفصل / المادة</label>
@@ -228,7 +351,7 @@ export default async function SearchPage({ searchParams }: Props) {
                   type="text"
                   name="q"
                   defaultValue={q}
-                  placeholder="مثال: 25 أو 25 مكرر"
+                  placeholder="مثال: 1 أو 25"
                   autoFocus
                   inputMode="numeric"
                   className="w-full sm:w-40 px-4 py-3 text-sm border border-slate-300 rounded-xl
@@ -242,27 +365,35 @@ export default async function SearchPage({ searchParams }: Props) {
                 بحث
               </button>
             </div>
-            {!q && (
-              <p className="text-xs text-slate-400 pt-1">
-                اختر قانوناً واكتب رقم الفصل للانتقال مباشرة إليه.
-              </p>
-            )}
+            <p className="text-xs text-slate-400">
+              يعرض المادة المطلوبة + المواد المشابهة (مثال: 1 → 1, 1-1, 1.1, 1-2…)
+            </p>
           </form>
         )}
 
-        {/* ── Tab 3: multi-keyword search + code ──────────────── */}
+        {/* ── Tab 3: multi-keyword search ─────────────────────── */}
         {tab === 'keywords' && (
           <form method="GET" action="/search" className="space-y-3 mb-8">
             <input type="hidden" name="tab" value="keywords" />
             <div className="grid grid-cols-1 sm:grid-cols-[1fr_2fr_auto] gap-3 items-end">
               <div className="space-y-1">
-                <label className="text-xs font-medium text-slate-500">القانون</label>
-                <CodeSelect codesList={codesList} selected={code} />
+                <label className="text-xs font-medium text-slate-500">القانون (اختياري)</label>
+                <select
+                  name="code"
+                  defaultValue={codeSlug}
+                  className="text-sm border border-slate-300 rounded-xl px-3 py-3 bg-white
+                             focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                >
+                  <option value="">— جميع القوانين —</option>
+                  {codesList.map((c) => (
+                    <option key={c.id} value={c.id}>{c.title_ar}</option>
+                  ))}
+                </select>
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-medium text-slate-500">
                   الكلمات المفتاحية
-                  <span className="mr-1 text-slate-400 font-normal">(افصل بينها بفاصلة أو مسافة)</span>
+                  <span className="mr-1 text-slate-400 font-normal">(افصل بينها بفاصلة أو شرطة أو مسافة)</span>
                 </label>
                 <div className="relative">
                   <input
@@ -286,7 +417,7 @@ export default async function SearchPage({ searchParams }: Props) {
             </div>
             {kw && (
               <div className="flex flex-wrap gap-1.5 pt-1">
-                {kw.split(/[,،\s]+/).filter(w => w.length >= 2).map((word, i) => (
+                {kw.split(/[,،\-\s]+/).filter(w => w.length >= 2).map((word, i) => (
                   <span key={i} className="text-xs bg-blue-50 text-blue-700 px-2.5 py-1
                                            rounded-full border border-blue-100">
                     {word}
@@ -294,24 +425,22 @@ export default async function SearchPage({ searchParams }: Props) {
                 ))}
               </div>
             )}
-            {!kw && (
-              <p className="text-xs text-slate-400 pt-1">
-                يمكنك الجمع بين عدة كلمات — تُعرض المواد التي تحتوي على أيٍّ منها.
-              </p>
-            )}
+            <p className="text-xs text-slate-400">
+              يعرض المواد التي تحتوي على 60% على الأقل من الكلمات المفتاحية المُدخلة.
+            </p>
           </form>
         )}
 
         {/* ── Results header ──────────────────────────────────── */}
         {activeQuery && (
           <div className="flex items-center justify-between mb-5 flex-wrap gap-2">
-            {pagination ? (
+            {pagination && pagination.total > 0 ? (
               <p className="text-sm text-slate-600">
                 {tab === 'article' ? (
                   <span className="inline-flex items-center gap-1.5">
                     <BookOpen className="w-4 h-4 text-blue-600" />
                     <span className="font-medium text-blue-700">{pagination.total}</span>
-                    &nbsp;نتيجة للفصل رقم&nbsp;
+                    &nbsp;نتيجة للمادة رقم&nbsp;
                     <span className="font-bold text-slate-900">&quot;{activeQuery}&quot;</span>
                     {selectedCodeName && <span className="text-slate-400"> في {selectedCodeName}</span>}
                   </span>
@@ -330,7 +459,7 @@ export default async function SearchPage({ searchParams }: Props) {
               </p>
             )}
             <span className="text-xs bg-slate-100 text-slate-500 px-3 py-1 rounded-full border border-slate-200">
-              {tab === 'text' ? 'بحث نصي' : tab === 'article' ? 'بحث برقم' : 'كلمات مفتاحية'}
+              {tab === 'text' ? 'بحث نصي (50%)' : tab === 'article' ? 'بحث برقم' : 'كلمات مفتاحية (60%)'}
             </span>
           </div>
         )}
@@ -338,36 +467,33 @@ export default async function SearchPage({ searchParams }: Props) {
         {/* ── Results list ────────────────────────────────────── */}
         {hits.length > 0 ? (
           <div className="space-y-3">
-            {hits.map((article: any) => {
-              const codeSlug = article.code?.slug ?? '#';
-              return (
-                <Link
-                  key={article.id}
-                  href={`/codes/${codeSlug}/articles/${encodeURIComponent(article.slug)}`}
-                  className="block bg-white rounded-xl border border-slate-200 px-5 py-4
-                             hover:border-blue-300 hover:shadow-sm transition-all group"
-                >
-                  <div className="flex items-start gap-3">
-                    <span className="shrink-0 text-xs font-bold text-blue-700 bg-blue-50
-                                     px-2.5 py-1 rounded-lg mt-0.5 whitespace-nowrap">
-                      م. {article.number}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      {article.code && (
-                        <p className="text-xs text-slate-400 mb-1 truncate">
-                          {article.code.title_ar}
-                        </p>
-                      )}
-                      <p className="text-slate-700 text-sm leading-relaxed text-arabic line-clamp-3">
-                        {truncateAround(article.content_ar, activeQuery)}
+            {hits.map((article: any) => (
+              <Link
+                key={article.id}
+                href={`/codes/${article.code?.id ?? article.code_id}/articles/${article.id}`}
+                className="block bg-white rounded-xl border border-slate-200 px-5 py-4
+                           hover:border-blue-300 hover:shadow-sm transition-all group"
+              >
+                <div className="flex items-start gap-3">
+                  <span className="shrink-0 text-xs font-bold text-blue-700 bg-blue-50
+                                   px-2.5 py-1 rounded-lg mt-0.5 whitespace-nowrap">
+                    م. {article.number}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    {article.code && (
+                      <p className="text-xs text-slate-400 mb-1 truncate">
+                        {article.code.title_ar}
                       </p>
-                    </div>
-                    <ChevronLeft className="w-4 h-4 text-slate-300 group-hover:text-blue-400
-                                           transition-colors shrink-0 mt-1" />
+                    )}
+                    <p className="text-slate-700 text-sm leading-relaxed text-arabic line-clamp-3">
+                      {truncateAround(article.content_ar, queryWords)}
+                    </p>
                   </div>
-                </Link>
-              );
-            })}
+                  <ChevronLeft className="w-4 h-4 text-slate-300 group-hover:text-blue-400
+                                         transition-colors shrink-0 mt-1" />
+                </div>
+              </Link>
+            ))}
           </div>
         ) : activeQuery ? (
           <div className="text-center py-20 text-slate-400">
@@ -375,7 +501,7 @@ export default async function SearchPage({ searchParams }: Props) {
             <p className="font-medium text-slate-500">لا توجد نتائج</p>
             <p className="text-sm mt-1">
               {tab === 'article'
-                ? 'تحقق من رقم الفصل أو اختر قانوناً آخر'
+                ? 'تحقق من رقم المادة أو اختر قانوناً آخر'
                 : tab === 'keywords'
                 ? 'جرّب كلمات أخرى أو قلّل عددها'
                 : 'جرّب كلمات مختلفة أو قلّل عدد الكلمات'}
