@@ -5,6 +5,12 @@
   --font-amiri:  var(--font-amiri);
   --font-naskh:  var(--font-naskh);
   --font-kufi:   var(--font-kufi);
+  --animate-slide-up: slide-up 0.35s ease-out;
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 * {

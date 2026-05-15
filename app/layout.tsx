@@ -3,6 +3,7 @@ import { Amiri, Noto_Naskh_Arabic, Reem_Kufi } from 'next/font/google';
 import './globals.css';
 import { Toaster } from 'react-hot-toast';
 import BottomNav from '@/components/BottomNav';
+import InstallPrompt from '@/components/InstallPrompt';
 
 /* ── Amiri : corps des articles juridiques ─────────────────── */
 const amiri = Amiri({
@@ -78,6 +79,7 @@ export default function RootLayout({
       <body className="min-h-full bg-slate-50 text-slate-900 font-naskh antialiased">
         {children}
         <BottomNav />
+        <InstallPrompt />
         <Toaster
           position="top-center"
           toastOptions={{
