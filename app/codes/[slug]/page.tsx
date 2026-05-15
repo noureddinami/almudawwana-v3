@@ -39,8 +39,12 @@ async function getArticles(codeId: string, page: number, perPage = 50) {
       .order('number', { ascending: true })
       .range(from, to)
     const total = count ?? 0
+    const articles = (data ?? []).map((a: any) => ({
+      ...a,
+      section: Array.isArray(a.section) ? a.section[0] : a.section,
+    }))
     return {
-      data: data ?? [],
+      data: articles,
       current_page: page,
       last_page: Math.ceil(total / perPage) || 1,
       total,

@@ -46,10 +46,17 @@ async function getArticle(articleId: string) {
       .eq('status', 'approved')
       .order('created_at')
 
+    const code = article.code as any
+    const section = article.section as any
     return {
       ...article,
+      code: code as { id: string; slug: string; title_ar: string } | null,
+      section: section as { id: string; title_ar: string; number: string } | null,
       tags: (tagRows as any[])?.map((t: any) => t.tag).filter(Boolean) ?? [],
-      admin_notes: adminNotes ?? [],
+      admin_notes: (adminNotes ?? []).map((n: any) => ({
+        ...n,
+        author: Array.isArray(n.author) ? n.author[0] : n.author,
+      })),
     }
   } catch { return null }
 }
@@ -81,7 +88,7 @@ export default async function ArticlePage({ params }: Props) {
   if (!article) notFound();
 
   const status = statusLabel[article.status] ?? statusLabel.in_force;
-  const codeName = (article as any).code?.title_ar ?? '';
+  const codeName = article.code?.title_ar ?? '';
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
