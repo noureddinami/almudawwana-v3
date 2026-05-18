@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Scale, Search, User } from 'lucide-react';
+import { Home, Scale, Search, Download, User } from 'lucide-react';
 
 const TABS = [
-  { href: '/',       label: 'الرئيسية', icon: Home   },
-  { href: '/codes',  label: 'القوانين',  icon: Scale  },
-  { href: '/search', label: 'البحث',     icon: Search },
-  { href: '/login',  label: 'حسابي',     icon: User   },
+  { href: '/',        label: 'الرئيسية', icon: Home     },
+  { href: '/codes',   label: 'القوانين',  icon: Scale    },
+  { href: '/search',  label: 'البحث',     icon: Search   },
+  { href: '/offline', label: 'المحمّلة',   icon: Download },
+  { href: '/login',   label: 'حسابي',     icon: User     },
 ];
 
 export default function BottomNav() {

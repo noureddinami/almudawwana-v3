@@ -8,6 +8,7 @@ import Footer from '@/components/Footer';
 import ArticlesList from '@/components/ArticlesList';
 import { Scale, ChevronLeft, Download, ExternalLink } from 'lucide-react';
 import CacheHydrator from '@/components/CacheHydrator';
+import DownloadCodeButton from '@/components/DownloadCodeButton';
 
 
 interface Props {
@@ -114,7 +115,7 @@ export default async function CodePage({ params, searchParams }: Props) {
               {code.title_fr && (
                 <p className="text-sm text-slate-400 mt-0.5" dir="ltr">{code.title_fr}</p>
               )}
-              <div className="mt-3 flex flex-wrap gap-3 text-sm text-slate-500">
+              <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-slate-500">
                 {pagination && (
                   <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full font-medium text-xs">
                     {pagination.total} مادة
@@ -123,6 +124,14 @@ export default async function CodePage({ params, searchParams }: Props) {
                 {code.promulgation_date && (
                   <span>سنة {new Date(code.promulgation_date).getFullYear()}</span>
                 )}
+              </div>
+              <div className="mt-3">
+                <DownloadCodeButton
+                  codeId={codeId}
+                  codeTitle={code.title_ar}
+                  codeTitleFr={code.title_fr}
+                  totalArticles={pagination?.total ?? 0}
+                />
               </div>
             </div>
 
