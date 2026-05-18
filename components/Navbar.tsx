@@ -4,16 +4,17 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { auth, clearToken, hasToken, User } from '@/lib/api';
-import { Search, LogOut, Menu, X, UserPlus } from 'lucide-react';
+import { Search, LogOut, Menu, X, UserPlus, FilePlus2, Mail } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const NAV_LINKS = [
-  { href: '/',          label: 'الرئيسية',        anchor: false },
-  { href: '/#features', label: 'لماذا المدوّنة؟',  anchor: true  },
-  { href: '/codes',     label: 'النصوص القانونية', anchor: false },
-  { href: '/#latest',   label: 'آخر الإضافات',    anchor: true  },
-  { href: '/search',    label: 'البحث',            anchor: false },
-  { href: '/contact',   label: 'تواصل معنا',       anchor: false },
+  { href: '/',              label: 'الرئيسية',            anchor: false },
+  { href: '/#features',     label: 'لماذا المدوّنة؟',      anchor: true  },
+  { href: '/codes',         label: 'النصوص القانونية',    anchor: false },
+  { href: '/#latest',       label: 'آخر الإضافات',        anchor: true  },
+  { href: '/search',        label: 'البحث',               anchor: false },
+  { href: '/request-code',  label: 'طلب إضافة نص قانوني', anchor: false },
+  { href: '/contact',       label: 'تواصل معنا',          anchor: false },
 ];
 
 export default function Navbar() {
@@ -121,11 +122,16 @@ export default function Navbar() {
                   onClick={e => handleAnchorClick(e, link.href, link.anchor)}
                   className={`
                     px-3 py-2 text-sm rounded-lg transition-colors whitespace-nowrap font-medium
-                    ${isActive(link.href)
-                      ? 'bg-blue-50 text-blue-700'
-                      : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}
+                    ${link.href === '/request-code'
+                      ? isActive(link.href)
+                        ? 'bg-emerald-50 text-emerald-700'
+                        : 'text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50'
+                      : isActive(link.href)
+                        ? 'bg-blue-50 text-blue-700'
+                        : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}
                   `}
                 >
+                  {link.href === '/request-code' && <FilePlus2 className="w-3.5 h-3.5 inline ml-1 -mt-0.5" />}
                   {link.label}
                 </a>
               ))}
@@ -185,9 +191,9 @@ export default function Navbar() {
               )}
             </div>
 
-            {/* Desktop hamburger (tablet: lg breakpoint) */}
+            {/* Hamburger (mobile + tablet) */}
             <button
-              className="hidden sm:block lg:hidden text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+              className="lg:hidden text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
               onClick={() => setMenuOpen(o => !o)}
               aria-label="القائمة"
             >
@@ -214,28 +220,64 @@ export default function Navbar() {
             </form>
           </div>
 
-          {/* ── Tablet menu (sm–lg) ────────────────────────────── */}
+          {/* ── Mobile / Tablet collapse menu ────────────────── */}
           <div className={`
-            hidden sm:block lg:hidden overflow-hidden transition-all duration-200 ease-in-out
-            ${menuOpen ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'}
+            lg:hidden overflow-hidden transition-all duration-200 ease-in-out
+            ${menuOpen ? 'max-h-[700px] opacity-100' : 'max-h-0 opacity-0'}
           `}>
             <div className="py-3 border-t border-slate-100 pb-4 space-y-1">
-              <div className="border-t border-slate-100 pt-2">
-                {NAV_LINKS.map(link => (
+              {NAV_LINKS.map(link => {
+                const isRequest = link.href === '/request-code';
+                const isContact = link.href === '/contact';
+                return (
                   <a
                     key={link.href}
                     href={link.href}
                     onClick={e => handleAnchorClick(e, link.href, link.anchor)}
                     className={`
-                      flex items-center px-3 py-2.5 text-sm rounded-lg transition-colors
+                      flex items-center gap-2 px-3 py-2.5 text-sm rounded-lg transition-colors
                       ${isActive(link.href)
-                        ? 'bg-blue-50 text-blue-700 font-medium'
-                        : 'text-slate-700 hover:text-blue-600 hover:bg-slate-50'}
+                        ? isRequest
+                          ? 'bg-emerald-50 text-emerald-700 font-medium'
+                          : 'bg-blue-50 text-blue-700 font-medium'
+                        : isRequest
+                          ? 'text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50'
+                          : 'text-slate-700 hover:text-blue-600 hover:bg-slate-50'}
                     `}
                   >
+                    {isRequest && <FilePlus2 className="w-4 h-4" />}
+                    {isContact && <Mail className="w-4 h-4" />}
                     {link.label}
                   </a>
-                ))}
+                );
+              })}
+
+              {/* Auth links in mobile menu */}
+              <div className="border-t border-slate-100 pt-2 mt-2 sm:hidden">
+                {user ? (
+                  <div className="flex items-center justify-between px-3 py-2.5">
+                    <span className="text-sm text-slate-600">{user.full_name ?? user.email}</span>
+                    <button onClick={handleLogout}
+                      className="flex items-center gap-1 text-sm text-red-500 hover:text-red-600">
+                      <LogOut className="w-4 h-4" />
+                      خروج
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 px-3 py-2">
+                    <Link href="/login"
+                      className="flex-1 text-center text-sm text-slate-600 hover:text-blue-600 font-medium
+                                 py-2.5 rounded-xl border border-slate-200 hover:border-blue-200">
+                      الدخول
+                    </Link>
+                    <Link href="/register"
+                      className="flex-1 flex items-center justify-center gap-1.5 text-sm bg-blue-600
+                                 text-white py-2.5 rounded-xl hover:bg-blue-700 font-medium">
+                      <UserPlus className="w-3.5 h-3.5" />
+                      انشئ حسابك
+                    </Link>
+                  </div>
+                )}
               </div>
             </div>
           </div>
