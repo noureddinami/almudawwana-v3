@@ -1,6 +1,8 @@
 /**
  * Al-Mudawwana Service Worker
- * Caches static assets + navigations for offline support.
+ * - Cache First for static assets
+ * - Network First for HTML pages
+ * - Offline redirect: /codes/* → /offline (downloaded codes in IndexedDB)
  */
 
 const CACHE_NAME = 'mudawwana-v3';
@@ -10,15 +12,18 @@ const STATIC_ASSETS = [
   '/manifest.json',
 ];
 
-// Install — pre-cache critical assets
+// Pre-cache the offline page so it's always available
+const OFFLINE_PRECACHE = ['/offline'];
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
+    caches.open(CACHE_NAME).then((cache) =>
+      cache.addAll([...STATIC_ASSETS, ...OFFLINE_PRECACHE])
+    )
   );
   self.skipWaiting();
 });
 
-// Activate — clean old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((names) =>
@@ -30,21 +35,19 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch strategy
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Skip non-GET and chrome-extension requests
   if (request.method !== 'GET') return;
   if (url.protocol === 'chrome-extension:') return;
 
-  // API/Supabase calls — network only (IndexedDB handles caching)
+  // API/Supabase — network only (IndexedDB handles caching)
   if (url.hostname.includes('supabase') || url.pathname.startsWith('/api/')) {
     return;
   }
 
-  // Static assets (_next/static, images, fonts) — Cache First
+  // Static assets — Cache First
   if (
     url.pathname.startsWith('/_next/static/') ||
     url.pathname.match(/\.(png|jpg|jpeg|svg|gif|ico|woff2?|ttf|css|js)$/)
@@ -64,7 +67,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // HTML navigations — Network first, fallback to cache
+  // HTML navigations — Network First with smart offline fallback
   if (request.headers.get('accept')?.includes('text/html')) {
     event.respondWith(
       fetch(request)
@@ -76,13 +79,40 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => {
+          // Offline — try cached version first
           return caches.match(request).then((cached) => {
-            return cached || caches.match('/') || new Response(
-              '<html dir="rtl"><body style="font-family:sans-serif;text-align:center;padding:4rem 1rem">' +
-              '<h1>غير متصل بالإنترنت</h1>' +
-              '<p>المحتوى الذي زرته سابقاً سيظهر عند الاتصال</p></body></html>',
-              { headers: { 'Content-Type': 'text/html; charset=utf-8' } }
-            );
+            if (cached) return cached;
+
+            // For /codes/X/articles/Y → redirect to offline reader
+            const articleMatch = url.pathname.match(/^\/codes\/([^/]+)\/articles\/([^/]+)/);
+            if (articleMatch) {
+              return Response.redirect(
+                url.origin + '/offline?code=' + articleMatch[1] + '&article=' + articleMatch[2],
+                302
+              );
+            }
+
+            // For /codes/X → redirect to offline reader for that code
+            const codeMatch = url.pathname.match(/^\/codes\/([^/]+)$/);
+            if (codeMatch) {
+              return Response.redirect(
+                url.origin + '/offline?code=' + codeMatch[1],
+                302
+              );
+            }
+
+            // For other pages → try serving cached /offline page
+            return caches.match('/offline').then((offlinePage) => {
+              return offlinePage || new Response(
+                '<html dir="rtl"><body style="font-family:sans-serif;text-align:center;padding:4rem 1rem">' +
+                '<h1 style="font-size:2rem">📱</h1>' +
+                '<h2>غير متصل بالإنترنت</h2>' +
+                '<p>المحتوى المحمّل متاح في صفحة القراءة بدون إنترنت</p>' +
+                '<a href="/offline" style="color:#2563eb;text-decoration:underline;margin-top:1rem;display:inline-block">الذهاب إلى المحمّلة</a>' +
+                '</body></html>',
+                { headers: { 'Content-Type': 'text/html; charset=utf-8' } }
+              );
+            });
           });
         })
     );
