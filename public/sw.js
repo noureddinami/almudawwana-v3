@@ -5,10 +5,12 @@
  * - Offline redirect: /codes/* → /offline (downloaded codes in IndexedDB)
  */
 
-const CACHE_NAME = 'mudawwana-v3';
+const CACHE_NAME = 'mudawwana-v4';
 const STATIC_ASSETS = [
   '/icon-192x192.png',
   '/icon-512x512.png',
+  '/apple-touch-icon.png',
+  '/favicon.svg',
   '/manifest.json',
 ];
 

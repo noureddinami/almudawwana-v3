@@ -1,24 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <defs>
-    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#1f2937;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#111827;stop-opacity:1" />
-    </linearGradient>
-  </defs>
-
-  <!-- Background -->
-  <rect width="512" height="512" fill="url(#grad)"/>
-
-  <!-- Book icon -->
-  <g fill="white" opacity="0.95">
-    <!-- Left page -->
-    <rect x="80" y="120" width="140" height="280" fill="none" stroke="currentColor" stroke-width="20" rx="10"/>
-    <!-- Right page -->
-    <rect x="292" y="120" width="140" height="280" fill="none" stroke="currentColor" stroke-width="20" rx="10"/>
-    <!-- Spine -->
-    <line x1="220" y1="120" x2="220" y2="400" stroke="white" stroke-width="12"/>
-
-    <!-- Arabic letter ا (Alef) -->
-    <text x="256" y="300" font-size="120" font-weight="bold" text-anchor="middle" dominant-baseline="middle" fill="white" font-family="serif">ا</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <!-- Blue rounded background for PWA -->
+  <rect width="512" height="512" rx="96" fill="#2152cc"/>
+  <!-- Book shape -->
+  <g transform="translate(56, 56) scale(2)">
+    <path d="M28 68 L28 132 L70 162 L70 38 Z" fill="#4a7fd4"/>
+    <path d="M172 68 L172 132 L130 162 L130 38 Z" fill="#4a7fd4"/>
+    <path d="M70 36 L100 20 L130 36 L130 164 L100 180 L70 164 Z" fill="#6ba3e8"/>
+    <rect x="98" y="72" width="4" height="80" rx="2" fill="white"/>
+    <path d="M96.5 72 Q100 63 103.5 72" fill="white"/>
+    <path d="M50 94 Q100 87 150 94" stroke="white" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+    <circle cx="54" cy="94" r="3.5" fill="white"/>
+    <circle cx="146" cy="94" r="3.5" fill="white"/>
+    <line x1="54" y1="97" x2="48" y2="116" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+    <line x1="66" y1="97" x2="72" y2="116" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M46 116 Q59 112 74 116" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+    <line x1="146" y1="97" x2="140" y2="116" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+    <line x1="134" y1="97" x2="128" y2="116" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M126 116 Q139 112 154 116" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+    <ellipse cx="100" cy="152" rx="13" ry="4.5" fill="white" opacity="0.9"/>
   </g>
 </svg>

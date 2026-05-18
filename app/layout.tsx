@@ -5,6 +5,7 @@ import { Toaster } from 'react-hot-toast';
 import BottomNav from '@/components/BottomNav';
 import InstallPrompt from '@/components/InstallPrompt';
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
+import SplashScreen from '@/components/SplashScreen';
 
 /* ── Amiri : corps des articles juridiques ─────────────────── */
 const amiri = Amiri({
@@ -52,8 +53,11 @@ export const metadata: Metadata = {
     telephone: false,
   },
   icons: {
-    icon: '/icon-192x192.png',
-    apple: '/icon-192x192.png',
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/icon-192x192.png', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: '/apple-touch-icon.png',
   },
 };
 
@@ -69,15 +73,17 @@ export default function RootLayout({
       className={`${amiri.variable} ${notoNaskh.variable} ${reemKufi.variable} h-full`}
     >
       <head>
-        <meta name="theme-color" content="#1e40af" />
+        <meta name="theme-color" content="#2152cc" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="المدوّنة" />
         <link rel="manifest" href="/manifest.json" />
-        <link rel="icon" type="image/png" href="/icon-192x192.png" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png" />
       </head>
       <body className="min-h-full bg-slate-50 text-slate-900 font-naskh antialiased">
+        <SplashScreen />
         {children}
         <BottomNav />
         <InstallPrompt />

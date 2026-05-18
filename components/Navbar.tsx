@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { auth, clearToken, hasToken, User } from '@/lib/api';
-import { Scale, Search, LogOut, Menu, X, UserPlus } from 'lucide-react';
+import { Search, LogOut, Menu, X, UserPlus } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const NAV_LINKS = [
@@ -87,9 +87,23 @@ export default function Navbar() {
 
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 shrink-0">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <Scale className="w-4 h-4 text-white" />
-              </div>
+              <svg className="w-8 h-8" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M28 68 L28 132 L70 162 L70 38 Z" fill="#2152cc"/>
+                <path d="M172 68 L172 132 L130 162 L130 38 Z" fill="#2152cc"/>
+                <path d="M70 36 L100 20 L130 36 L130 164 L100 180 L70 164 Z" fill="#4a7fd4"/>
+                <rect x="98" y="72" width="4" height="80" rx="2" fill="white"/>
+                <path d="M96.5 72 Q100 63 103.5 72" fill="white"/>
+                <path d="M50 94 Q100 87 150 94" stroke="white" strokeWidth="3.5" strokeLinecap="round" fill="none"/>
+                <circle cx="54" cy="94" r="3.5" fill="white"/>
+                <circle cx="146" cy="94" r="3.5" fill="white"/>
+                <line x1="54" y1="97" x2="48" y2="116" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
+                <line x1="66" y1="97" x2="72" y2="116" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
+                <path d="M46 116 Q59 112 74 116" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
+                <line x1="146" y1="97" x2="140" y2="116" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
+                <line x1="134" y1="97" x2="128" y2="116" stroke="white" strokeWidth="2.2" strokeLinecap="round"/>
+                <path d="M126 116 Q139 112 154 116" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
+                <ellipse cx="100" cy="152" rx="13" ry="4.5" fill="white" opacity="0.9"/>
+              </svg>
               <span className="font-kufi text-lg sm:text-xl font-bold text-slate-900 tracking-wide">
                 المدوّنة
               </span>
