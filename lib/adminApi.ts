@@ -148,7 +148,7 @@ export const adminCodes = {
     qs.set('page', String(params.page ?? 1))
     return adminFetch<PaginatedResponse<AdminCode>>(`/codes?${qs}`)
   },
-  create: (data: { title_ar: string; title_fr?: string; type: string; official_number?: string; promulgation_date?: string; status?: string }) =>
+  create: (data: { title_ar: string; title_fr?: string; type: string; official_number?: string; promulgation_date?: string; status?: string; slug?: string; source_url?: string | null }) =>
     adminFetch<{ message: string; code: AdminCode }>('/codes', { method: 'POST', body: JSON.stringify(data) }),
   update:  (id: string, data: Partial<AdminCode>) =>
     adminFetch<{ message: string; code: AdminCode }>(`/codes/${id}`, { method: 'PUT', body: JSON.stringify(data) }),

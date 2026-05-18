@@ -6,6 +6,7 @@ import BottomNav from '@/components/BottomNav';
 import InstallPrompt from '@/components/InstallPrompt';
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
 import SplashScreen from '@/components/SplashScreen';
+import { OrganizationJsonLd } from '@/components/JsonLd';
 
 /* ── Amiri : corps des articles juridiques ─────────────────── */
 const amiri = Amiri({
@@ -39,10 +40,20 @@ export const viewport: Viewport = {
   viewportFit: 'cover',  // Extends into notch/safe areas
 };
 
+const BASE_URL = 'https://almudawwana-v3.vercel.app'
+
 export const metadata: Metadata = {
-  title: 'المدوّنة — موسوعتك القانونية',
-  description: 'الموسوعة القانونية المغربية الشاملة — القوانين والمدونات في متناول الجميع',
-  keywords: ['قانون مغربي', 'تشريع', 'مجلة العقوبات', 'المسطرة الجنائية'],
+  metadataBase: new URL(BASE_URL),
+  title: {
+    default: 'المدوّنة — الموسوعة القانونية المغربية',
+    template: '%s | المدوّنة',
+  },
+  description: 'الموسوعة القانونية المغربية الشاملة — ابحث وتصفّح القوانين والمدونات المغربية مجاناً. أكثر من آلاف المواد القانونية من المصادر الرسمية.',
+  keywords: [
+    'قانون مغربي', 'تشريع', 'مدونة الأسرة', 'القانون الجنائي', 'المسطرة الجنائية',
+    'قانون الالتزامات والعقود', 'مدونة الشغل', 'الدستور المغربي', 'الجريدة الرسمية',
+    'loi marocaine', 'code marocain', 'législation Maroc', 'droit marocain',
+  ],
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
@@ -58,6 +69,50 @@ export const metadata: Metadata = {
       { url: '/icon-192x192.png', sizes: '192x192', type: 'image/png' },
     ],
     apple: '/apple-touch-icon.png',
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'ar_MA',
+    url: BASE_URL,
+    siteName: 'المدوّنة — Al-Mudawwana',
+    title: 'المدوّنة — الموسوعة القانونية المغربية',
+    description: 'ابحث وتصفّح القوانين والمدونات المغربية مجاناً — أكثر من آلاف المواد القانونية من المصادر الرسمية',
+    images: [
+      {
+        url: '/icon-512x512.png',
+        width: 512,
+        height: 512,
+        alt: 'المدوّنة — الموسوعة القانونية المغربية',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary',
+    title: 'المدوّنة — الموسوعة القانونية المغربية',
+    description: 'ابحث وتصفّح القوانين والمدونات المغربية مجاناً',
+    images: ['/icon-512x512.png'],
+  },
+  alternates: {
+    canonical: BASE_URL,
+    languages: {
+      'ar-MA': BASE_URL,
+      'x-default': BASE_URL,
+    },
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-snippet': -1,
+      'max-image-preview': 'large',
+      'max-video-preview': -1,
+    },
+  },
+  verification: {
+    // Add Google Search Console verification when available
+    // google: 'your-verification-code',
   },
 };
 
@@ -83,6 +138,7 @@ export default function RootLayout({
         <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png" />
       </head>
       <body className="min-h-full bg-slate-50 text-slate-900 font-naskh antialiased">
+        <OrganizationJsonLd />
         <SplashScreen />
         {children}
         <BottomNav />

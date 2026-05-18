@@ -1,11 +1,31 @@
 export const dynamic = 'force-dynamic'
 
+import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { createPublicClient } from '@/lib/supabase/server';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Search, ChevronLeft, BookOpen, Hash, AlignLeft, Tags } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: 'البحث في القوانين المغربية',
+  description: 'ابحث في جميع القوانين والمدونات المغربية — بحث بالنص الحر، برقم المادة، أو بكلمات مفتاحية متعددة.',
+  openGraph: {
+    title: 'البحث في القوانين المغربية | المدوّنة',
+    description: 'ابحث في جميع القوانين والمدونات المغربية — ثلاثة أوضاع للبحث',
+    url: 'https://almudawwana-v3.vercel.app/search',
+    type: 'website',
+    locale: 'ar_MA',
+  },
+  alternates: {
+    canonical: 'https://almudawwana-v3.vercel.app/search',
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+}
 
 type Tab = 'text' | 'article' | 'keywords';
 
@@ -470,7 +490,7 @@ export default async function SearchPage({ searchParams }: Props) {
             {hits.map((article: any) => (
               <Link
                 key={article.id}
-                href={`/codes/${article.code?.id ?? article.code_id}/articles/${article.id}`}
+                href={`/codes/${(article.code as any)?.slug ?? article.code_id}/المادة-${article.number}`}
                 className="block bg-white rounded-xl border border-slate-200 px-5 py-4
                            hover:border-blue-300 hover:shadow-sm transition-all group"
               >

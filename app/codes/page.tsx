@@ -1,13 +1,35 @@
 export const dynamic = 'force-dynamic'
 
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { createPublicClient } from '@/lib/supabase/server';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { FileText, Scale, ChevronLeft, Search, BookOpen } from 'lucide-react';
 import CacheHydrator from '@/components/CacheHydrator';
+import { BreadcrumbJsonLd } from '@/components/JsonLd';
 
-// export const revalidate - removed for testing
+const BASE_URL = 'https://almudawwana-v3.vercel.app'
+
+export const metadata: Metadata = {
+  title: 'جميع القوانين والمدونات المغربية',
+  description: 'تصفّح جميع القوانين والمدونات المغربية — الدستور، القوانين التنظيمية، المدونات، المراسيم بقوانين. المصدر: الجريدة الرسمية المغربية.',
+  openGraph: {
+    title: 'جميع القوانين والمدونات المغربية | المدوّنة',
+    description: 'تصفّح جميع القوانين والمدونات المغربية مجاناً — المصدر: الجريدة الرسمية',
+    url: `${BASE_URL}/codes`,
+    type: 'website',
+    locale: 'ar_MA',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'جميع القوانين المغربية | المدوّنة',
+    description: 'تصفّح جميع القوانين والمدونات المغربية مجاناً',
+  },
+  alternates: {
+    canonical: `${BASE_URL}/codes`,
+  },
+}
 
 const TYPE_ORDER = ['constitution', 'organic_law', 'ordinary_law', 'code', 'decree_law'];
 
@@ -49,6 +71,12 @@ export default async function CodesPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col" dir="rtl">
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'الرئيسية', url: BASE_URL },
+          { name: 'القوانين', url: `${BASE_URL}/codes` },
+        ]}
+      />
       <CacheHydrator store="codes" cacheKey="all" data={allCodes} />
       <Navbar />
 
@@ -122,7 +150,7 @@ export default async function CodesPage() {
                 {items.map((code: any) => (
                   <Link
                     key={code.id}
-                    href={`/codes/${code.id}`}
+                    href={`/codes/${code.slug}`}
                     className="group bg-white rounded-2xl border border-slate-200 shadow-sm
                                hover:shadow-md hover:border-blue-300 transition-all duration-200 p-5
                                flex flex-col"

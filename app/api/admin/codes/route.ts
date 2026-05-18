@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
 
   let query = supabase
     .from('codes')
-    .select('id, slug, title_ar, title_fr, type, status, official_number, total_articles, promulgation_date, created_at', { count: 'exact' })
+    .select('id, slug, title_ar, title_fr, type, status, official_number, total_articles, promulgation_date, source_url, created_at', { count: 'exact' })
 
   if (q)      query = query.or(`title_ar.ilike.%${q}%,title_fr.ilike.%${q}%`)
   if (status) query = query.eq('status', status)
@@ -41,7 +41,10 @@ export async function POST(req: NextRequest) {
   if (!title_ar) return NextResponse.json({ message: 'العنوان بالعربية مطلوب' }, { status: 422 })
   if (!VALID_TYPES.includes(type)) return NextResponse.json({ message: 'نوع القانون غير صالح' }, { status: 422 })
 
-  const slug = await uniqueSlug(supabase, 'codes', title_fr ?? title_ar)
+  // Use admin-provided slug if given, otherwise auto-generate from title
+  const slug = body.slug
+    ? body.slug.replace(/\s+/g, '-').toLowerCase()
+    : await uniqueSlug(supabase, 'codes', title_fr ?? title_ar)
 
   const { data, error } = await supabase
     .from('codes')

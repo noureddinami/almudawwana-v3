@@ -69,10 +69,13 @@ export function slugify(text: string): string {
   return text
     .toString()
     .toLowerCase()
+    // Remove Arabic diacritics (tashkeel) but keep the letters
+    .replace(/[ؐ-ًؚ-ٰٟۖ-ۜ۟-۪ۤۧۨ-ۭ]/g, '')
+    // Normalize Latin diacritics
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')  // diacritiques latin
-    .replace(/[؀-ۿ]/g, c => c) // garder l'arabe (pour les slugs arabes)
-    .replace(/[^a-z0-9؀-ۿ]+/g, '-')
+    .replace(/[̀-ͯ]/g, '')
+    // Replace any non-letter/digit chars with hyphens (keep Arabic + Latin + digits)
+    .replace(/[^a-z0-9ء-ي٠-٩]+/g, '-')
     .replace(/^-+|-+$/g, '')
     || 'item'
 }

@@ -178,7 +178,7 @@ export default async function HomePage() {
                 return (
                   <Link
                     key={code.id}
-                    href={`/codes/${code.id}`}
+                    href={`/codes/${code.slug}`}
                     className="group bg-white rounded-xl sm:rounded-2xl border border-slate-200 shadow-sm
                                hover:shadow-md hover:border-blue-300 transition-all duration-200
                                p-4 sm:p-6 flex flex-col active:scale-[0.98]"
@@ -272,7 +272,7 @@ export default async function HomePage() {
               ) : latestCodes.map((code: any) => {
                 const badge = typeLabel(code.type);
                 return (
-                  <Link key={code.id} href={`/codes/${code.id}`}
+                  <Link key={code.id} href={`/codes/${code.slug}`}
                     className="flex items-start gap-4 bg-white rounded-2xl border border-slate-200
                                hover:border-blue-300 hover:shadow-md p-4 transition-all group">
                     <div className="w-10 h-10 bg-blue-50 group-hover:bg-blue-100 rounded-xl
@@ -321,7 +321,7 @@ export default async function HomePage() {
                       <StickyNote className="w-3.5 h-3.5 shrink-0" />
                       {n.article ? (
                         <Link
-                          href={`/codes/${n.article.code?.slug ?? '#'}/articles/${n.article.slug}`}
+                          href={`/codes/${n.article.code?.slug ?? '#'}/المادة-${n.article.number}`}
                           className="hover:underline"
                         >
                           م. {n.article.number}

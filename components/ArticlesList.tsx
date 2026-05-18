@@ -57,7 +57,7 @@ export default function ArticlesList({ articles, slug, pagination, currentPage }
         {articles.map((article) => (
           <Link
             key={article.id}
-            href={`/codes/${slug}/articles/${article.id}`}
+            href={`/codes/${slug}/المادة-${article.number}`}
             prefetch={false}
             className="block bg-white rounded-xl border border-slate-200 px-4 py-3.5 sm:px-5 sm:py-4
                        hover:border-blue-300 hover:shadow-sm transition-all duration-150 group

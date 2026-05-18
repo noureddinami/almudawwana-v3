@@ -34,13 +34,26 @@ const STATUS_COLOR: Record<string, string> = {
 type FormState = {
   title_ar: string; title_fr: string; type: string;
   official_number: string; promulgation_date: string; status: string;
-  source_url: string;
+  source_url: string; slug: string;
 };
 const emptyForm: FormState = {
   title_ar: '', title_fr: '', type: 'code',
   official_number: '', promulgation_date: '', status: 'in_force',
-  source_url: '',
+  source_url: '', slug: '',
 };
+
+/** Generate a slug from text: lowercase, spaces→hyphens, keep Arabic chars */
+function autoSlug(text: string): string {
+  return text
+    .toString()
+    .toLowerCase()
+    .replace(/[ؐ-ًؚ-ٰٟۖ-ۜ۟-۪ۤۧۨ-ۭ]/g, '') // remove tashkeel
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9ء-ي٠-٩]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    || '';
+}
 
 export default function AdminCodesPage() {
   const router = useRouter();
@@ -78,6 +91,7 @@ export default function AdminCodesPage() {
       promulgation_date: c.promulgation_date?.slice(0, 10) ?? '',
       status: c.status,
       source_url: (c as any).source_url ?? '',
+      slug: c.slug ?? '',
     });
     setModal('edit');
   };
@@ -94,6 +108,7 @@ export default function AdminCodesPage() {
         promulgation_date: form.promulgation_date || undefined,
         status: form.status,
         source_url: form.source_url || null,
+        slug: form.slug || undefined,
       };
       if (modal === 'create') {
         await adminCodes.create(payload);
@@ -195,6 +210,9 @@ export default function AdminCodesPage() {
                       <p className="font-medium text-slate-900">{c.title_ar}</p>
                       {c.title_fr && (
                         <p className="text-xs text-slate-400" dir="ltr">{c.title_fr}</p>
+                      )}
+                      {c.slug && (
+                        <p className="text-[10px] text-slate-400 font-mono mt-0.5" dir="ltr">/{c.slug}</p>
                       )}
                       <div className="flex items-center gap-2 mt-0.5">
                         {c.official_number && (
@@ -313,7 +331,15 @@ export default function AdminCodesPage() {
                 <input
                   required
                   value={form.title_ar}
-                  onChange={e => setForm(f => ({ ...f, title_ar: e.target.value }))}
+                  onChange={e => {
+                    const title = e.target.value;
+                    setForm(f => ({
+                      ...f,
+                      title_ar: title,
+                      // Auto-generate slug from title_fr if available, else from title_ar
+                      slug: autoSlug(f.title_fr || title),
+                    }));
+                  }}
                   className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg
                              focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -323,10 +349,36 @@ export default function AdminCodesPage() {
                 <input
                   dir="ltr"
                   value={form.title_fr}
-                  onChange={e => setForm(f => ({ ...f, title_fr: e.target.value }))}
+                  onChange={e => {
+                    const titleFr = e.target.value;
+                    setForm(f => ({
+                      ...f,
+                      title_fr: titleFr,
+                      // Re-generate slug from French title if provided
+                      slug: autoSlug(titleFr || f.title_ar),
+                    }));
+                  }}
                   className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg
                              focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
+              </div>
+              {/* Auto-generated slug */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Slug <span className="text-slate-400 font-normal text-xs">(يُولّد تلقائياً)</span>
+                </label>
+                <input
+                  dir="ltr"
+                  value={form.slug}
+                  onChange={e => setForm(f => ({ ...f, slug: e.target.value.replace(/\s+/g, '-').toLowerCase() }))}
+                  placeholder="auto-generated-slug"
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg
+                             bg-slate-50 font-mono text-slate-600
+                             focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <p className="mt-1 text-xs text-slate-400">
+                  يُستخدم في الرابط. يُولّد تلقائياً من العنوان — يمكنك تعديله يدوياً.
+                </p>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>

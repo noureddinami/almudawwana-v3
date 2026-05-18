@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic'
 
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createPublicClient } from '@/lib/supabase/server';
@@ -9,6 +10,7 @@ import ArticlesList from '@/components/ArticlesList';
 import { Scale, ChevronLeft, Download, ExternalLink } from 'lucide-react';
 import CacheHydrator from '@/components/CacheHydrator';
 import DownloadCodeButton from '@/components/DownloadCodeButton';
+import { LegislationJsonLd, BreadcrumbJsonLd } from '@/components/JsonLd';
 
 
 interface Props {
@@ -16,13 +18,14 @@ interface Props {
   searchParams: Promise<{ page?: string }>;
 }
 
-async function getCode(id: string) {
+async function getCode(slug: string) {
   try {
     const supabase = createPublicClient()
+    const decoded = decodeURIComponent(slug)
     const { data } = await supabase
       .from('codes')
-      .select('id, slug, title_ar, title_fr, status, official_number, promulgation_date, source_url, total_articles')
-      .eq('id', id)
+      .select('id, slug, title_ar, title_fr, type, status, official_number, promulgation_date, source_url, total_articles')
+      .eq('slug', decoded)
       .single()
     return data
   } catch { return null }
@@ -65,18 +68,60 @@ async function getPdfs(codeId: string) {
   } catch { return [] }
 }
 
+const BASE_URL = 'https://almudawwana-v3.vercel.app'
+
+const TYPE_LABELS: Record<string, string> = {
+  constitution: 'دستور',
+  organic_law: 'قانون تنظيمي',
+  ordinary_law: 'قانون',
+  code: 'مدونة',
+  decree_law: 'مرسوم بقانون',
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug: codeSlug } = await params
+  const code = await getCode(codeSlug)
+  if (!code) return { title: 'غير موجود' }
+
+  const title = code.title_ar
+  const description = `${title}${code.title_fr ? ` — ${code.title_fr}` : ''} — ${code.total_articles ?? 0} مادة قانونية. تصفّح جميع مواد هذا القانون على المدوّنة.`
+  const url = `${BASE_URL}/codes/${code.slug}`
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title: `${title} | المدوّنة`,
+      description,
+      url,
+      type: 'article',
+      locale: 'ar_MA',
+      siteName: 'المدوّنة — Al-Mudawwana',
+      images: [{ url: `${BASE_URL}/icon-512x512.png`, width: 512, height: 512 }],
+    },
+    twitter: {
+      card: 'summary',
+      title: `${title} | المدوّنة`,
+      description,
+    },
+    alternates: {
+      canonical: url,
+    },
+  }
+}
+
 export default async function CodePage({ params, searchParams }: Props) {
-  const { slug: codeId } = await params;
+  const { slug: codeSlug } = await params;
   const { page: pageParam } = await searchParams;
   const page = Number(pageParam ?? 1);
 
-  const [code, articlesData, pdfs] = await Promise.all([
-    getCode(codeId),
-    getArticles(codeId, page),
-    getPdfs(codeId),
-  ]);
-
+  const code = await getCode(codeSlug);
   if (!code) notFound();
+
+  const [articlesData, pdfs] = await Promise.all([
+    getArticles(code.id, page),
+    getPdfs(code.id),
+  ]);
 
   const articles = articlesData?.data ?? [];
   const pagination = articlesData
@@ -89,8 +134,23 @@ export default async function CodePage({ params, searchParams }: Props) {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
-      <CacheHydrator store="code" cacheKey={codeId} data={code} />
-      <CacheHydrator store="articles" cacheKey={`${codeId}-p${page}`} data={articles} />
+      <LegislationJsonLd
+        name={code.title_ar}
+        nameFr={code.title_fr}
+        url={`${BASE_URL}/codes/${code.slug}`}
+        datePublished={code.promulgation_date}
+        legislationType={TYPE_LABELS[code.type ?? ''] ?? undefined}
+        totalArticles={pagination?.total}
+      />
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'الرئيسية', url: BASE_URL },
+          { name: 'القوانين', url: `${BASE_URL}/codes` },
+          { name: code.title_ar, url: `${BASE_URL}/codes/${code.slug}` },
+        ]}
+      />
+      <CacheHydrator store="code" cacheKey={code.id} data={code} />
+      <CacheHydrator store="articles" cacheKey={`${code.id}-p${page}`} data={articles} />
       <Navbar />
 
       {/* Header */}
@@ -127,7 +187,7 @@ export default async function CodePage({ params, searchParams }: Props) {
               </div>
               <div className="mt-3">
                 <DownloadCodeButton
-                  codeId={codeId}
+                  codeId={code.id}
                   codeTitle={code.title_ar}
                   codeTitleFr={code.title_fr}
                   totalArticles={pagination?.total ?? 0}
@@ -182,7 +242,7 @@ export default async function CodePage({ params, searchParams }: Props) {
       <div className="max-w-5xl mx-auto px-4 py-8">
         <ArticlesList
           articles={articles}
-          slug={codeId}
+          slug={code.slug}
           pagination={pagination}
           currentPage={page}
         />

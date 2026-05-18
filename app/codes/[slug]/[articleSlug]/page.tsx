@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic'
 
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createPublicClient } from '@/lib/supabase/server';
@@ -8,14 +9,38 @@ import Footer from '@/components/Footer';
 import CommentsSection from '@/components/CommentsSection';
 import { ChevronLeft, Scale, ExternalLink, Eye, MessageSquare, BookMarked, StickyNote } from 'lucide-react';
 import CacheHydrator from '@/components/CacheHydrator';
+import { LegalArticleJsonLd, BreadcrumbJsonLd } from '@/components/JsonLd';
 
-// export const revalidate - removed for testing
+const BASE_URL = 'https://almudawwana-v3.vercel.app'
 
 interface Props {
-  params: Promise<{ slug: string; number: string }>; // "number" = article slug
+  params: Promise<{ slug: string; articleSlug: string }>;
 }
 
-async function getArticle(articleId: string) {
+/** Extract article number from slug like "المادة-55" → "55" */
+function extractArticleNumber(articleSlug: string): string {
+  const decoded = decodeURIComponent(articleSlug)
+  // Match "المادة-{number}" pattern
+  const match = decoded.match(/^المادة[_-](.+)$/)
+  if (match) return match[1]
+  // Fallback: return as-is (might be a direct number or legacy slug)
+  return decoded
+}
+
+async function getCodeBySlug(slug: string) {
+  try {
+    const supabase = createPublicClient()
+    const decoded = decodeURIComponent(slug)
+    const { data } = await supabase
+      .from('codes')
+      .select('id, slug, title_ar, title_fr')
+      .eq('slug', decoded)
+      .single()
+    return data
+  } catch { return null }
+}
+
+async function getArticleByNumber(codeId: string, articleNumber: string) {
   try {
     const supabase = createPublicClient()
 
@@ -27,18 +52,19 @@ async function getArticle(articleId: string) {
         section:sections(id, title_ar, number),
         code:codes(id, slug, title_ar)
       `)
-      .eq('id', articleId)
+      .eq('code_id', codeId)
+      .eq('number', articleNumber)
       .single()
 
     if (error || !article) return null
 
-    // Tags (table optionnelle)
+    // Tags
     const { data: tagRows } = await supabase
       .from('article_tags')
       .select('tag:tags(id, name_ar, slug)')
       .eq('article_id', article.id)
 
-    // Notes admin — use !author_id to disambiguate the two FK to profiles
+    // Admin notes
     const { data: adminNotes } = await supabase
       .from('commentaries')
       .select('id, content_ar, created_at, author:profiles!author_id(full_name)')
@@ -62,18 +88,6 @@ async function getArticle(articleId: string) {
   } catch { return null }
 }
 
-async function getCode(slug: string) {
-  try {
-    const supabase = createPublicClient()
-    const { data } = await supabase
-      .from('codes')
-      .select('id, slug, title_ar, title_fr')
-      .eq('slug', slug)
-      .single()
-    return data
-  } catch { return null }
-}
-
 const statusLabel: Record<string, { label: string; cls: string }> = {
   in_force:  { label: 'ساري المفعول',  cls: 'bg-green-50  text-green-700  border-green-200' },
   amended:   { label: 'مُعدَّل',        cls: 'bg-amber-50  text-amber-700  border-amber-200' },
@@ -81,28 +95,86 @@ const statusLabel: Record<string, { label: string; cls: string }> = {
   draft:     { label: 'مشروع',          cls: 'bg-slate-100 text-slate-600  border-slate-200' },
 };
 
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug: codeSlug, articleSlug } = await params
+  const articleNumber = extractArticleNumber(articleSlug)
+  const code = await getCodeBySlug(codeSlug)
+  if (!code) return { title: 'غير موجود' }
+
+  const article = await getArticleByNumber(code.id, articleNumber)
+  if (!article) return { title: 'غير موجود' }
+
+  const codeName = article.code?.title_ar ?? code.title_ar
+  const title = `المادة ${article.number} — ${codeName}`
+  const contentPreview = article.content_ar?.slice(0, 200).replace(/\n/g, ' ') ?? ''
+  const description = `${title}. ${contentPreview}...`
+  const url = `${BASE_URL}/codes/${codeSlug}/المادة-${article.number}`
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title: `${title} | المدوّنة`,
+      description,
+      url,
+      type: 'article',
+      locale: 'ar_MA',
+      siteName: 'المدوّنة — Al-Mudawwana',
+      images: [{ url: `${BASE_URL}/icon-512x512.png`, width: 512, height: 512 }],
+    },
+    twitter: {
+      card: 'summary',
+      title: `${title} | المدوّنة`,
+      description: description.slice(0, 200),
+    },
+    alternates: {
+      canonical: url,
+    },
+  }
+}
+
 export default async function ArticlePage({ params }: Props) {
-  const { slug: codeId, number: articleId } = await params;
+  const { slug: codeSlug, articleSlug } = await params;
+  const articleNumber = extractArticleNumber(articleSlug);
 
-  const article = await getArticle(articleId);
+  const code = await getCodeBySlug(codeSlug);
+  if (!code) notFound();
 
+  const article = await getArticleByNumber(code.id, articleNumber);
   if (!article) notFound();
 
   const status = statusLabel[article.status] ?? statusLabel.in_force;
-  const codeName = article.code?.title_ar ?? '';
+  const codeName = article.code?.title_ar ?? code.title_ar;
+  const codeSlugVal = article.code?.slug ?? codeSlug;
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
-      <CacheHydrator store="article" cacheKey={articleId} data={article} />
+      <LegalArticleJsonLd
+        articleNumber={article.number}
+        content={article.content_ar ?? ''}
+        url={`${BASE_URL}/codes/${codeSlugVal}/المادة-${article.number}`}
+        codeName={codeName}
+        codeUrl={`${BASE_URL}/codes/${codeSlugVal}`}
+        status={article.status}
+      />
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'الرئيسية', url: BASE_URL },
+          { name: 'القوانين', url: `${BASE_URL}/codes` },
+          { name: codeName, url: `${BASE_URL}/codes/${codeSlugVal}` },
+          { name: `المادة ${article.number}`, url: `${BASE_URL}/codes/${codeSlugVal}/المادة-${article.number}` },
+        ]}
+      />
+      <CacheHydrator store="article" cacheKey={article.id} data={article} />
       <Navbar />
 
-      {/* ── Fil d'ariane ──────────────────────────────────────── */}
+      {/* Breadcrumb */}
       <div className="bg-white border-b border-slate-200">
         <div className="max-w-4xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3">
           <nav className="flex items-center gap-1.5 text-xs sm:text-sm text-slate-500 flex-wrap">
             <Link href="/" className="hover:text-blue-600 transition-colors">القوانين</Link>
             <ChevronLeft className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-300" />
-            <Link href={`/codes/${article?.code?.id ?? codeId}`} className="hover:text-blue-600 transition-colors truncate max-w-[140px] sm:max-w-[200px]">
+            <Link href={`/codes/${codeSlugVal}`} className="hover:text-blue-600 transition-colors truncate max-w-[140px] sm:max-w-[200px]">
               {codeName}
             </Link>
             <ChevronLeft className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-300" />
@@ -111,11 +183,11 @@ export default async function ArticlePage({ params }: Props) {
         </div>
       </div>
 
-      {/* ── Contenu principal ─────────────────────────────────── */}
+      {/* Main content */}
       <div className="max-w-4xl mx-auto px-0 sm:px-4 py-0 sm:py-8 flex-1 w-full">
         <article className="bg-white sm:rounded-2xl border-0 sm:border border-slate-200 shadow-none sm:shadow-sm overflow-hidden">
 
-          {/* En-tête — compact sur mobile */}
+          {/* Header */}
           <div className="bg-gradient-to-l from-blue-700 to-blue-800 px-4 py-5 sm:px-8 sm:py-7">
             <div className="flex items-start gap-3 sm:gap-4">
               <div className="w-9 h-9 sm:w-11 sm:h-11 bg-white/15 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0 mt-0.5">
@@ -133,7 +205,6 @@ export default async function ArticlePage({ params }: Props) {
                 )}
               </div>
 
-              {/* Statut */}
               <span className={`shrink-0 text-[10px] sm:text-xs font-medium px-2 py-1 sm:px-3 sm:py-1.5 rounded-full border ${status.cls}`}
                     style={{ backgroundColor: 'rgba(255,255,255,0.9)' }}>
                 {status.label}
@@ -141,14 +212,13 @@ export default async function ArticlePage({ params }: Props) {
             </div>
           </div>
 
-          {/* Texte de l'article — pleine largeur mobile, padding réduit */}
+          {/* Article text */}
           <div className="px-4 py-6 sm:px-8 sm:py-9">
             <div className="text-slate-800 text-[0.95rem] sm:text-[1.05rem] leading-[2.2] sm:leading-[2.3] text-arabic whitespace-pre-wrap
                             max-w-none sm:max-w-[70ch]">
               {article.content_ar}
             </div>
 
-            {/* Traduction française si disponible */}
             {article.content_fr && (
               <div className="mt-8 pt-6 border-t border-slate-100">
                 <p className="text-xs font-medium text-slate-500 mb-3 uppercase tracking-wide" dir="ltr">
@@ -175,7 +245,7 @@ export default async function ArticlePage({ params }: Props) {
             </div>
           )}
 
-          {/* Pied de l'article : méta + source */}
+          {/* Footer meta */}
           <div className="px-8 py-4 bg-slate-50 border-t border-slate-100">
             <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500">
               <span className="flex items-center gap-1.5">
@@ -199,7 +269,7 @@ export default async function ArticlePage({ params }: Props) {
           </div>
         </article>
 
-        {/* ── Admin notes ──────────────────────────────────────── */}
+        {/* Admin notes */}
         {article.admin_notes && article.admin_notes.length > 0 && (
           <div className="mt-6 bg-amber-50 border border-amber-200 rounded-2xl overflow-hidden">
             <div className="flex items-center gap-2 px-5 py-3 border-b border-amber-200 bg-amber-100/60">
@@ -221,7 +291,7 @@ export default async function ArticlePage({ params }: Props) {
           </div>
         )}
 
-        {/* ── Disclaimer article ────────────────────────────────── */}
+        {/* Disclaimer */}
         <div className="mt-5 p-4 bg-amber-50 border border-amber-100 rounded-xl text-xs text-amber-800 leading-relaxed">
           ⚠️ هذا النص للمعلومات العامة فقط —{' '}
           <strong>لا يُعدّ مرجعاً قانونياً رسمياً</strong>.
@@ -233,13 +303,13 @@ export default async function ArticlePage({ params }: Props) {
           أو استشارة محامٍ مؤهّل.
         </div>
 
-        {/* ── User comments ────────────────────────────────────── */}
+        {/* Comments */}
         <CommentsSection articleSlug={article.id} initialCount={article.comment_count} />
 
         {/* Navigation */}
         <div className="mt-6 flex items-center justify-between">
           <Link
-            href={`/codes/${article?.code?.id ?? codeId}`}
+            href={`/codes/${codeSlugVal}`}
             className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-blue-600"
           >
             <ChevronLeft className="w-4 h-4 rotate-180" />

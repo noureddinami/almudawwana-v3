@@ -1,0 +1,15 @@
+# المدوّنة — الموسوعة القانونية المغربية
+# Al-Mudawwana — Moroccan Legal Encyclopedia
+
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin/
+Disallow: /api/
+Disallow: /auth/
+Disallow: /offline
+Disallow: /login
+Disallow: /register
+
+# Sitemap
+Sitemap: https://almudawwana-v3.vercel.app/sitemap.xml
