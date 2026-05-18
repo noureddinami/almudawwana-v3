@@ -27,87 +27,162 @@ php artisan migrate  # Run database migrations
 
 ## Architecture
 
-### Dual-API Pattern (Critical)
+### Database: Supabase
 
-The frontend has **two separate API modules** — this is the most important architectural detail:
+The project uses **Supabase** (PostgreSQL) as its primary database:
 
-| Module | File | Used by | Purpose |
-|--------|------|---------|---------|
-| `lib/api.ts` | `apiFetch()` | Public pages, auth, `/me` | Public endpoints (codes, articles, search, auth) |
-| `lib/adminApi.ts` | `adminFetch()` | All `/admin/*` pages | Admin CRUD (stats, users, codes, articles, comments, PDFs) |
+- **Supabase project ID:** `aoojpafediogwfdacqww`
+- **Client libraries:** `@supabase/supabase-js` + `@supabase/ssr`
+- **Server client:** `lib/supabase/server.ts` — `createClient()` (authenticated) and `createPublicClient()` (anon)
+- **Helpers:** `lib/supabase/helpers.ts` — pagination, auth guards, slugify, uniqueSlug, apiError
+- **API routes** use Supabase directly (no external API proxy needed for Supabase-backed pages)
+- **Environment vars:** `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_KEY`
 
-**Both modules must be updated in sync** when changing fetch logic, headers, or proxy behavior.
+### Dual-API Pattern (Legacy + Supabase)
 
-### Proxy Architecture
+The frontend has **two API layers**:
 
-DreamHost shared hosting cannot use `mod_rewrite`, so all API requests go through `api-proxy.php`:
+| Layer | Used by | Backend |
+|-------|---------|---------|
+| `lib/supabase/server.ts` | Server components, API routes, SSR pages | Supabase (PostgreSQL) |
+| `lib/api.ts` / `lib/adminApi.ts` | Some client components (legacy) | DreamHost api-proxy.php → MySQL |
+
+**New features should use Supabase directly.** The legacy API proxy (`api-proxy.php`) is kept for backward compatibility.
+
+### Proxy Architecture (Legacy)
+
+DreamHost shared hosting cannot use `mod_rewrite`, so legacy API requests go through `api-proxy.php`:
 
 ```
 Frontend (Vercel) → api-proxy.php (DreamHost) → MySQL database
 ```
 
 - `api-proxy.php` is a standalone PHP file (not part of Laravel) that directly queries the database
-- It handles CORS, authentication, routing, and pagination independently
 - Path translation: `/admin/codes?page=1` → `api-proxy.php?endpoint=admin&slug=codes&page=1`
-- The proxy is used when `PROXY_ENABLED` is true (detects `dreamhosters.com` or `:8080` in API_BASE)
 
 ### DreamHost Authorization Header Workaround
 
-**DreamHost strips the `Authorization` header** from requests before they reach PHP. The workaround:
+**DreamHost strips the `Authorization` header.** The workaround:
 
-1. Frontend appends `&token=<jwt>` as a query parameter for protected endpoints (`/admin/*`, `/me`)
-2. Backend (`api-proxy.php`) checks multiple sources in order:
-   - `getallheaders()` → `$_SERVER['HTTP_AUTHORIZATION']` → `$_SERVER['REDIRECT_HTTP_AUTHORIZATION']` → `$_GET['token']` → `$_SESSION['token']`
+1. Frontend appends `&token=<jwt>` as a query parameter for protected endpoints
+2. Backend checks: `getallheaders()` → `$_SERVER['HTTP_AUTHORIZATION']` → `$_SERVER['REDIRECT_HTTP_AUTHORIZATION']` → `$_GET['token']` → `$_SESSION['token']`
 
 ### Authentication
 
-- Token format: base64-encoded JSON containing `{user_id, email, role, created_at, nonce}`
-- Stored in `localStorage` as `mudawwana_token`, user object as `mudawwana_user`
-- Login restricted to users with `role = 'admin'` and `status = 'active'`
-- No JWT library — token is simply base64-decoded and validated against the database
+- **Supabase Auth** for new auth flows (SSR cookies via `@supabase/ssr`)
+- **Legacy token:** base64-encoded JSON `{user_id, email, role, created_at, nonce}` in `localStorage`
+- Admin guard: `requireAdmin()` in `lib/supabase/helpers.ts` checks `profiles.role` + `profiles.status`
+
+### URL Structure & Slugs
+
+Public URLs use **Arabic slugs**, not UUIDs:
+
+```
+/codes                              → List all legal codes
+/codes/{slug-arabe}                 → Single code (e.g., /codes/المسطرة-الجنائية)
+/codes/{slug-arabe}/المادة-{number} → Single article (e.g., /codes/المسطرة-الجنائية/المادة-1)
+/search                             → Full-text search
+```
+
+**⚠️ Slugify rules (CRITICAL):**
+- `slugify()` in `lib/supabase/helpers.ts` and `autoSlug()` in `app/admin/codes/page.tsx`
+- **Do NOT use `normalize('NFD')`** — it breaks Arabic hamza letters (ئ, أ, إ, ؤ)
+- Only strip tashkeel diacritics (U+064B to U+065F range)
+- Keep Arabic letters (ء-ي), Latin letters (a-z), and digits
+- Spaces/special chars → hyphens
 
 ### Frontend Structure
 
 ```
 app/
-  page.tsx                    # Homepage (hero, search, stats)
-  login/page.tsx              # Login form
-  register/page.tsx           # Registration
-  search/page.tsx             # Full-text search
-  codes/page.tsx              # List all legal codes
-  codes/[slug]/page.tsx       # Single code with article list
-  codes/[slug]/articles/[number]/page.tsx  # Single article view
-  contact/page.tsx            # Contact form
+  page.tsx                              # Homepage (hero, search, stats) — SSR
+  login/page.tsx                        # Login form (client)
+  login/layout.tsx                      # noindex metadata
+  register/page.tsx                     # Registration (client)
+  register/layout.tsx                   # noindex metadata
+  search/page.tsx                       # Full-text search — SSR
+  codes/page.tsx                        # List all legal codes — SSR
+  codes/[slug]/page.tsx                 # Single code with article list — SSR
+  codes/[slug]/[articleSlug]/page.tsx   # Single article view — SSR
+  contact/page.tsx                      # Contact form
+  contact/layout.tsx                    # SEO metadata
+  request-code/page.tsx                 # Request new code form
+  request-code/layout.tsx               # SEO metadata
+  auth/callback/page.tsx                # OAuth callback
+  sitemap.ts                            # Dynamic sitemap from Supabase
   admin/
-    layout.tsx                # Admin shell (sidebar, auth guard)
-    page.tsx                  # Dashboard (stats cards, charts)
-    codes/page.tsx            # CRUD codes
-    code-types/page.tsx       # Manage code type categories
-    articles/page.tsx         # CRUD articles
-    users/page.tsx            # User management
-    comments/page.tsx         # Comment moderation
-    pdfs/page.tsx             # PDF upload & article extraction
+    layout.tsx                          # Admin shell (sidebar, auth guard)
+    page.tsx                            # Dashboard (stats cards, charts)
+    codes/page.tsx                      # CRUD codes (with slug auto-generation)
+    code-types/page.tsx                 # Manage code type categories
+    articles/page.tsx                   # CRUD articles
+    users/page.tsx                      # User management
+    comments/page.tsx                   # Comment moderation
+    pdfs/page.tsx                       # PDF upload & article extraction
+  api/
+    admin/
+      codes/route.ts                    # API: CRUD codes (Supabase)
+      codes/[id]/route.ts              # API: single code operations
+      migrate-slugs/route.ts           # One-time slug migration endpoint
+      ...
 
 lib/
-  api.ts                      # Public API client (apiFetch + pathToProxyUrl)
-  adminApi.ts                 # Admin API client (adminFetch)
+  api.ts                                # Legacy public API client (apiFetch)
+  adminApi.ts                           # Legacy admin API client (adminFetch)
+  supabase/
+    server.ts                           # Supabase server client (createClient, createPublicClient)
+    client.ts                           # Supabase browser client
+    helpers.ts                          # Pagination, auth guards, slugify, apiError
 
 components/
-  Navbar.tsx                  # Top navigation bar
-  Footer.tsx                  # Site footer
-  ArticlesList.tsx            # Paginated article list
-  CommentsSection.tsx         # Article comments
-  HomeSectionNav.tsx          # Homepage section navigation
-  ConfirmDeleteModal.tsx      # Reusable delete confirmation
+  Navbar.tsx                            # Top navigation bar (RTL)
+  Footer.tsx                            # Site footer
+  ArticlesList.tsx                      # Paginated article list
+  CommentsSection.tsx                   # Article comments
+  JsonLd.tsx                            # SEO structured data components
+  HomeSectionNav.tsx                    # Homepage section navigation
+  ConfirmDeleteModal.tsx                # Reusable delete confirmation
+  CacheHydrator.tsx                     # Client cache hydration from SSR data
+
+public/
+  robots.txt                            # Blocks /admin, /api, /auth, /login, /register
+  manifest.json                         # PWA manifest
+  sw.js                                 # Service worker (next-pwa)
 ```
+
+### SEO Implementation
+
+Full SEO is implemented across all public pages:
+
+- **Metadata:** `generateMetadata` on dynamic pages, static `metadata` export on others
+- **Title template:** `'%s | المدوّنة'` (set in `app/layout.tsx`)
+- **BASE_URL:** `https://almudawwana-v3.vercel.app` — hardcoded in metadata/JSON-LD (update when custom domain is set)
+- **Open Graph / Twitter Cards:** On all public pages (`summary_large_image`)
+- **JSON-LD** (`components/JsonLd.tsx`):
+  - `OrganizationJsonLd` — Organization + WebSite + SearchAction (layout)
+  - `BreadcrumbJsonLd` — Breadcrumbs on codes, articles, search
+  - `LegislationJsonLd` — Legal code metadata (code detail page)
+  - `LegalArticleJsonLd` — Legal article metadata (article page)
+  - `CollectionPageJsonLd` — ItemList on codes list page
+- **Sitemap:** `app/sitemap.ts` — dynamic from Supabase (codes + articles)
+- **robots.txt:** Blocks admin/auth/API routes
+- **middleware.ts:** Adds `X-Robots-Tag: noindex, nofollow` on admin/API/auth routes
+- **Canonical URLs:** Set on all public pages via `alternates.canonical`
+- **hreflang:** `ar-MA` + `x-default` (in layout)
+- **noindex:** Login, register pages
+
+**⚠️ When changing domain:** Update `BASE_URL` in `app/layout.tsx`, `app/page.tsx`, `app/sitemap.ts`, `components/JsonLd.tsx`, and all pages with `generateMetadata`.
 
 ### Environment Variables
 
 | Variable | Dev default | Production (Vercel) |
 |----------|-------------|---------------------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL | Same |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key | Same |
+| `SUPABASE_SERVICE_KEY` | Supabase service role key | Set in Vercel dashboard |
 | `NEXT_PUBLIC_API_URL` | `http://localhost:8080` | `https://almodawana.dreamhosters.com` |
 
-**Important:** Production URL must NOT include `/api/v1` — the proxy appends paths automatically. Including it causes double-path bugs like `/api/v1/api-proxy.php`.
+**Important:** `NEXT_PUBLIC_API_URL` must NOT include `/api/v1` — the proxy appends paths automatically.
 
 ### Deployment
 
@@ -122,5 +197,7 @@ components/
 - **Icons:** Lucide React exclusively
 - **Toasts:** `react-hot-toast` for notifications
 - **No test suite** currently configured
-- **All pages are client components** (`'use client'`) — no SSR data fetching
-- **PWA:** Service worker via `next-pwa`, caches API responses (NetworkFirst) and static assets (CacheFirst). Service worker cache can cause stale JS after deployment — clear with `caches.keys().then(names => names.forEach(name => caches.delete(name)))`
+- **SSR pages** use `createPublicClient()` from Supabase for data fetching
+- **Admin pages** are client components (`'use client'`)
+- **PWA:** Service worker via `next-pwa`, caches API responses (NetworkFirst) and static assets (CacheFirst). Cache can cause stale JS after deployment — clear with `caches.keys().then(names => names.forEach(name => caches.delete(name)))`
+- **Middleware deprecation:** Next.js 16 deprecated `middleware.ts` in favor of `proxy`, but it still works (shows as "ƒ Proxy (Middleware)" in build)
