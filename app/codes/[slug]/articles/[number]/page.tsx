@@ -7,6 +7,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import CommentsSection from '@/components/CommentsSection';
 import { ChevronLeft, Scale, ExternalLink, Eye, MessageSquare, BookMarked, StickyNote } from 'lucide-react';
+import CacheHydrator from '@/components/CacheHydrator';
 
 // export const revalidate - removed for testing
 
@@ -92,6 +93,7 @@ export default async function ArticlePage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
+      <CacheHydrator store="article" cacheKey={articleId} data={article} />
       <Navbar />
 
       {/* ── Fil d'ariane ──────────────────────────────────────── */}

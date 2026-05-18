@@ -4,6 +4,7 @@ import './globals.css';
 import { Toaster } from 'react-hot-toast';
 import BottomNav from '@/components/BottomNav';
 import InstallPrompt from '@/components/InstallPrompt';
+import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
 
 /* ── Amiri : corps des articles juridiques ─────────────────── */
 const amiri = Amiri({
@@ -80,6 +81,7 @@ export default function RootLayout({
         {children}
         <BottomNav />
         <InstallPrompt />
+        <ServiceWorkerRegister />
         <Toaster
           position="top-center"
           toastOptions={{

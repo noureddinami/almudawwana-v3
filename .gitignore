@@ -41,8 +41,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# PWA
-public/sw.js
+# PWA (keep sw.js — it's our custom service worker now)
 public/sw.js.map
 public/workbox-*.js
 
@@ -63,3 +62,5 @@ ehthumbs.db
 *.tmp
 *.temp
 .turbo/
+
+.vercel

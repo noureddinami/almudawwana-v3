@@ -3,6 +3,7 @@ import { RecentNote } from '@/lib/api';
 import { createPublicClient } from '@/lib/supabase/server';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import CacheHydrator from '@/components/CacheHydrator';
 import {
   BookOpen, FileText, Scale, ChevronLeft, Search,
   MessageSquare, StickyNote, CheckCircle, Hash,
@@ -81,6 +82,7 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col" dir="rtl">
+      <CacheHydrator store="codes" cacheKey="all" data={codesList} />
       <Navbar />
 
       {/* ── Hero ─────────────────────────────────────────────── */}

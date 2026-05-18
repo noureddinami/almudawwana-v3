@@ -7,6 +7,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ArticlesList from '@/components/ArticlesList';
 import { Scale, ChevronLeft, Download, ExternalLink } from 'lucide-react';
+import CacheHydrator from '@/components/CacheHydrator';
 
 
 interface Props {
@@ -87,6 +88,8 @@ export default async function CodePage({ params, searchParams }: Props) {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
+      <CacheHydrator store="code" cacheKey={codeId} data={code} />
+      <CacheHydrator store="articles" cacheKey={`${codeId}-p${page}`} data={articles} />
       <Navbar />
 
       {/* Header */}
