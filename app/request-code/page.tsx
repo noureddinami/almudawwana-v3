@@ -32,22 +32,19 @@ export default function RequestCodePage() {
     setStatus('sending');
     setError('');
     try {
-      const res = await fetch('/api/contact', {
+      const res = await fetch('/api/code-requests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: form.name,
           email: form.email,
-          subject: `طلب إضافة نص قانوني: ${form.codeTitle}`,
-          message:
-            `نوع الطلب: طلب إضافة نص قانوني\n` +
-            `عنوان النص: ${form.codeTitle}\n` +
-            `الرابط: ${form.codeLink || '—'}\n` +
-            `ملاحظات إضافية:\n${form.notes || '—'}`,
+          codeTitle: form.codeTitle,
+          codeLink: form.codeLink,
+          notes: form.notes,
         }),
       });
+      const d = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const d = await res.json();
         throw new Error(d.error ?? 'حدث خطأ');
       }
       setStatus('sent');

@@ -33,6 +33,8 @@ export async function GET(req: NextRequest) {
     { data: recentUsers },
     { data: pendingComments },
     { data: activityWeek },
+    { count: codeRequestsPending },
+    { count: codeRequestsTotal },
   ] = await Promise.all([
     supabase.from('profiles').select('*', { count: 'exact', head: true }),
     supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('status', 'active'),
@@ -60,6 +62,8 @@ export async function GET(req: NextRequest) {
     supabase.from('profiles').select('id, full_name, email, role, status, created_at').order('created_at', { ascending: false }).limit(5),
     supabase.from('commentaries').select('id, article_id, author_id, content_ar, created_at, author:profiles!author_id(id, full_name, email), article:articles(id, number, slug, code_id, code:codes(id, slug, title_ar))').eq('type', 'commentary').eq('status', 'pending').order('created_at', { ascending: false }).limit(5),
     supabase.from('articles').select('created_at').gte('created_at', weekAgo),
+    supabase.from('code_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+    supabase.from('code_requests').select('*', { count: 'exact', head: true }),
   ])
 
   // Calculer total_views et activity_week côté JS
@@ -85,5 +89,6 @@ export async function GET(req: NextRequest) {
     recent_users:     recentUsers ?? [],
     pending_comments: pendingComments ?? [],
     activity_week:    activityWeekFormatted,
+    code_requests:    { total: codeRequestsTotal ?? 0, pending: codeRequestsPending ?? 0 },
   })
 }

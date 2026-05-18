@@ -6,17 +6,18 @@ import { useEffect, useState } from 'react';
 import { auth, clearToken, User, getUser, saveUser } from '@/lib/api';
 import {
   LayoutDashboard, Users, BookOpen, FileText, LogOut, Menu, X,
-  ChevronRight, Scale, Upload, MessageSquare, Tag,
+  ChevronRight, Scale, Upload, MessageSquare, Tag, FilePlus2,
 } from 'lucide-react';
 
 const NAV = [
-  { href: '/admin',             label: 'لوحة التحكم',  icon: LayoutDashboard, exact: true },
-  { href: '/admin/users',       label: 'المستخدمون',    icon: Users },
-  { href: '/admin/codes',       label: 'القوانين',      icon: BookOpen },
-  { href: '/admin/code-types',  label: 'أنواع القوانين', icon: Tag },
-  { href: '/admin/articles',    label: 'المواد',         icon: FileText },
-  { href: '/admin/comments',    label: 'التعليقات',     icon: MessageSquare },
-  { href: '/admin/pdfs',        label: 'استيراد PDF',   icon: Upload },
+  { href: '/admin',                label: 'لوحة التحكم',    icon: LayoutDashboard, exact: true },
+  { href: '/admin/users',         label: 'المستخدمون',      icon: Users },
+  { href: '/admin/codes',         label: 'القوانين',        icon: BookOpen },
+  { href: '/admin/code-types',    label: 'أنواع القوانين',   icon: Tag },
+  { href: '/admin/articles',      label: 'المواد',           icon: FileText },
+  { href: '/admin/comments',      label: 'التعليقات',       icon: MessageSquare },
+  { href: '/admin/code-requests', label: 'طلبات الإضافة',   icon: FilePlus2 },
+  { href: '/admin/pdfs',          label: 'استيراد PDF',     icon: Upload },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

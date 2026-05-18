@@ -52,6 +52,7 @@ export interface DashboardStats {
     article?: { id: string; number: string; slug: string; code_id: string; code?: Pick<Code, 'id' | 'slug' | 'title_ar'> }
   }[]
   activity_week: { date: string; count: number }[]
+  code_requests: { total: number; pending: number }
 }
 
 export interface AdminUser extends User {
@@ -211,6 +212,32 @@ export const adminPdfs = {
   preview: (id: string) =>
     adminFetch<{ detected: number; sample: { type: string; number: string; content_ar: string }[]; all_numbers: string[] }>(`/pdfs/${id}/preview`, { method: 'POST' }),
   destroy: (id: string) => adminFetch<{ message: string }>(`/pdfs/${id}`, { method: 'DELETE' }),
+}
+
+export interface AdminCodeRequest {
+  id: string
+  name: string
+  email: string
+  code_title: string
+  code_link: string | null
+  notes: string | null
+  status: 'pending' | 'reviewed' | 'added' | 'rejected'
+  admin_notes: string | null
+  created_at: string
+}
+
+export const adminCodeRequests = {
+  list: (params: { status?: string; q?: string; page?: number } = {}) => {
+    const qs = new URLSearchParams()
+    if (params.status) qs.set('status', params.status)
+    if (params.q)      qs.set('q', params.q)
+    qs.set('page', String(params.page ?? 1))
+    return adminFetch<PaginatedResponse<AdminCodeRequest>>(`/code-requests?${qs}`)
+  },
+  update: (id: string, data: { status?: string; admin_notes?: string }) =>
+    adminFetch<{ message: string; request: AdminCodeRequest }>(`/code-requests/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  destroy: (id: string) =>
+    adminFetch<{ message: string }>(`/code-requests/${id}`, { method: 'DELETE' }),
 }
 
 export const adminCodeTypes = {

@@ -6,7 +6,7 @@ import { adminStats, adminComments, DashboardStats } from '@/lib/adminApi';
 import {
   Users, BookOpen, FileText, Eye, TrendingUp, AlertCircle,
   MessageSquare, CheckCircle, XCircle, Clock, UserCheck,
-  BarChart2, Activity,
+  BarChart2, Activity, FilePlus2,
 } from 'lucide-react';
 
 /* ── helpers ─────────────────────────────────────────────────────────── */
@@ -157,7 +157,7 @@ export default function AdminDashboard() {
       <h1 className="text-2xl font-bold text-slate-900 font-kufi">لوحة التحكم</h1>
 
       {/* ── Row 1: KPI cards ── */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
         <KpiCard
           label="المستخدمون"
           value={fmt(stats.users.total)}
@@ -188,6 +188,14 @@ export default function AdminDashboard() {
           sub="إجمالي مشاهدات المواد"
           icon={Eye}
           color="bg-orange-50 text-orange-600"
+        />
+        <KpiCard
+          label="طلبات الإضافة"
+          value={fmt(stats.code_requests?.pending ?? 0)}
+          sub={`من ${fmt(stats.code_requests?.total ?? 0)} إجمالاً`}
+          icon={FilePlus2}
+          href="/admin/code-requests"
+          color={stats.code_requests?.pending > 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-50 text-slate-500'}
         />
         <KpiCard
           label="التعليقات المعلّقة"

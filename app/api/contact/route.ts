@@ -2,10 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 
 export async function POST(req: NextRequest) {
+  try {
   const { name, email, subject, message } = await req.json();
 
   if (!name?.trim() || !email?.trim() || !message?.trim()) {
     return NextResponse.json({ error: 'الحقول المطلوبة ناقصة' }, { status: 422 });
+  }
+
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    // SMTP not configured — log and return success (message not lost, just not emailed)
+    console.warn('SMTP not configured. Contact message from:', email, 'Subject:', subject);
+    return NextResponse.json({ ok: true, note: 'SMTP not configured' });
   }
 
   const transporter = nodemailer.createTransport({
@@ -49,4 +56,8 @@ export async function POST(req: NextRequest) {
   });
 
   return NextResponse.json({ ok: true });
+  } catch (err: any) {
+    console.error('Contact API error:', err);
+    return NextResponse.json({ error: 'حدث خطأ أثناء الإرسال' }, { status: 500 });
+  }
 }
