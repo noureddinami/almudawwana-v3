@@ -42,15 +42,15 @@ const emptyForm: FormState = {
   source_url: '', slug: '',
 };
 
-/** Generate a slug from text: lowercase, spaces→hyphens, keep Arabic chars */
+/** Generate a slug from text: lowercase, spaces→hyphens, keep Arabic chars.
+ *  Do NOT use normalize('NFD') — it breaks Arabic hamza letters (ئ, أ, إ, ؤ) */
 function autoSlug(text: string): string {
   return text
     .toString()
     .toLowerCase()
-    .replace(/[ؐ-ًؚ-ٰٟۖ-ۜ۟-۪ۤۧۨ-ۭ]/g, '') // remove tashkeel
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9ء-ي٠-٩]+/g, '-')
+    // Remove Arabic tashkeel/diacritics only (U+064B to U+065F range)
+    .replace(/[ً-ٟ]/g, '')
+    .replace(/[^a-z0-9ء-ي]+/g, '-')
     .replace(/^-+|-+$/g, '')
     || '';
 }

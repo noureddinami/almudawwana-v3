@@ -65,19 +65,25 @@ export async function requireAdmin(
 
 // ── Slug ──────────────────────────────────────────────────────────────────────
 
+/**
+ * Generate a URL-safe slug from Arabic or Latin text.
+ * - Removes Arabic tashkeel (diacritics like fatha, damma, kasra, shadda)
+ * - Does NOT use normalize('NFD') which breaks Arabic hamza letters (ئ, أ, إ, ؤ)
+ * - Keeps Arabic letters, Latin letters, and digits
+ * - Replaces spaces and special chars with hyphens
+ */
 export function slugify(text: string): string {
-  return text
-    .toString()
-    .toLowerCase()
-    // Remove Arabic diacritics (tashkeel) but keep the letters
-    .replace(/[ؐ-ًؚ-ٰٟۖ-ۜ۟-۪ۤۧۨ-ۭ]/g, '')
-    // Normalize Latin diacritics
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    // Replace any non-letter/digit chars with hyphens (keep Arabic + Latin + digits)
-    .replace(/[^a-z0-9ء-ي٠-٩]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    || 'item'
+  let s = text
+  // Remove Arabic tashkeel/diacritics only (U+064B to U+065F range)
+  s = s.replace(/[ً-ٟ]/g, '')
+  // Lowercase for Latin chars (Arabic has no case)
+  s = s.toLowerCase()
+  // Replace anything that's NOT a letter (Arabic or Latin) or digit with a hyphen
+  // Arabic letter range: ء-ي covers ء آ أ إ ؤ ئ ا ب ... ي
+  s = s.replace(/[^a-z0-9ء-ي]+/g, '-')
+  // Trim leading/trailing hyphens
+  s = s.replace(/^-+|-+$/g, '')
+  return s || 'item'
 }
 
 export async function uniqueSlug(
