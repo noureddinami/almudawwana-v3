@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { createPublicClient } from '@/lib/supabase/server';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { BreadcrumbJsonLd } from '@/components/JsonLd';
 import { Search, ChevronLeft, BookOpen, Hash, AlignLeft, Tags } from 'lucide-react';
 
 export const metadata: Metadata = {
@@ -275,6 +276,12 @@ export default async function SearchPage({ searchParams }: Props) {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'الرئيسية', url: 'https://almudawwana-v3.vercel.app' },
+          { name: 'البحث', url: 'https://almudawwana-v3.vercel.app/search' },
+        ]}
+      />
       <Navbar />
 
       <div className="max-w-4xl mx-auto px-4 py-8 flex-1 w-full">

@@ -7,7 +7,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { FileText, Scale, ChevronLeft, Search, BookOpen } from 'lucide-react';
 import CacheHydrator from '@/components/CacheHydrator';
-import { BreadcrumbJsonLd } from '@/components/JsonLd';
+import { BreadcrumbJsonLd, CollectionPageJsonLd } from '@/components/JsonLd';
 
 const BASE_URL = 'https://almudawwana-v3.vercel.app'
 
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     locale: 'ar_MA',
   },
   twitter: {
-    card: 'summary',
+    card: 'summary_large_image',
     title: 'جميع القوانين المغربية | المدوّنة',
     description: 'تصفّح جميع القوانين والمدونات المغربية مجاناً',
   },
@@ -76,6 +76,12 @@ export default async function CodesPage() {
           { name: 'الرئيسية', url: BASE_URL },
           { name: 'القوانين', url: `${BASE_URL}/codes` },
         ]}
+      />
+      <CollectionPageJsonLd
+        name="جميع القوانين والمدونات المغربية"
+        description="تصفّح جميع القوانين والمدونات المغربية — الدستور، القوانين التنظيمية، المدونات، المراسيم بقوانين."
+        url={`${BASE_URL}/codes`}
+        items={allCodes.map((c: any) => ({ name: c.title_ar, url: `${BASE_URL}/codes/${c.slug}` }))}
       />
       <CacheHydrator store="codes" cacheKey="all" data={allCodes} />
       <Navbar />

@@ -120,6 +120,49 @@ export function LegislationJsonLd({
   )
 }
 
+/* ── CollectionPage (liste de codes ou résultats) ────────────────── */
+export function CollectionPageJsonLd({
+  name,
+  description,
+  url,
+  items,
+}: {
+  name: string
+  description: string
+  url: string
+  items?: { name: string; url: string }[]
+}) {
+  const data: Record<string, any> = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name,
+    description,
+    url,
+    inLanguage: 'ar-MA',
+    isPartOf: { '@type': 'WebSite', '@id': `${BASE_URL}/#website` },
+  }
+
+  if (items?.length) {
+    data.mainEntity = {
+      '@type': 'ItemList',
+      numberOfItems: items.length,
+      itemListElement: items.map((item, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        name: item.name,
+        url: item.url,
+      })),
+    }
+  }
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+    />
+  )
+}
+
 /* ── LegalArticle (مادة قانونية) ──────────────────────────────────── */
 export function LegalArticleJsonLd({
   articleNumber,

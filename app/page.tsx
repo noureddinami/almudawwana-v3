@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { RecentNote } from '@/lib/api';
 import { createPublicClient } from '@/lib/supabase/server';
@@ -12,6 +13,30 @@ import {
 } from 'lucide-react';
 
 export const dynamic = 'force-dynamic'
+
+const BASE_URL = 'https://almudawwana-v3.vercel.app'
+
+export const metadata: Metadata = {
+  title: 'المدوّنة — الموسوعة القانونية المغربية',
+  description: 'الموسوعة القانونية المغربية الشاملة — تصفّح الدستور، القوانين التنظيمية، المدونات والمراسيم بقوانين. جميع النصوص مجانية ومتاحة للجميع.',
+  openGraph: {
+    title: 'المدوّنة — الموسوعة القانونية المغربية',
+    description: 'تصفّح جميع القوانين والمدونات المغربية مجاناً — المصدر: الجريدة الرسمية',
+    url: BASE_URL,
+    type: 'website',
+    locale: 'ar_MA',
+    siteName: 'المدوّنة — Al-Mudawwana',
+    images: [{ url: `${BASE_URL}/icon-512x512.png`, width: 512, height: 512 }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'المدوّنة — الموسوعة القانونية المغربية',
+    description: 'تصفّح جميع القوانين والمدونات المغربية مجاناً',
+  },
+  alternates: {
+    canonical: BASE_URL,
+  },
+}
 
 async function getCodes() {
   try {

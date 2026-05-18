@@ -100,7 +100,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       images: [{ url: `${BASE_URL}/icon-512x512.png`, width: 512, height: 512 }],
     },
     twitter: {
-      card: 'summary',
+      card: 'summary_large_image',
       title: `${title} | المدوّنة`,
       description,
     },
