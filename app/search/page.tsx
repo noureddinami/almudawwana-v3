@@ -6,8 +6,9 @@ import Link from 'next/link';
 import { createPublicClient } from '@/lib/supabase/server';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import SearchableSelect from '@/components/SearchableSelect';
 import { BreadcrumbJsonLd } from '@/components/JsonLd';
-import { Search, ChevronLeft, BookOpen, Hash, AlignLeft, Tags } from 'lucide-react';
+import { Search, ChevronLeft, BookOpen, Hash } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'البحث في القوانين المغربية',
@@ -28,7 +29,7 @@ export const metadata: Metadata = {
   },
 }
 
-type Tab = 'text' | 'article' | 'keywords';
+type Tab = 'text' | 'article';
 
 interface Props {
   searchParams: Promise<{
@@ -48,7 +49,7 @@ async function getAllCodes() {
   const { data } = await supabase
     .from('codes')
     .select('id, slug, title_ar, total_articles')
-    .order('title_ar')
+    .order('total_articles', { ascending: false, nullsFirst: false })
   return data ?? []
 }
 
@@ -199,11 +200,10 @@ function truncateAround(text: string, queryWords: string[], max = 280): string {
   return (start > 0 ? '…' : '') + text.slice(start, end) + (end < text.length ? '…' : '');
 }
 
-function buildTabHref(tab: Tab, params: { q: string; kw: string; code: string }) {
+function buildTabHref(tab: Tab, params: { q: string; code: string }) {
   const p = new URLSearchParams({ tab });
-  if (tab === 'text' && params.q)      p.set('q', params.q);
-  if (tab === 'article' && params.q)   { p.set('q', params.q); if (params.code) p.set('code', params.code); }
-  if (tab === 'keywords' && params.kw) { p.set('kw', params.kw); if (params.code) p.set('code', params.code); }
+  if (params.q) p.set('q', params.q);
+  if (params.code) p.set('code', params.code);
   return `/search?${p}`;
 }
 
@@ -218,7 +218,7 @@ export default async function SearchPage({ searchParams }: Props) {
     page: pageParam,
   } = await searchParams;
 
-  const tab: Tab = (['text', 'article', 'keywords'].includes(tabParam ?? '') ? tabParam : 'text') as Tab;
+  const tab: Tab = (['text', 'article'].includes(tabParam ?? '') ? tabParam : 'text') as Tab;
   const q        = qParam?.trim() ?? '';
   const kw       = kwParam?.trim() ?? '';
   const codeSlug = codeParam ?? '';
@@ -246,8 +246,6 @@ export default async function SearchPage({ searchParams }: Props) {
     result = await searchByText(q, codeId, page, perPage);
   } else if (tab === 'article' && q) {
     result = await searchByNumber(q, codeId, page, perPage);
-  } else if (tab === 'keywords' && kw) {
-    result = await searchByKeywords(kw, codeId, page, perPage);
   }
 
   const hits       = result?.data ?? [];
@@ -255,21 +253,19 @@ export default async function SearchPage({ searchParams }: Props) {
     ? { current: result.current_page, last: result.last_page, total: result.total }
     : null;
 
-  const activeQuery = tab === 'keywords' ? kw : q;
-  const queryWords  = (tab === 'keywords' ? kw : q)
+  const activeQuery = q;
+  const queryWords  = q
     .split(/[,،\-\s]+/)
     .filter((w: string) => w.length >= 2);
 
   const tabs: { id: Tab; label: string; icon: ReactNode }[] = [
-    { id: 'text',     label: 'بحث بالنص',              icon: <AlignLeft className="w-4 h-4" /> },
+    { id: 'text',     label: 'بحث بالكلمات المفتاحية',  icon: <Search className="w-4 h-4" /> },
     { id: 'article',  label: 'بحث برقم المادة',         icon: <Hash className="w-4 h-4" /> },
-    { id: 'keywords', label: 'بحث بكلمات مفتاحية',      icon: <Tags className="w-4 h-4" /> },
   ];
 
   const paginationBase = () => {
     const p = new URLSearchParams({ tab });
-    if (tab === 'keywords') { if (kw) p.set('kw', kw); }
-    else { if (q) p.set('q', q); }
+    if (q) p.set('q', q);
     if (codeSlug) p.set('code', codeSlug);
     return p;
   };
@@ -294,7 +290,7 @@ export default async function SearchPage({ searchParams }: Props) {
           {tabs.map(t => (
             <a
               key={t.id}
-              href={buildTabHref(t.id, { q, kw, code: codeSlug })}
+              href={buildTabHref(t.id, { q, code: codeSlug })}
               className={`flex-1 flex items-center justify-center gap-2 text-sm font-medium
                           py-2.5 px-3 rounded-lg transition-all
                           ${tab === t.id
@@ -307,7 +303,7 @@ export default async function SearchPage({ searchParams }: Props) {
           ))}
         </div>
 
-        {/* ── Tab 1: text search ──────────────────────────────── */}
+        {/* ── Tab 1: text / keyword search ────────────────────── */}
         {tab === 'text' && (
           <form method="GET" action="/search" className="space-y-3 mb-8">
             <input type="hidden" name="tab" value="text" />
@@ -317,7 +313,7 @@ export default async function SearchPage({ searchParams }: Props) {
                   type="text"
                   name="q"
                   defaultValue={q}
-                  placeholder="ابحث بالنص الحر في جميع القوانين..."
+                  placeholder="ابحث بكلمة أو عدة كلمات مفتاحية..."
                   autoFocus
                   className="w-full pr-4 pl-12 py-3.5 text-sm border border-slate-300 rounded-xl
                              bg-white focus:outline-none focus:ring-2 focus:ring-blue-500
@@ -334,8 +330,16 @@ export default async function SearchPage({ searchParams }: Props) {
                 بحث
               </button>
             </div>
+            <div className="max-w-xs">
+              <SearchableSelect
+                name="code"
+                defaultValue={codeSlug}
+                placeholder="— جميع القوانين —"
+                options={codesList.map(c => ({ value: c.id, label: c.title_ar, sub: `${c.total_articles ?? 0} مادة` }))}
+              />
+            </div>
             <p className="text-xs text-slate-400">
-              يعرض المواد التي تحتوي على 50% على الأقل من الكلمات المُدخلة.
+              يعرض المواد التي تحتوي على 50% على الأقل من الكلمات المُدخلة. يمكنك إدخال عدة كلمات مفتاحية.
             </p>
             {!q && (
               <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-sm text-blue-800">
@@ -360,17 +364,12 @@ export default async function SearchPage({ searchParams }: Props) {
             <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-3 items-end">
               <div className="space-y-1">
                 <label className="text-xs font-medium text-slate-500">القانون</label>
-                <select
+                <SearchableSelect
                   name="code"
                   defaultValue={codeSlug}
-                  className="text-sm border border-slate-300 rounded-xl px-3 py-3 bg-white
-                             focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-                >
-                  <option value="">— جميع القوانين —</option>
-                  {codesList.map((c) => (
-                    <option key={c.id} value={c.id}>{c.title_ar}</option>
-                  ))}
-                </select>
+                  placeholder="— جميع القوانين —"
+                  options={codesList.map(c => ({ value: c.id, label: c.title_ar, sub: `${c.total_articles ?? 0} مادة` }))}
+                />
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-medium text-slate-500">رقم الفصل / المادة</label>
@@ -394,66 +393,6 @@ export default async function SearchPage({ searchParams }: Props) {
             </div>
             <p className="text-xs text-slate-400">
               يعرض المادة المطلوبة + المواد المشابهة (مثال: 1 → 1, 1-1, 1.1, 1-2…)
-            </p>
-          </form>
-        )}
-
-        {/* ── Tab 3: multi-keyword search ─────────────────────── */}
-        {tab === 'keywords' && (
-          <form method="GET" action="/search" className="space-y-3 mb-8">
-            <input type="hidden" name="tab" value="keywords" />
-            <div className="grid grid-cols-1 sm:grid-cols-[1fr_2fr_auto] gap-3 items-end">
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-slate-500">القانون (اختياري)</label>
-                <select
-                  name="code"
-                  defaultValue={codeSlug}
-                  className="text-sm border border-slate-300 rounded-xl px-3 py-3 bg-white
-                             focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-                >
-                  <option value="">— جميع القوانين —</option>
-                  {codesList.map((c) => (
-                    <option key={c.id} value={c.id}>{c.title_ar}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-slate-500">
-                  الكلمات المفتاحية
-                  <span className="mr-1 text-slate-400 font-normal">(افصل بينها بفاصلة أو شرطة أو مسافة)</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    name="kw"
-                    defaultValue={kw}
-                    placeholder="مثال: ميراث، طلاق، حضانة"
-                    autoFocus
-                    className="w-full pr-4 pl-10 py-3 text-sm border border-slate-300 rounded-xl
-                               bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm
-                               placeholder:text-slate-400"
-                  />
-                  <Tags className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                </div>
-              </div>
-              <button type="submit"
-                className="px-6 py-3 bg-blue-600 text-white rounded-xl text-sm font-semibold
-                           hover:bg-blue-700 transition-colors shadow-sm">
-                بحث
-              </button>
-            </div>
-            {kw && (
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {kw.split(/[,،\-\s]+/).filter(w => w.length >= 2).map((word, i) => (
-                  <span key={i} className="text-xs bg-blue-50 text-blue-700 px-2.5 py-1
-                                           rounded-full border border-blue-100">
-                    {word}
-                  </span>
-                ))}
-              </div>
-            )}
-            <p className="text-xs text-slate-400">
-              يعرض المواد التي تحتوي على 60% على الأقل من الكلمات المفتاحية المُدخلة.
             </p>
           </form>
         )}
@@ -529,8 +468,6 @@ export default async function SearchPage({ searchParams }: Props) {
             <p className="text-sm mt-1">
               {tab === 'article'
                 ? 'تحقق من رقم المادة أو اختر قانوناً آخر'
-                : tab === 'keywords'
-                ? 'جرّب كلمات أخرى أو قلّل عددها'
                 : 'جرّب كلمات مختلفة أو قلّل عدد الكلمات'}
             </p>
           </div>

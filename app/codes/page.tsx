@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { createPublicClient } from '@/lib/supabase/server';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { FileText, Scale, ChevronLeft, Search, BookOpen } from 'lucide-react';
+import { FileText, Scale, ChevronLeft, Search, BookOpen, Share2 } from 'lucide-react';
+import ShareButton from '@/components/ShareButton';
 import CacheHydrator from '@/components/CacheHydrator';
 import { BreadcrumbJsonLd, CollectionPageJsonLd } from '@/components/JsonLd';
 
@@ -93,11 +94,16 @@ export default async function CodesPage() {
             <div className="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center">
               <Scale className="w-5 h-5 text-white" />
             </div>
-            <h1 className="font-kufi text-2xl font-bold">جميع القوانين والمدونات</h1>
+            <h1 className="font-kufi text-2xl font-bold flex-1">جميع القوانين والمدونات</h1>
+            <ShareButton
+              variant="icon"
+              title="جميع القوانين والمدونات المغربية"
+              text="تصفّح جميع القوانين والمدونات المغربية مجاناً — المدوّنة"
+            />
           </div>
           <p className="text-blue-200 text-sm max-w-xl leading-relaxed">
             {allCodes.length} قانون ومدونة تضم أكثر من{' '}
-            <span className="text-white font-bold">{totalArticles.toLocaleString('ar-MA')}</span>{' '}
+            <span className="text-white font-bold">{totalArticles.toLocaleString('en')}</span>{' '}
             مادة قانونية — المصدر: الجريدة الرسمية المغربية
           </p>
           <div className="mt-4 flex flex-wrap gap-2">

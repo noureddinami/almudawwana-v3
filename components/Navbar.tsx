@@ -75,7 +75,7 @@ export default function Navbar() {
   return (
     <header dir="rtl">
       {/* Bandeau disclaimer — desktop uniquement */}
-      <div className="bg-blue-900 text-blue-100 text-center py-1.5 text-xs hidden sm:block">
+      <div className="bg-blue-900 text-blue-100 text-center py-1.5 text-xs hidden md:block">
         📋 النصوص الرسمية متاحة على{' '}
         <a href="https://www.sgg.gov.ma" target="_blank" rel="noopener noreferrer"
            className="underline hover:text-white">sgg.gov.ma</a>

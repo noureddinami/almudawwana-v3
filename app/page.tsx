@@ -9,8 +9,9 @@ import {
   BookOpen, FileText, Scale, ChevronLeft, Search,
   MessageSquare, StickyNote, CheckCircle, Hash,
   AlignLeft, Tags, Shield, Smartphone, Zap, BookMarked,
-  Sparkles, Clock,
+  Sparkles, Clock, Share2,
 } from 'lucide-react';
+import ShareButton from '@/components/ShareButton';
 
 export const dynamic = 'force-dynamic'
 
@@ -138,7 +139,7 @@ export default async function HomePage() {
           </p>
           <p className="text-blue-200 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed px-2">
             ابحث وتصفّح أكثر من{' '}
-            <span className="font-bold text-white text-base sm:text-lg">{totalArticles.toLocaleString('ar-MA')}</span>{' '}
+            <span className="font-bold text-white text-base sm:text-lg">{totalArticles.toLocaleString('en')}</span>{' '}
             مادة قانونية من القوانين والمدونات المغربية الرسمية
           </p>
 
@@ -161,15 +162,17 @@ export default async function HomePage() {
           {/* Stats — grille 2x2 sur mobile, ligne sur desktop */}
           <div className="mt-6 sm:mt-10 grid grid-cols-2 sm:flex sm:flex-wrap sm:justify-center gap-2.5 sm:gap-4 text-sm">
             {[
-              { value: codesList.length.toString(), label: 'قانون ومدونة' },
-              { value: totalArticles.toLocaleString('ar-MA'), label: 'مادة قانونية' },
-              { value: '٣', label: 'أوضاع بحث' },
-              { value: 'مجاني', label: 'وصول حر للجميع' },
+              { value: codesList.length.toString(), label: 'قانون ومدونة', href: '/codes' },
+              { value: totalArticles.toLocaleString('en'), label: 'مادة قانونية', href: '/codes' },
+              { value: '3', label: 'أوضاع بحث', href: '/search' },
+              { value: 'مجاني', label: 'وصول حر للجميع', href: '/about' },
             ].map((s, i) => (
-              <div key={i} className="bg-white/10 backdrop-blur-sm px-4 py-2.5 sm:px-6 sm:py-3 rounded-xl border border-white/15 sm:min-w-[110px]">
+              <Link key={i} href={s.href}
+                className="bg-white/10 backdrop-blur-sm px-4 py-2.5 sm:px-6 sm:py-3 rounded-xl border border-white/15
+                           sm:min-w-[110px] hover:bg-white/20 transition-all cursor-pointer active:scale-95">
                 <div className="font-bold text-xl sm:text-2xl text-white font-kufi">{s.value}</div>
                 <div className="text-blue-200 text-[10px] sm:text-xs mt-0.5">{s.label}</div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
@@ -455,7 +458,7 @@ export default async function HomePage() {
             {[
               {
                 icon: AlignLeft,
-                num: '١',
+                num: '1',
                 title: 'بحث بالنص الحر',
                 desc: 'اكتب أي كلمة أو جملة وسيبحث النظام في محتوى جميع المواد القانونية',
                 example: 'مثال: "عقد الإيجار" أو "الأحوال الشخصية"',
@@ -463,15 +466,15 @@ export default async function HomePage() {
               },
               {
                 icon: Hash,
-                num: '٢',
+                num: '2',
                 title: 'بحث برقم المادة',
                 desc: 'حدد القانون المطلوب ثم اكتب رقم المادة للوصول المباشر إليها',
-                example: 'مثال: المادة ٤٨٨ من قانون الالتزامات',
+                example: 'مثال: المادة 488 من قانون الالتزامات',
                 color: 'from-teal-600 to-teal-700',
               },
               {
                 icon: Tags,
-                num: '٣',
+                num: '3',
                 title: 'بحث بكلمات متعددة',
                 desc: 'أدخل عدة كلمات مفتاحية لتضييق نطاق البحث داخل قانون محدد',
                 example: 'مثال: "الطلاق، النفقة، الحضانة"',
@@ -518,19 +521,19 @@ export default async function HomePage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {[
             {
-              step: '١',
+              step: '1',
               icon: Search,
               title: 'ابحث أو تصفّح',
               desc: 'اكتب ما تبحث عنه في خانة البحث، أو اختر القانون مباشرة من القائمة',
             },
             {
-              step: '٢',
+              step: '2',
               icon: FileText,
               title: 'اقرأ المادة',
               desc: 'اطّلع على نص المادة كاملاً مع بيان حالتها القانونية وملاحظات الإدارة إن وُجدت',
             },
             {
-              step: '٣',
+              step: '3',
               icon: MessageSquare,
               title: 'شارك برأيك',
               desc: 'سجّل دخولك وأضف تعليقك أو استفسارك على المادة وستظهر بعد المراجعة',
@@ -596,7 +599,7 @@ export default async function HomePage() {
             <div className="bg-white rounded-2xl border border-slate-200 shadow-md p-5 space-y-4">
               <div className="flex items-center gap-2 text-xs text-slate-500">
                 <BookMarked className="w-3.5 h-3.5" />
-                <span>المادة ٤٨٨ — قانون الالتزامات</span>
+                <span>المادة 488 — قانون الالتزامات</span>
               </div>
               <p className="text-sm text-slate-700 bg-slate-50 rounded-xl px-4 py-3 leading-relaxed">
                 "هل هذا النص ينطبق على عقود الكراء المنزلي؟ أريد التوضيح حول شرط الأهلية."
@@ -620,7 +623,7 @@ export default async function HomePage() {
                 ملاحظة الإدارة
               </div>
               <p className="text-xs text-amber-800 leading-relaxed">
-                "نعم، تنطبق هذه المادة على عقود الكراء السكني وفق الفصل ٦٢٧ من ق.ل.ع."
+                "نعم، تنطبق هذه المادة على عقود الكراء السكني وفق الفصل 627 من ق.ل.ع."
               </p>
             </div>
           </div>
@@ -670,6 +673,11 @@ export default async function HomePage() {
               <MessageSquare className="w-4 h-4" />
               سجّل للمشاركة
             </Link>
+            <ShareButton
+              variant="button"
+              title="المدوّنة — الموسوعة القانونية المغربية"
+              text="المدوّنة — الموسوعة القانونية المغربية الشاملة. تصفّح جميع القوانين المغربية مجاناً."
+            />
           </div>
         </div>
       </section>

@@ -7,7 +7,8 @@ import { createPublicClient } from '@/lib/supabase/server';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import CommentsSection from '@/components/CommentsSection';
-import { ChevronLeft, Scale, ExternalLink, Eye, MessageSquare, BookMarked, StickyNote } from 'lucide-react';
+import { ChevronLeft, Scale, ExternalLink, Eye, MessageSquare, BookMarked, StickyNote, Share2 } from 'lucide-react';
+import ShareButton from '@/components/ShareButton';
 import CacheHydrator from '@/components/CacheHydrator';
 import { LegalArticleJsonLd, BreadcrumbJsonLd } from '@/components/JsonLd';
 
@@ -246,7 +247,7 @@ export default async function ArticlePage({ params }: Props) {
           )}
 
           {/* Footer meta */}
-          <div className="px-8 py-4 bg-slate-50 border-t border-slate-100">
+          <div className="px-4 sm:px-8 py-4 bg-slate-50 border-t border-slate-100">
             <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500">
               <span className="flex items-center gap-1.5">
                 <Eye className="w-3.5 h-3.5" />{article.view_count} مشاهدة
@@ -265,6 +266,12 @@ export default async function ArticlePage({ params }: Props) {
                   sgg.gov.ma <ExternalLink className="w-3 h-3" />
                 </a>
               </span>
+              <ShareButton
+                variant="icon"
+                title={`المادة ${article.number} — ${codeName}`}
+                text={`المادة ${article.number} من ${codeName} — المدوّنة`}
+                className="mr-auto"
+              />
             </div>
           </div>
         </article>

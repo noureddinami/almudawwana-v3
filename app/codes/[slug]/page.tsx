@@ -7,7 +7,8 @@ import { createPublicClient } from '@/lib/supabase/server';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ArticlesList from '@/components/ArticlesList';
-import { Scale, ChevronLeft, Download, ExternalLink } from 'lucide-react';
+import { Scale, ChevronLeft, Download, ExternalLink, Share2 } from 'lucide-react';
+import ShareButton from '@/components/ShareButton';
 import CacheHydrator from '@/components/CacheHydrator';
 import DownloadCodeButton from '@/components/DownloadCodeButton';
 import { LegislationJsonLd, BreadcrumbJsonLd } from '@/components/JsonLd';
@@ -185,12 +186,17 @@ export default async function CodePage({ params, searchParams }: Props) {
                   <span>سنة {new Date(code.promulgation_date).getFullYear()}</span>
                 )}
               </div>
-              <div className="mt-3">
+              <div className="mt-3 flex items-center gap-2 flex-wrap">
                 <DownloadCodeButton
                   codeId={code.id}
                   codeTitle={code.title_ar}
                   codeTitleFr={code.title_fr}
                   totalArticles={pagination?.total ?? 0}
+                />
+                <ShareButton
+                  variant="icon"
+                  title={code.title_ar}
+                  text={`${code.title_ar} — المدوّنة`}
                 />
               </div>
             </div>
