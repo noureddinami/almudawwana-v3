@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { auth, saveToken, saveUser } from '@/lib/api';
 import { createClient } from '@/lib/supabase/client';
@@ -20,12 +20,25 @@ function GoogleIcon() {
   );
 }
 
-export default function LoginPage() {
+function LoginInner() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
+  const params = useSearchParams();
+
+  /* Show OAuth error toast if redirected from /auth/callback */
+  useEffect(() => {
+    const error = params.get('error');
+    if (error) {
+      const messages: Record<string, string> = {
+        no_code: 'لم يتم استلام رمز المصادقة',
+        auth_failed: 'فشل تسجيل الدخول بـ Google',
+      };
+      toast.error(messages[error] ?? 'حدث خطأ أثناء تسجيل الدخول');
+    }
+  }, [params]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -197,5 +210,13 @@ export default function LoginPage() {
         ← العودة للرئيسية
       </Link>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginInner />
+    </Suspense>
   );
 }
