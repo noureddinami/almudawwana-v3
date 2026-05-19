@@ -2,10 +2,14 @@
 
 import { Suspense, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { saveToken } from '@/lib/api';
 import { Scale, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+/**
+ * This page is only reached when the OAuth callback has an error
+ * (the success case is handled by the route.ts which redirects directly).
+ * It also serves as a visual loading state while the redirect happens.
+ */
 function CallbackInner() {
   const router = useRouter();
   const params = useSearchParams();
@@ -15,16 +19,17 @@ function CallbackInner() {
     if (handled.current) return;
     handled.current = true;
 
-    const token = params.get('token');
-    const error = params.get('message');
-
-    if (token) {
-      saveToken(token);
-      toast.success('تم تسجيل الدخول بنجاح');
-      router.replace('/');
-    } else {
-      toast.error(error ?? 'فشل تسجيل الدخول بـ Google');
+    const error = params.get('error');
+    if (error) {
+      const messages: Record<string, string> = {
+        no_code: 'لم يتم استلام رمز المصادقة',
+        auth_failed: 'فشل تسجيل الدخول بـ Google',
+      };
+      toast.error(messages[error] ?? 'حدث خطأ أثناء تسجيل الدخول');
       router.replace('/login');
+    } else {
+      // If no error and no code, user likely landed here directly
+      router.replace('/');
     }
   }, [params, router]);
 

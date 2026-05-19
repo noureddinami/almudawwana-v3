@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { auth, saveToken, API_BASE } from '@/lib/api';
+import { auth, saveToken } from '@/lib/api';
+import { createClient } from '@/lib/supabase/client';
 import { Scale, Eye, EyeOff, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -47,8 +48,16 @@ export default function RegisterPage() {
     }
   };
 
-  const handleGoogle = () => {
-    window.location.href = `${API_BASE.replace('/api/v1', '')}/api/v1/auth/google/redirect`;
+  const handleGoogle = async () => {
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+        queryParams: { access_type: 'offline', prompt: 'consent' },
+      },
+    });
+    if (error) toast.error('حدث خطأ أثناء الاتصال بـ Google');
   };
 
   return (
