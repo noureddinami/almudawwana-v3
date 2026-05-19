@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { auth, clearToken, hasToken, User } from '@/lib/api';
 import { Search, LogOut, Menu, X, UserPlus, FilePlus2, Mail, Info } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -25,6 +25,8 @@ export default function Navbar() {
   const [searchQ, setSearchQ]   = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [headerHidden, setHeaderHidden] = useState(false);
+  const lastScrollY = useRef(0);
 
   useEffect(() => {
     if (hasToken()) {
@@ -35,6 +37,19 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => { setMenuOpen(false); setMobileSearchOpen(false); }, [pathname]);
+
+  // Hide header on scroll down, show on scroll up (mobile only)
+  useEffect(() => {
+    const onScroll = () => {
+      if (window.innerWidth >= 640) { setHeaderHidden(false); return; } // sm+ always visible
+      const y = window.scrollY;
+      if (y > lastScrollY.current && y > 60) setHeaderHidden(true);
+      else setHeaderHidden(false);
+      lastScrollY.current = y;
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,7 +89,7 @@ export default function Navbar() {
   };
 
   return (
-    <header dir="rtl">
+    <header dir="rtl" className={`sticky top-0 z-50 transition-transform duration-300 ${headerHidden ? '-translate-y-full sm:translate-y-0' : 'translate-y-0'}`}>
       {/* Bandeau disclaimer — desktop uniquement */}
       <div className="bg-blue-900 text-blue-100 text-center py-1.5 text-xs hidden md:block">
         📋 النصوص الرسمية متاحة على{' '}
@@ -83,7 +98,7 @@ export default function Navbar() {
         {' '}— المدوّنة للمعلومات العامة فقط
       </div>
 
-      <nav className="bg-white/95 backdrop-blur-lg border-b border-slate-200 shadow-sm sticky top-0 z-50">
+      <nav className="bg-white/95 backdrop-blur-lg border-b border-slate-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center h-14 sm:h-16 gap-3">
 

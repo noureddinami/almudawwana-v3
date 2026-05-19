@@ -48,7 +48,7 @@ async function getAllCodes() {
     const { data } = await supabase
       .from('codes')
       .select('id, slug, title_ar, title_fr, type, status, total_articles, promulgation_date')
-      .order('title_ar')
+      .order('total_articles', { ascending: false })
     return data ?? []
   } catch { return [] }
 }
