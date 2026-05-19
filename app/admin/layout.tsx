@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { auth, clearToken, User, getUser, saveUser } from '@/lib/api';
 import {
   LayoutDashboard, Users, BookOpen, FileText, LogOut, Menu, X,
-  ChevronRight, Scale, Upload, MessageSquare, Tag, FilePlus2,
+  ChevronRight, Scale, Upload, MessageSquare, Tag, FilePlus2, Mail,
 } from 'lucide-react';
 
 const NAV = [
@@ -16,8 +16,9 @@ const NAV = [
   { href: '/admin/code-types',    label: 'أنواع القوانين',   icon: Tag },
   { href: '/admin/articles',      label: 'المواد',           icon: FileText },
   { href: '/admin/comments',      label: 'التعليقات',       icon: MessageSquare },
-  { href: '/admin/code-requests', label: 'طلبات الإضافة',   icon: FilePlus2 },
-  { href: '/admin/pdfs',          label: 'استيراد PDF',     icon: Upload },
+  { href: '/admin/contact-messages', label: 'رسائل التواصل', icon: Mail },
+  { href: '/admin/code-requests',   label: 'طلبات الإضافة', icon: FilePlus2 },
+  { href: '/admin/pdfs',            label: 'استيراد PDF',   icon: Upload },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
