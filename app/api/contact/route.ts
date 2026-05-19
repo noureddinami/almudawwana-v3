@@ -1,61 +1,50 @@
 import { NextRequest, NextResponse } from 'next/server';
-import nodemailer from 'nodemailer';
+import { createPublicClient } from '@/lib/supabase/server';
 
 export async function POST(req: NextRequest) {
   try {
-  const { name, email, subject, message } = await req.json();
+    const { name, email, subject, message } = await req.json();
 
-  if (!name?.trim() || !email?.trim() || !message?.trim()) {
-    return NextResponse.json({ error: 'الحقول المطلوبة ناقصة' }, { status: 422 });
-  }
+    // Validation
+    if (!name?.trim() || !email?.trim() || !message?.trim()) {
+      return NextResponse.json({ error: 'الحقول المطلوبة ناقصة' }, { status: 422 });
+    }
 
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    // SMTP not configured — log and return success (message not lost, just not emailed)
-    console.warn('SMTP not configured. Contact message from:', email, 'Subject:', subject);
-    return NextResponse.json({ ok: true, note: 'SMTP not configured' });
-  }
+    // Basic email format check
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      return NextResponse.json({ error: 'بريد إلكتروني غير صالح' }, { status: 422 });
+    }
 
-  const transporter = nodemailer.createTransport({
-    host:   process.env.SMTP_HOST   ?? 'smtp.gmail.com',
-    port:   Number(process.env.SMTP_PORT ?? 587),
-    secure: false,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
+    // Rate limiting: max 3 messages per email per hour (check in DB)
+    const supabase = createPublicClient();
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const { count } = await supabase
+      .from('contact_messages')
+      .select('id', { count: 'exact', head: true })
+      .eq('email', email.trim().toLowerCase())
+      .gte('created_at', oneHourAgo);
 
-  await transporter.sendMail({
-    from:    `"المدوّنة - تواصل" <${process.env.SMTP_USER}>`,
-    to:      '9anoni@gmail.com',
-    replyTo: email,
-    subject: subject?.trim() || `رسالة جديدة من ${name}`,
-    text: `الاسم: ${name}\nالبريد: ${email}\n\n${message}`,
-    html: `
-      <div dir="rtl" style="font-family:sans-serif;max-width:600px;margin:auto">
-        <h2 style="color:#1e40af;border-bottom:2px solid #e2e8f0;padding-bottom:12px">
-          رسالة جديدة — المدوّنة
-        </h2>
-        <table style="width:100%;border-collapse:collapse">
-          <tr><td style="padding:8px 0;color:#64748b;width:100px">الاسم</td>
-              <td style="padding:8px 0;font-weight:600">${name}</td></tr>
-          <tr><td style="padding:8px 0;color:#64748b">البريد</td>
-              <td style="padding:8px 0"><a href="mailto:${email}">${email}</a></td></tr>
-          ${subject ? `<tr><td style="padding:8px 0;color:#64748b">الموضوع</td>
-              <td style="padding:8px 0">${subject}</td></tr>` : ''}
-        </table>
-        <div style="margin-top:20px;background:#f8fafc;border-right:4px solid #3b82f6;
-                    padding:16px;border-radius:8px;white-space:pre-wrap;line-height:1.8">
-          ${message.replace(/\n/g, '<br>')}
-        </div>
-        <p style="margin-top:24px;font-size:12px;color:#94a3b8;text-align:center">
-          منصة المدوّنة — البريد الوارد
-        </p>
-      </div>
-    `,
-  });
+    if ((count ?? 0) >= 3) {
+      return NextResponse.json({ error: 'لقد أرسلت عدة رسائل مؤخراً. يرجى الانتظار قليلاً.' }, { status: 429 });
+    }
 
-  return NextResponse.json({ ok: true });
+    // Save to database
+    const { error } = await supabase
+      .from('contact_messages')
+      .insert({
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        subject: subject?.trim() || null,
+        message: message.trim(),
+        status: 'new',
+      });
+
+    if (error) {
+      console.error('Contact insert error:', error);
+      return NextResponse.json({ error: 'حدث خطأ أثناء الإرسال' }, { status: 500 });
+    }
+
+    return NextResponse.json({ ok: true });
   } catch (err: any) {
     console.error('Contact API error:', err);
     return NextResponse.json({ error: 'حدث خطأ أثناء الإرسال' }, { status: 500 });
