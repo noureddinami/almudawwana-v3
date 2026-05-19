@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { auth, clearToken, hasToken, User } from '@/lib/api';
-import { Search, LogOut, Menu, X, UserPlus, FilePlus2, Mail } from 'lucide-react';
+import { Search, LogOut, Menu, X, UserPlus, FilePlus2, Mail, Info } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const NAV_LINKS = [
@@ -15,6 +15,7 @@ const NAV_LINKS = [
   { href: '/search',        label: 'البحث',               anchor: false },
   { href: '/request-code',  label: 'طلب إضافة نص قانوني', anchor: false },
   { href: '/contact',       label: 'تواصل معنا',          anchor: false },
+  { href: '/about',         label: 'حول المدوّنة',         anchor: false },
 ];
 
 export default function Navbar() {
@@ -229,6 +230,7 @@ export default function Navbar() {
               {NAV_LINKS.map(link => {
                 const isRequest = link.href === '/request-code';
                 const isContact = link.href === '/contact';
+                const isAbout = link.href === '/about';
                 return (
                   <a
                     key={link.href}
@@ -247,6 +249,7 @@ export default function Navbar() {
                   >
                     {isRequest && <FilePlus2 className="w-4 h-4" />}
                     {isContact && <Mail className="w-4 h-4" />}
+                    {isAbout && <Info className="w-4 h-4" />}
                     {link.label}
                   </a>
                 );

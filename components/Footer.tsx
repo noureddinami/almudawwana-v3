@@ -44,6 +44,7 @@ export default function Footer() {
             <Link href="/"         className="hover:text-blue-600">الرئيسية</Link>
             <Link href="/search"   className="hover:text-blue-600">البحث</Link>
             <Link href="/login"    className="hover:text-blue-600">تسجيل الدخول</Link>
+            <Link href="/about"    className="hover:text-blue-600">حول المدوّنة</Link>
             <a
               href="https://www.sgg.gov.ma"
               target="_blank"
