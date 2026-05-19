@@ -10,6 +10,8 @@ type Status = 'idle' | 'sending' | 'sent' | 'error';
 
 export default function ContactPage() {
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
+  const [honeypot, setHoneypot] = useState('');
+  const [loadedAt] = useState(() => Date.now());
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState('');
 
@@ -24,7 +26,7 @@ export default function ContactPage() {
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, _hp: honeypot, _ts: loadedAt }),
       });
       if (!res.ok) {
         const d = await res.json();
@@ -185,6 +187,13 @@ export default function ContactPage() {
                     className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-xl resize-none
                                focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 leading-relaxed"
                   />
+                </div>
+
+                {/* Honeypot — hidden from real users, bots fill it */}
+                <div className="absolute -left-[9999px]" aria-hidden="true">
+                  <label htmlFor="website">Website</label>
+                  <input id="website" type="text" tabIndex={-1} autoComplete="off"
+                         value={honeypot} onChange={e => setHoneypot(e.target.value)} />
                 </div>
 
                 {status === 'error' && (

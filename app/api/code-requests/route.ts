@@ -7,7 +7,11 @@ import { createPublicClient, createServiceClient } from '@/lib/supabase/server'
  */
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, codeTitle, codeLink, notes } = await req.json()
+    const { name, email, codeTitle, codeLink, notes, _hp, _ts } = await req.json()
+
+    // Bot protection
+    if (_hp) return NextResponse.json({ ok: true })
+    if (_ts && Date.now() - _ts < 3000) return NextResponse.json({ ok: true })
 
     if (!name?.trim() || !email?.trim() || !codeTitle?.trim()) {
       return NextResponse.json(

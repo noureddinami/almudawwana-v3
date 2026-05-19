@@ -3,7 +3,17 @@ import { createPublicClient } from '@/lib/supabase/server';
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, subject, message } = await req.json();
+    const { name, email, subject, message, _hp, _ts } = await req.json();
+
+    // Bot protection: honeypot field must be empty
+    if (_hp) {
+      return NextResponse.json({ ok: true }); // silently accept but don't save
+    }
+
+    // Bot protection: form must be open for at least 3 seconds
+    if (_ts && Date.now() - _ts < 3000) {
+      return NextResponse.json({ ok: true }); // too fast, likely a bot
+    }
 
     // Validation
     if (!name?.trim() || !email?.trim() || !message?.trim()) {

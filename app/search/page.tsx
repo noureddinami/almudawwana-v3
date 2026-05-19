@@ -219,9 +219,9 @@ export default async function SearchPage({ searchParams }: Props) {
   } = await searchParams;
 
   const tab: Tab = (['text', 'article'].includes(tabParam ?? '') ? tabParam : 'text') as Tab;
-  const q        = qParam?.trim() ?? '';
-  const kw       = kwParam?.trim() ?? '';
-  const codeSlug = codeParam ?? '';
+  const q        = (qParam?.trim() ?? '').slice(0, 200);   // max 200 chars
+  const kw       = (kwParam?.trim() ?? '').slice(0, 200);
+  const codeSlug = (codeParam ?? '').slice(0, 100);
   const page     = Math.max(1, Number(pageParam ?? 1));
   const perPage  = 20;
 

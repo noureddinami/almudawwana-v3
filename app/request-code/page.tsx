@@ -19,6 +19,8 @@ export default function RequestCodePage() {
     codeLink: '',
     notes: '',
   });
+  const [honeypot, setHoneypot] = useState('');
+  const [loadedAt] = useState(() => Date.now());
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState('');
 
@@ -41,6 +43,8 @@ export default function RequestCodePage() {
           codeTitle: form.codeTitle,
           codeLink: form.codeLink,
           notes: form.notes,
+          _hp: honeypot,
+          _ts: loadedAt,
         }),
       });
       const d = await res.json().catch(() => ({}));
@@ -248,6 +252,13 @@ export default function RequestCodePage() {
                     className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-xl resize-none
                                focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50 leading-relaxed"
                   />
+                </div>
+
+                {/* Honeypot — hidden from real users */}
+                <div className="absolute -left-[9999px]" aria-hidden="true">
+                  <label htmlFor="website">Website</label>
+                  <input id="website" type="text" tabIndex={-1} autoComplete="off"
+                         value={honeypot} onChange={e => setHoneypot(e.target.value)} />
                 </div>
 
                 {status === 'error' && (
