@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Amiri, Noto_Naskh_Arabic, Reem_Kufi } from 'next/font/google';
+import Script from 'next/script';
 import './globals.css';
 import { Toaster } from 'react-hot-toast';
 import BottomNav from '@/components/BottomNav';
@@ -7,6 +8,8 @@ import InstallPrompt from '@/components/InstallPrompt';
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
 import SplashScreen from '@/components/SplashScreen';
 import { OrganizationJsonLd } from '@/components/JsonLd';
+
+const GA_ID = 'G-FVBMSK5TD2';
 
 /* ── Amiri : corps des articles juridiques ─────────────────── */
 const amiri = Amiri({
@@ -111,8 +114,7 @@ export const metadata: Metadata = {
     },
   },
   verification: {
-    // Add Google Search Console verification when available
-    // google: 'your-verification-code',
+    google: 'yHaXEZ8qCMNa6vILRr3kfRA_08R3fwG_tuJ_yRIUskM',
   },
 };
 
@@ -136,6 +138,22 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png" />
+        {/* Google Analytics 4 */}
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${GA_ID}', {
+              page_path: window.location.pathname,
+              anonymize_ip: true,
+            });
+          `}
+        </Script>
       </head>
       <body className="min-h-full bg-slate-50 text-slate-900 font-naskh antialiased">
         <OrganizationJsonLd />
