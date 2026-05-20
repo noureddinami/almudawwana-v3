@@ -8,6 +8,7 @@ import InstallPrompt from '@/components/InstallPrompt';
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
 import SplashScreen from '@/components/SplashScreen';
 import { OrganizationJsonLd } from '@/components/JsonLd';
+import PushNotificationSetup from '@/components/PushNotificationSetup';
 
 const GA_ID = 'G-FVBMSK5TD2';
 
@@ -162,6 +163,7 @@ export default function RootLayout({
         <BottomNav />
         <InstallPrompt />
         <ServiceWorkerRegister />
+        <PushNotificationSetup />
         <Toaster
           position="top-center"
           toastOptions={{

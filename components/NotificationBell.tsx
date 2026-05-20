@@ -3,19 +3,12 @@
 import { useEffect, useState } from 'react'
 import { Bell, BellOff, BellRing } from 'lucide-react'
 import toast from 'react-hot-toast'
-
-function urlBase64ToUint8Array(base64String: string) {
-  const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
-  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
-  const rawData = window.atob(base64)
-  return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)))
-}
+import { isPushSupported, getPushStatus, subscribeToPush, unsubscribeFromPush } from '@/lib/pushSubscribe'
 
 type Status = 'unsupported' | 'denied' | 'subscribed' | 'unsubscribed' | 'loading'
 
 interface Props {
   className?: string
-  /** Show as full labeled button (default: icon only) */
   labeled?: boolean
 }
 
@@ -23,103 +16,51 @@ export default function NotificationBell({ className = '', labeled = false }: Pr
   const [status, setStatus] = useState<Status>('loading')
 
   useEffect(() => {
-    if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
-      setStatus('unsupported')
-      return
-    }
-    if (Notification.permission === 'denied') {
-      setStatus('denied')
-      return
-    }
-    navigator.serviceWorker.ready.then(async (reg) => {
-      const sub = await reg.pushManager.getSubscription()
-      setStatus(sub ? 'subscribed' : 'unsubscribed')
-    })
+    if (!isPushSupported()) { setStatus('unsupported'); return }
+    getPushStatus().then((s) => setStatus(s as Status))
   }, [])
 
-  const subscribe = async () => {
+  const handleSubscribe = async () => {
     setStatus('loading')
-    try {
-      const reg = await navigator.serviceWorker.ready
-      const permission = await Notification.requestPermission()
-      if (permission !== 'granted') {
-        setStatus('denied')
-        toast.error('يجب السماح بالإشعارات من إعدادات المتصفح')
-        return
-      }
-
-      const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!
-      const sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(publicKey),
-      })
-
-      const json = sub.toJSON()
-      await fetch('/api/push/subscribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          endpoint: json.endpoint,
-          p256dh: (json.keys as any)?.p256dh,
-          auth: (json.keys as any)?.auth,
-        }),
-      })
-
+    const permission = await Notification.requestPermission()
+    if (permission === 'denied') {
+      setStatus('denied')
+      toast.error('الإشعارات محجوبة — يرجى السماح بها من إعدادات المتصفح')
+      return
+    }
+    const ok = await subscribeToPush()
+    if (ok) {
       setStatus('subscribed')
-      toast.success('🔔 سيتم إشعارك بكل تحديث جديد')
-    } catch (e: any) {
+      toast.success('🔔 تم تفعيل الإشعارات بنجاح')
+    } else {
       setStatus('unsubscribed')
-      toast.error('تعذّر تفعيل الإشعارات')
+      toast.error('تعذّر تفعيل الإشعارات — تحقق من الاتصال')
     }
   }
 
-  const unsubscribe = async () => {
+  const handleUnsubscribe = async () => {
     setStatus('loading')
-    try {
-      const reg = await navigator.serviceWorker.ready
-      const sub = await reg.pushManager.getSubscription()
-      if (sub) {
-        await fetch('/api/push/subscribe', {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ endpoint: sub.endpoint }),
-        })
-        await sub.unsubscribe()
-      }
-      setStatus('unsubscribed')
-      toast('تم إيقاف الإشعارات', { icon: '🔕' })
-    } catch {
-      setStatus('subscribed')
-      toast.error('تعذّر إيقاف الإشعارات')
-    }
+    const ok = await unsubscribeFromPush()
+    setStatus(ok ? 'unsubscribed' : 'subscribed')
+    if (ok) toast('تم إيقاف الإشعارات', { icon: '🔕' })
   }
 
   if (status === 'unsupported') return null
 
   const isSubscribed = status === 'subscribed'
-  const isLoading   = status === 'loading'
-  const isDenied    = status === 'denied'
-
-  const handleClick = () => {
-    if (isLoading || isDenied) return
-    isSubscribed ? unsubscribe() : subscribe()
-  }
-
-  const icon = isDenied
-    ? <BellOff className="w-5 h-5" />
-    : isSubscribed
-      ? <BellRing className="w-5 h-5 text-blue-600" />
-      : <Bell className="w-5 h-5" />
+  const isLoading    = status === 'loading'
+  const isDenied     = status === 'denied'
 
   const label = isDenied
     ? 'الإشعارات محجوبة'
-    : isSubscribed
-      ? 'إيقاف الإشعارات'
-      : 'تفعيل الإشعارات'
+    : isSubscribed ? 'إيقاف الإشعارات' : 'تفعيل الإشعارات'
 
   return (
     <button
-      onClick={handleClick}
+      onClick={() => {
+        if (isLoading || isDenied) return
+        isSubscribed ? handleUnsubscribe() : handleSubscribe()
+      }}
       disabled={isLoading || isDenied}
       title={label}
       className={`
@@ -131,7 +72,12 @@ export default function NotificationBell({ className = '', labeled = false }: Pr
     >
       {isLoading
         ? <Bell className="w-5 h-5 animate-pulse" />
-        : icon}
+        : isDenied
+          ? <BellOff className="w-5 h-5" />
+          : isSubscribed
+            ? <BellRing className="w-5 h-5 text-blue-600" />
+            : <Bell className="w-5 h-5" />
+      }
       {labeled && <span className="text-sm">{label}</span>}
     </button>
   )
