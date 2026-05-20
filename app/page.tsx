@@ -198,33 +198,67 @@ export default async function HomePage() {
             <BookOpen className="w-12 h-12 mx-auto mb-3 opacity-40" />
             <p>لا توجد قوانين متاحة حالياً</p>
           </div>
-        ) : (
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm divide-y divide-slate-100 overflow-hidden">
-            {codesList.map((code: any) => {
-              const badge = typeLabel(code.type);
-              return (
-                <Link
-                  key={code.id}
-                  href={`/codes/${code.slug}`}
-                  className="flex items-center gap-3 px-4 py-3 hover:bg-blue-50/50 transition-colors group"
-                >
-                  <span className={`text-[10px] sm:text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${badge.cls}`}>
-                    {badge.label}
-                  </span>
-                  <span className="flex-1 min-w-0 text-sm font-medium text-slate-800 group-hover:text-blue-700 transition-colors truncate">
-                    {code.title_ar}
-                  </span>
-                  {code.total_articles > 0 && (
-                    <span className="text-xs text-slate-400 shrink-0 hidden sm:inline">
-                      {code.total_articles} مادة
-                    </span>
-                  )}
-                  <ChevronLeft className="w-3.5 h-3.5 text-slate-300 group-hover:text-blue-400 shrink-0" />
-                </Link>
-              );
-            })}
-          </div>
-        )}
+        ) : (() => {
+          const perCol = 7;
+          const col1 = codesList.slice(0, perCol);
+          const col2 = codesList.slice(perCol, perCol * 2);
+          const col3 = codesList.slice(perCol * 2, perCol * 3);
+
+          const CodeItem = ({ code }: { code: any }) => {
+            const badge = typeLabel(code.type);
+            return (
+              <Link
+                href={`/codes/${code.slug}`}
+                className="flex items-center gap-3 px-4 py-2.5 hover:bg-blue-50/50 transition-colors group"
+              >
+                <span className={`text-[10px] sm:text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${badge.cls}`}>
+                  {badge.label}
+                </span>
+                <span className="flex-1 min-w-0 text-sm font-medium text-slate-800 group-hover:text-blue-700 transition-colors truncate">
+                  {code.title_ar}
+                </span>
+                <ChevronLeft className="w-3.5 h-3.5 text-slate-300 group-hover:text-blue-400 shrink-0" />
+              </Link>
+            );
+          };
+
+          return (
+            <>
+              {/* Desktop: 3 colonnes */}
+              <div className="hidden sm:grid sm:grid-cols-3 gap-4">
+                {[col1, col2, col3].map((col, i) => (
+                  <div key={i} className="bg-white rounded-2xl border border-slate-200 shadow-sm divide-y divide-slate-100 overflow-hidden">
+                    {col.map((code: any) => (
+                      <CodeItem key={code.id} code={code} />
+                    ))}
+                  </div>
+                ))}
+              </div>
+
+              {/* Mobile: 1 seule liste de 7 */}
+              <div className="sm:hidden bg-white rounded-2xl border border-slate-200 shadow-sm divide-y divide-slate-100 overflow-hidden">
+                {col1.map((code: any) => (
+                  <CodeItem key={code.id} code={code} />
+                ))}
+              </div>
+
+              {/* Bouton "عرض الكل" */}
+              {codesList.length > perCol && (
+                <div className="mt-5 text-center">
+                  <Link
+                    href="/codes"
+                    className="inline-flex items-center gap-2 bg-white border border-slate-200
+                               hover:border-blue-300 hover:shadow-md text-slate-700 hover:text-blue-700
+                               px-8 py-3 rounded-xl text-sm font-medium transition-all shadow-sm"
+                  >
+                    <BookOpen className="w-4 h-4" />
+                    عرض جميع القوانين ({codesList.length})
+                  </Link>
+                </div>
+              )}
+            </>
+          );
+        })()}
       </section>
 
       {/* ── 1b. آخر الإضافات ─────────────────────────────────── */}
