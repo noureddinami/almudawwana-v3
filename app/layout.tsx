@@ -40,7 +40,7 @@ export const viewport: Viewport = {
   viewportFit: 'cover',  // Extends into notch/safe areas
 };
 
-const BASE_URL = 'https://almudawwana-v3.vercel.app'
+const BASE_URL = 'https://modawana.app'
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),

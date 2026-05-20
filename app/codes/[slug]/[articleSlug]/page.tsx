@@ -12,7 +12,7 @@ import ShareButton from '@/components/ShareButton';
 import CacheHydrator from '@/components/CacheHydrator';
 import { LegalArticleJsonLd, BreadcrumbJsonLd } from '@/components/JsonLd';
 
-const BASE_URL = 'https://almudawwana-v3.vercel.app'
+const BASE_URL = 'https://modawana.app'
 
 interface Props {
   params: Promise<{ slug: string; articleSlug: string }>;

@@ -15,7 +15,7 @@ import ShareButton from '@/components/ShareButton';
 
 export const dynamic = 'force-dynamic'
 
-const BASE_URL = 'https://almudawwana-v3.vercel.app'
+const BASE_URL = 'https://modawana.app'
 
 export const metadata: Metadata = {
   title: 'المدوّنة — الموسوعة القانونية المغربية',
@@ -120,11 +120,11 @@ export default async function HomePage() {
         </div>
 
         <div className="max-w-4xl mx-auto text-center relative">
-          {/* Icon — plus petit sur mobile */}
+          {/* Logo */}
           <div className="flex justify-center mb-4 sm:mb-6">
             <div className="w-16 h-16 sm:w-24 sm:h-24 bg-white/10 rounded-2xl sm:rounded-3xl flex items-center justify-center
                             backdrop-blur-sm shadow-2xl border border-white/20">
-              <Scale className="w-8 h-8 sm:w-12 sm:h-12 text-white" />
+              <img src="/logo.svg" alt="المدوّنة" className="w-10 h-10 sm:w-16 sm:h-16" />
             </div>
           </div>
 
@@ -199,74 +199,31 @@ export default async function HomePage() {
             <p>لا توجد قوانين متاحة حالياً</p>
           </div>
         ) : (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
-              {codesList.slice(0, 6).map((code: any) => {
-                const badge = typeLabel(code.type);
-                return (
-                  <Link
-                    key={code.id}
-                    href={`/codes/${code.slug}`}
-                    className="group bg-white rounded-xl sm:rounded-2xl border border-slate-200 shadow-sm
-                               hover:shadow-md hover:border-blue-300 transition-all duration-200
-                               p-4 sm:p-6 flex flex-col active:scale-[0.98]"
-                  >
-                    <div className="flex items-start gap-3 sm:gap-4 flex-1">
-                      <div className="w-10 h-10 sm:w-11 sm:h-11 bg-blue-50 rounded-xl flex items-center justify-center
-                                      group-hover:bg-blue-100 transition-colors shrink-0">
-                        <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-slate-900 text-base leading-snug
-                                       group-hover:text-blue-700 transition-colors">
-                          {code.title_ar}
-                        </h3>
-                        {code.title_fr && (
-                          <p className="text-xs text-slate-400 truncate mt-0.5" dir="ltr">
-                            {code.title_fr}
-                          </p>
-                        )}
-                      </div>
-                      <ChevronLeft className="w-4 h-4 text-slate-300 group-hover:text-blue-400
-                                             transition-colors shrink-0 mt-0.5" />
-                    </div>
-                    <div className="mt-4 flex items-center gap-2 flex-wrap">
-                      <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${badge.cls}`}>
-                        {badge.label}
-                      </span>
-                      {code.total_articles > 0 && (
-                        <span className="text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full">
-                          {code.total_articles} مادة
-                        </span>
-                      )}
-                      {code.total_articles === 0 && (
-                        <span className="text-xs text-slate-400 italic">قريباً</span>
-                      )}
-                      {code.promulgation_date && (
-                        <span className="text-xs text-slate-400 mr-auto">
-                          {new Date(code.promulgation_date).getFullYear()}
-                        </span>
-                      )}
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-
-            {codesList.length > 6 && (
-              <div className="mt-8 text-center">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm divide-y divide-slate-100 overflow-hidden">
+            {codesList.map((code: any) => {
+              const badge = typeLabel(code.type);
+              return (
                 <Link
-                  href="/codes"
-                  className="inline-flex items-center gap-2 bg-white border border-slate-200
-                             hover:border-blue-300 hover:shadow-md text-slate-700 hover:text-blue-700
-                             px-8 py-3 rounded-xl text-sm font-medium transition-all shadow-sm"
+                  key={code.id}
+                  href={`/codes/${code.slug}`}
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-blue-50/50 transition-colors group"
                 >
-                  <BookOpen className="w-4 h-4" />
-                  عرض جميع القوانين ({codesList.length})
+                  <span className={`text-[10px] sm:text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${badge.cls}`}>
+                    {badge.label}
+                  </span>
+                  <span className="flex-1 min-w-0 text-sm font-medium text-slate-800 group-hover:text-blue-700 transition-colors truncate">
+                    {code.title_ar}
+                  </span>
+                  {code.total_articles > 0 && (
+                    <span className="text-xs text-slate-400 shrink-0 hidden sm:inline">
+                      {code.total_articles} مادة
+                    </span>
+                  )}
+                  <ChevronLeft className="w-3.5 h-3.5 text-slate-300 group-hover:text-blue-400 shrink-0" />
                 </Link>
-              </div>
-            )}
-          </>
+              );
+            })}
+          </div>
         )}
       </section>
 
@@ -653,7 +610,7 @@ export default async function HomePage() {
       {/* ── Final CTA ────────────────────────────────────────── */}
       <section className="bg-gradient-to-br from-blue-700 to-blue-900 text-white py-14 px-4">
         <div className="max-w-2xl mx-auto text-center">
-          <Scale className="w-12 h-12 text-blue-200 mx-auto mb-5" />
+          <img src="/logo.svg" alt="المدوّنة" className="w-14 h-14 mx-auto mb-5 opacity-80" />
           <h2 className="font-kufi text-3xl font-bold mb-3">ابدأ الاستكشاف الآن</h2>
           <p className="text-blue-200 text-base leading-relaxed mb-8">
             المدوّنة متاحة مجاناً للجميع — طلاباً وأكاديميين ومهنيين ومواطنين عاديين.

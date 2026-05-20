@@ -16,12 +16,12 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'البحث في القوانين المغربية | المدوّنة',
     description: 'ابحث في جميع القوانين والمدونات المغربية — ثلاثة أوضاع للبحث',
-    url: 'https://almudawwana-v3.vercel.app/search',
+    url: 'https://modawana.app/search',
     type: 'website',
     locale: 'ar_MA',
   },
   alternates: {
-    canonical: 'https://almudawwana-v3.vercel.app/search',
+    canonical: 'https://modawana.app/search',
   },
   robots: {
     index: true,
@@ -274,8 +274,8 @@ export default async function SearchPage({ searchParams }: Props) {
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <BreadcrumbJsonLd
         items={[
-          { name: 'الرئيسية', url: 'https://almudawwana-v3.vercel.app' },
-          { name: 'البحث', url: 'https://almudawwana-v3.vercel.app/search' },
+          { name: 'الرئيسية', url: 'https://modawana.app' },
+          { name: 'البحث', url: 'https://modawana.app/search' },
         ]}
       />
       <Navbar />

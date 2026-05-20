@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { createClient } from '@/lib/supabase/client';
 import {
   Mail, Search, CheckCircle, Clock, Eye, Archive,
   Trash2, ChevronLeft, ChevronRight,
@@ -27,12 +26,11 @@ const STATUS_MAP: Record<string, { label: string; color: string; icon: React.Ele
   archived: { label: 'مؤرشف',        color: 'bg-slate-100 text-slate-600',     icon: Archive },
 };
 
-const PER_PAGE = 20;
-
 export default function AdminContactMessagesPage() {
   const [messages, setMessages]         = useState<ContactMessage[]>([]);
   const [total, setTotal]               = useState(0);
   const [page, setPage]                 = useState(1);
+  const [lastPage, setLastPage]         = useState(1);
   const [loading, setLoading]           = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
   const [search, setSearch]             = useState('');
@@ -41,24 +39,18 @@ export default function AdminContactMessagesPage() {
   const [noteInputs, setNoteInputs]     = useState<Record<string, string>>({});
   const [updatingId, setUpdatingId]     = useState<string | null>(null);
 
-  const supabase = createClient();
-
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      let query = supabase
-        .from('contact_messages')
-        .select('*', { count: 'exact' })
-        .order('created_at', { ascending: false })
-        .range((page - 1) * PER_PAGE, page * PER_PAGE - 1);
-
-      if (statusFilter) query = query.eq('status', statusFilter);
-      if (search) query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%,subject.ilike.%${search}%`);
-
-      const { data, count, error } = await query;
-      if (error) throw error;
-      setMessages(data ?? []);
-      setTotal(count ?? 0);
+      const params = new URLSearchParams({ page: String(page) });
+      if (statusFilter) params.set('status', statusFilter);
+      if (search) params.set('q', search);
+      const res = await fetch(`/api/admin/contact-messages?${params}`);
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? json.message);
+      setMessages(json.data);
+      setTotal(json.total);
+      setLastPage(json.last_page);
     } catch (e: any) {
       toast.error(e.message ?? 'خطأ في تحميل الرسائل');
     } finally {
@@ -67,8 +59,6 @@ export default function AdminContactMessagesPage() {
   }, [page, statusFilter, search]);
 
   useEffect(() => { load(); }, [load]);
-
-  const lastPage = Math.max(1, Math.ceil(total / PER_PAGE));
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,15 +69,15 @@ export default function AdminContactMessagesPage() {
   const updateStatus = async (id: string, status: string) => {
     setUpdatingId(id);
     try {
-      const updates: Record<string, any> = { status };
+      const body: Record<string, any> = { id, status };
       const note = noteInputs[id]?.trim();
-      if (note !== undefined) updates.admin_notes = note || null;
-
-      const { error } = await supabase
-        .from('contact_messages')
-        .update(updates)
-        .eq('id', id);
-      if (error) throw error;
+      if (note !== undefined) body.admin_notes = note || null;
+      const res = await fetch('/api/admin/contact-messages', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) { const j = await res.json(); throw new Error(j.error); }
       toast.success('تم التحديث');
       load();
     } catch (e: any) {
@@ -100,11 +90,12 @@ export default function AdminContactMessagesPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('هل تريد حذف هذه الرسالة؟')) return;
     try {
-      const { error } = await supabase
-        .from('contact_messages')
-        .delete()
-        .eq('id', id);
-      if (error) throw error;
+      const res = await fetch('/api/admin/contact-messages', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+      if (!res.ok) { const j = await res.json(); throw new Error(j.error); }
       toast.success('تم الحذف');
       load();
     } catch (e: any) {

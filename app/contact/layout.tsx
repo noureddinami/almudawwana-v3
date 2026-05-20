@@ -6,12 +6,12 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'تواصل معنا | المدوّنة',
     description: 'تواصل مع فريق المدوّنة — أرسل رسالتك أو استفسارك',
-    url: 'https://almudawwana-v3.vercel.app/contact',
+    url: 'https://modawana.app/contact',
     type: 'website',
     locale: 'ar_MA',
   },
   alternates: {
-    canonical: 'https://almudawwana-v3.vercel.app/contact',
+    canonical: 'https://modawana.app/contact',
   },
 }
 

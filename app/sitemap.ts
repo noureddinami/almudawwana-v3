@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next'
 import { createPublicClient } from '@/lib/supabase/server'
 
-const BASE_URL = 'https://almudawwana-v3.vercel.app'
+const BASE_URL = 'https://modawana.app'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = createPublicClient()

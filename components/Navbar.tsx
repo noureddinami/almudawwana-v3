@@ -89,7 +89,7 @@ export default function Navbar() {
   };
 
   return (
-    <header dir="rtl" className={`sticky top-0 z-50 transition-transform duration-300 ${headerHidden ? '-translate-y-full sm:translate-y-0' : 'translate-y-0'}`}>
+    <header dir="rtl" className="sticky top-0 z-50 hidden sm:block">
       {/* Bandeau disclaimer — desktop uniquement */}
       <div className="bg-blue-900 text-blue-100 text-center py-1.5 text-xs hidden md:block">
         📋 النصوص الرسمية متاحة على{' '}

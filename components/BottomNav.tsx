@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import {
   Home, Scale, Search, Download, MoreHorizontal,
-  FilePlus2, Mail, User, X,
+  FilePlus2, Mail, User, X, Info,
 } from 'lucide-react';
 
 const TABS = [
@@ -18,6 +18,7 @@ const TABS = [
 const MORE_LINKS = [
   { href: '/request-code', label: 'طلب إضافة نص قانوني', icon: FilePlus2, color: 'text-emerald-600' },
   { href: '/contact',      label: 'تواصل معنا',          icon: Mail,      color: 'text-blue-600'    },
+  { href: '/about',        label: 'حول المدوّنة',         icon: Info,      color: 'text-slate-500'   },
   { href: '/login',        label: 'حسابي',               icon: User,      color: 'text-slate-600'   },
 ];
 

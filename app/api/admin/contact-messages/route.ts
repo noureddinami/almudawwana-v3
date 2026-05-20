@@ -1,34 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { paginationRange, paginatedResponse } from '@/lib/supabase/helpers'
 
 export async function GET(req: NextRequest) {
+  const sp = req.nextUrl.searchParams
+  const page = Math.max(1, Number(sp.get('page') ?? 1))
+  const perPage = 20
+  const status = sp.get('status') || null
+  const search = sp.get('q') || null
+
   const supabase = createServiceClient()
 
-  const url = new URL(req.url)
-  const page   = Number(url.searchParams.get('page') ?? 1)
-  const status = url.searchParams.get('status') || undefined
-  const q      = url.searchParams.get('q') || undefined
-  const perPage = 20
-
-  const { from, to } = paginationRange(page, perPage)
-
   let query = supabase
-    .from('code_requests')
+    .from('contact_messages')
     .select('*', { count: 'exact' })
     .order('created_at', { ascending: false })
-    .range(from, to)
+    .range((page - 1) * perPage, page * perPage - 1)
 
   if (status) query = query.eq('status', status)
-  if (q) query = query.or(`code_title.ilike.%${q}%,name.ilike.%${q}%,email.ilike.%${q}%`)
+  if (search) query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%,subject.ilike.%${search}%`)
 
   const { data, count, error } = await query
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  if (error) {
-    return NextResponse.json({ message: error.message }, { status: 500 })
-  }
-
-  return NextResponse.json(paginatedResponse(data ?? [], count ?? 0, page, perPage))
+  return NextResponse.json({ data: data ?? [], total: count ?? 0, page, last_page: Math.max(1, Math.ceil((count ?? 0) / perPage)) })
 }
 
 export async function PATCH(req: NextRequest) {
@@ -36,7 +30,7 @@ export async function PATCH(req: NextRequest) {
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 })
 
   const supabase = createServiceClient()
-  const { error } = await supabase.from('code_requests').update(updates).eq('id', id)
+  const { error } = await supabase.from('contact_messages').update(updates).eq('id', id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ ok: true })
 }
@@ -46,7 +40,7 @@ export async function DELETE(req: NextRequest) {
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 })
 
   const supabase = createServiceClient()
-  const { error } = await supabase.from('code_requests').delete().eq('id', id)
+  const { error } = await supabase.from('contact_messages').delete().eq('id', id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ ok: true })
 }

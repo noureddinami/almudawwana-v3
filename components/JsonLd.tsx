@@ -1,6 +1,6 @@
 /** JSON-LD structured data components for SEO */
 
-const BASE_URL = 'https://almudawwana-v3.vercel.app'
+const BASE_URL = 'https://modawana.app'
 
 /* ── Organization + WebSite (homepage) ────────────────────────────── */
 export function OrganizationJsonLd() {

@@ -6,12 +6,12 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'طلب إضافة نص قانوني | المدوّنة',
     description: 'اطلب إضافة قانون أو مدونة جديدة إلى المنصة',
-    url: 'https://almudawwana-v3.vercel.app/request-code',
+    url: 'https://modawana.app/request-code',
     type: 'website',
     locale: 'ar_MA',
   },
   alternates: {
-    canonical: 'https://almudawwana-v3.vercel.app/request-code',
+    canonical: 'https://modawana.app/request-code',
   },
 }
 

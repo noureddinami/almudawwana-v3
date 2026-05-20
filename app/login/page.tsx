@@ -49,11 +49,11 @@ function LoginInner() {
       saveUser(user);
       toast.success(`مرحباً ${user.full_name ?? user.email} 👋`);
 
-      // Redirect to admin panel if user is admin
+      // Redirect based on role
       if (user.role === 'admin' || user.role === 'moderator') {
         router.push('/admin');
       } else {
-        router.push('/');
+        router.push('/codes');
       }
       router.refresh();
     } catch (err: any) {

@@ -10,7 +10,7 @@ import ShareButton from '@/components/ShareButton';
 import CacheHydrator from '@/components/CacheHydrator';
 import { BreadcrumbJsonLd, CollectionPageJsonLd } from '@/components/JsonLd';
 
-const BASE_URL = 'https://almudawwana-v3.vercel.app'
+const BASE_URL = 'https://modawana.app'
 
 export const metadata: Metadata = {
   title: 'جميع القوانين والمدونات المغربية',

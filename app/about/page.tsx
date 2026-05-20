@@ -9,7 +9,7 @@ import {
   MoreVertical, PlusSquare, ArrowUpFromLine
 } from 'lucide-react';
 
-const BASE_URL = 'https://almudawwana-v3.vercel.app';
+const BASE_URL = 'https://modawana.app';
 
 export const metadata: Metadata = {
   title: 'حول المدوّنة',

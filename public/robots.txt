@@ -12,4 +12,4 @@ Disallow: /login
 Disallow: /register
 
 # Sitemap
-Sitemap: https://almudawwana-v3.vercel.app/sitemap.xml
+Sitemap: https://modawana.app/sitemap.xml

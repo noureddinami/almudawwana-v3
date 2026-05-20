@@ -69,7 +69,7 @@ async function getPdfs(codeId: string) {
   } catch { return [] }
 }
 
-const BASE_URL = 'https://almudawwana-v3.vercel.app'
+const BASE_URL = 'https://modawana.app'
 
 const TYPE_LABELS: Record<string, string> = {
   constitution: 'دستور',
