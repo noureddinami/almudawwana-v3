@@ -37,6 +37,48 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+/* ── Push Notifications ────────────────────────────────────────── */
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
+
+  let data = {};
+  try { data = event.data.json(); } catch { data = { title: 'المدوّنة', body: event.data.text() }; }
+
+  const title   = data.title   ?? 'المدوّنة';
+  const options = {
+    body:    data.body   ?? '',
+    icon:    data.icon   ?? '/icon-192x192.png',
+    badge:   data.badge  ?? '/icon-192x192.png',
+    dir:     'rtl',
+    lang:    'ar',
+    tag:     'mudawwana-update',
+    renotify: true,
+    data:    { url: data.url ?? '/' },
+    actions: [
+      { action: 'open', title: 'فتح' },
+      { action: 'close', title: 'إغلاق' },
+    ],
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  if (event.action === 'close') return;
+
+  const url = event.notification.data?.url ?? '/';
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url === url && 'focus' in client) return client.focus();
+      }
+      if (clients.openWindow) return clients.openWindow(url);
+    })
+  );
+});
+
+/* ── Fetch Handler ─────────────────────────────────────────────── */
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);

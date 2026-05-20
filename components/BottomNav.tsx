@@ -7,6 +7,7 @@ import {
   Home, Scale, Search, Download, MoreHorizontal,
   FilePlus2, Mail, User, X, Info,
 } from 'lucide-react';
+import NotificationBell from '@/components/NotificationBell';
 
 const TABS = [
   { href: '/',        label: 'الرئيسية', icon: Home     },
@@ -104,6 +105,11 @@ export default function BottomNav() {
                 </Link>
               );
             })}
+
+            {/* Notification toggle */}
+            <div className="flex items-center gap-3 px-4 py-3 text-sm text-slate-700">
+              <NotificationBell labeled className="w-full justify-start gap-3" />
+            </div>
           </div>
         </div>
       </div>

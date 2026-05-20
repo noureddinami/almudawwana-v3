@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
+import { sendPushNotification } from '@/lib/pushNotification';
 
 const TYPES = [
   'constitution','organic_law','ordinary_law','code',
@@ -113,9 +114,19 @@ export default function AdminCodesPage() {
       if (modal === 'create') {
         await adminCodes.create(payload);
         toast.success('تم إنشاء القانون');
+        sendPushNotification({
+          title: '📚 نص قانوني جديد',
+          body: `تمت إضافة "${form.title_ar}" إلى المدوّنة`,
+          url: `/codes/${form.slug || autoSlug(form.title_ar)}`,
+        });
       } else if (editing) {
         await adminCodes.update(editing.id, payload);
         toast.success('تم تحديث القانون');
+        sendPushNotification({
+          title: '📝 تحديث نص قانوني',
+          body: `تم تحديث "${form.title_ar}"`,
+          url: `/codes/${form.slug || editing.slug}`,
+        });
       }
       setModal(null);
       load();

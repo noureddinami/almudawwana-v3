@@ -11,6 +11,7 @@ import { ChevronLeft, Scale, ExternalLink, Eye, MessageSquare, BookMarked, Stick
 import ShareButton from '@/components/ShareButton';
 import CacheHydrator from '@/components/CacheHydrator';
 import { LegalArticleJsonLd, BreadcrumbJsonLd } from '@/components/JsonLd';
+import ReportButton from '@/components/ReportButton';
 
 const BASE_URL = 'https://modawana.app'
 
@@ -272,6 +273,7 @@ export default async function ArticlePage({ params }: Props) {
                 text={`المادة ${article.number} من ${codeName} — المدوّنة`}
                 className="mr-auto"
               />
+              <ReportButton articleId={article.id} articleNumber={article.number} />
             </div>
           </div>
         </article>

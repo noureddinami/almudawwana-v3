@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
+import { sendPushNotification } from '@/lib/pushNotification';
 
 const STATUSES = ['in_force','abrogated','amended','draft'];
 const STATUS_LABEL: Record<string, string> = {
@@ -133,6 +134,18 @@ export default function AdminArticlesPage() {
       toast.success('تم تحديث الحالة');
       setEditId(null);
       load();
+      // Notify subscribers when article becomes active
+      if (editStatus === 'in_force' || editStatus === 'amended') {
+        const article = data?.data.find(a => a.id === id);
+        if (article) {
+          const codeSlug = (article as any).code?.slug ?? '';
+          sendPushNotification({
+            title: '⚖️ تحديث مادة قانونية',
+            body: `المادة ${article.number}${article.code_id ? ` — ${(article as any).code?.title_ar ?? ''}` : ''} — تم تحديث حالتها`,
+            url: codeSlug ? `/codes/${codeSlug}/المادة-${article.number}` : '/',
+          });
+        }
+      }
     } catch (e: any) {
       toast.error(e.message);
     }
@@ -175,6 +188,13 @@ export default function AdminArticlesPage() {
       setNotesList(prev => [r.note, ...prev]);
       setNoteText('');
       toast.success('تمت إضافة الملاحظة');
+      // Notify subscribers of new admin note
+      const codeSlug = (notesArticle as any).code?.slug ?? '';
+      sendPushNotification({
+        title: '🗒️ ملاحظة جديدة',
+        body: `تمت إضافة ملاحظة على المادة ${notesArticle.number}`,
+        url: codeSlug ? `/codes/${codeSlug}/المادة-${notesArticle.number}` : '/',
+      });
     } catch (e: any) { toast.error(e.message); }
     finally { setNoteSaving(false); }
   };
