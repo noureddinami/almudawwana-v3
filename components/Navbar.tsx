@@ -15,7 +15,6 @@ const NAV_LINKS = [
   { href: '/search',        label: 'البحث',               anchor: false },
   { href: '/request-code',  label: 'طلب إضافة نص قانوني', anchor: false },
   { href: '/contact',       label: 'تواصل معنا',          anchor: false },
-  { href: '/about',         label: 'حول المدوّنة',         anchor: false },
 ];
 
 export default function Navbar() {

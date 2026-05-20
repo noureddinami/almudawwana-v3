@@ -50,6 +50,16 @@ async function getCodes() {
   } catch { return [] }
 }
 
+async function getTotalArticles() {
+  try {
+    const supabase = createPublicClient()
+    const { count } = await supabase
+      .from('articles')
+      .select('id', { count: 'exact', head: true })
+    return count ?? 0
+  } catch { return 0 }
+}
+
 async function getLatestCodes() {
   try {
     const supabase = createPublicClient()
@@ -99,12 +109,12 @@ function typeLabel(type: string) {
 }
 
 export default async function HomePage() {
-  const [codesList, latestCodes, recentNotes] = await Promise.all([
+  const [codesList, latestCodes, recentNotes, totalArticles] = await Promise.all([
     getCodes(),
     getLatestCodes(),
     getRecentNotes(),
+    getTotalArticles(),
   ]);
-  const totalArticles = codesList.reduce((s: number, c: any) => s + (c.total_articles ?? 0), 0);
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col" dir="rtl">
@@ -178,7 +188,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── 1. القوانين المتاحة (6 premiers) ────────────────── */}
+      {/* ── 1. القوانين المتاحة — carousel ────────────────── */}
       <section id="codes" className="max-w-6xl mx-auto px-4 py-8 sm:py-12 w-full">
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -200,9 +210,11 @@ export default async function HomePage() {
           </div>
         ) : (() => {
           const perCol = 7;
-          const col1 = codesList.slice(0, perCol);
-          const col2 = codesList.slice(perCol, perCol * 2);
-          const col3 = codesList.slice(perCol * 2, perCol * 3);
+          // Split into groups of 7 for carousel pages
+          const columns: any[][] = [];
+          for (let i = 0; i < codesList.length; i += perCol) {
+            columns.push(codesList.slice(i, i + perCol));
+          }
 
           const CodeItem = ({ code }: { code: any }) => {
             const badge = typeLabel(code.type);
@@ -222,40 +234,78 @@ export default async function HomePage() {
             );
           };
 
+          const CodeColumn = ({ codes }: { codes: any[] }) => (
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm divide-y divide-slate-100 overflow-hidden
+                            min-w-[280px] sm:min-w-0 shrink-0 snap-start w-[85vw] sm:w-auto">
+              {codes.map((code: any) => (
+                <CodeItem key={code.id} code={code} />
+              ))}
+            </div>
+          );
+
+          // Desktop: show 3 columns per view, carousel horizontally
+          // Group columns into pages of 3 for desktop
+          const desktopPages: any[][][] = [];
+          for (let i = 0; i < columns.length; i += 3) {
+            desktopPages.push(columns.slice(i, i + 3));
+          }
+
           return (
             <>
-              {/* Desktop: 3 colonnes */}
-              <div className="hidden sm:grid sm:grid-cols-3 gap-4">
-                {[col1, col2, col3].map((col, i) => (
-                  <div key={i} className="bg-white rounded-2xl border border-slate-200 shadow-sm divide-y divide-slate-100 overflow-hidden">
-                    {col.map((code: any) => (
-                      <CodeItem key={code.id} code={code} />
+              {/* Desktop: 3 columns per view, horizontal scroll */}
+              <div className="hidden sm:flex overflow-x-auto snap-x snap-mandatory gap-4 pb-3
+                              scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent"
+                   style={{ scrollbarWidth: 'thin' }}>
+                {desktopPages.map((page, pi) => (
+                  <div key={pi} className="grid grid-cols-3 gap-4 snap-start min-w-full shrink-0">
+                    {page.map((col, ci) => (
+                      <CodeColumn key={ci} codes={col} />
+                    ))}
+                    {/* Fill empty columns if last page has < 3 */}
+                    {page.length < 3 && Array.from({ length: 3 - page.length }).map((_, ei) => (
+                      <div key={`empty-${ei}`} />
                     ))}
                   </div>
                 ))}
               </div>
 
-              {/* Mobile: 1 seule liste de 7 */}
-              <div className="sm:hidden bg-white rounded-2xl border border-slate-200 shadow-sm divide-y divide-slate-100 overflow-hidden">
-                {col1.map((code: any) => (
-                  <CodeItem key={code.id} code={code} />
+              {/* Desktop dots indicator */}
+              {desktopPages.length > 1 && (
+                <div className="hidden sm:flex items-center justify-center gap-1.5 mt-4">
+                  {desktopPages.map((_, i) => (
+                    <div key={i} className="w-2 h-2 rounded-full bg-slate-300" />
+                  ))}
+                </div>
+              )}
+
+              {/* Mobile: single list per view, horizontal scroll */}
+              <div className="sm:hidden flex overflow-x-auto snap-x snap-mandatory gap-3 pb-3 -mx-1 px-1 no-scrollbar">
+                {columns.map((col, i) => (
+                  <CodeColumn key={i} codes={col} />
                 ))}
               </div>
 
-              {/* Bouton "عرض الكل" */}
-              {codesList.length > perCol && (
-                <div className="mt-5 text-center">
-                  <Link
-                    href="/codes"
-                    className="inline-flex items-center gap-2 bg-white border border-slate-200
-                               hover:border-blue-300 hover:shadow-md text-slate-700 hover:text-blue-700
-                               px-8 py-3 rounded-xl text-sm font-medium transition-all shadow-sm"
-                  >
-                    <BookOpen className="w-4 h-4" />
-                    عرض جميع القوانين ({codesList.length})
-                  </Link>
+              {/* Mobile dots indicator */}
+              {columns.length > 1 && (
+                <div className="sm:hidden flex items-center justify-center gap-1.5 mt-3">
+                  {columns.map((_, i) => (
+                    <div key={i} className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+                  ))}
                 </div>
               )}
+
+              {/* Show all button */}
+              <div className="mt-5 text-center">
+                <Link
+                  href="/codes"
+                  className="inline-flex items-center gap-2 bg-white border border-slate-200
+                             hover:border-blue-300 hover:shadow-md text-slate-700 hover:text-blue-700
+                             px-8 py-3 rounded-xl text-sm font-medium transition-all shadow-sm"
+                >
+                  <BookOpen className="w-4 h-4" />
+                  عرض جميع القوانين ({codesList.length})
+                </Link>
+              </div>
             </>
           );
         })()}

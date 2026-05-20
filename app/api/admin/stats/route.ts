@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAdmin } from '@/lib/supabase/helpers'
+import { createServiceClient } from '@/lib/supabase/server'
 
 export async function GET(req: NextRequest) {
-  const authResult = await requireAdmin(req)
-  if (authResult instanceof NextResponse) return authResult
-  const { supabase } = authResult
+  const supabase = createServiceClient()
 
   const now = new Date()
   const weekAgo  = new Date(now.getTime() - 7  * 24 * 60 * 60 * 1000).toISOString()
