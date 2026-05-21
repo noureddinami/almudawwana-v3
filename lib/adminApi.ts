@@ -169,9 +169,9 @@ export const adminArticles = {
   },
   stats:  () => adminFetch<ArticleStats>('/articles/stats'),
   get:    (id: string) => adminFetch<Article>(`/articles/${id}`),
-  create: (data: { code_id: string; number: string; content_ar: string; content_fr?: string; status?: string }) =>
+  create: (data: { code_id: string; number: string; content_ar: string; content_fr?: string; status?: string; meta_description?: string; keywords?: string[] }) =>
     adminFetch<{ message: string; article: AdminArticle }>('/articles', { method: 'POST', body: JSON.stringify(data) }),
-  update: (id: string, data: { content_ar?: string; content_fr?: string; status?: string; number?: string }) =>
+  update: (id: string, data: { content_ar?: string; content_fr?: string; status?: string; number?: string; meta_description?: string; keywords?: string[] }) =>
     adminFetch<{ message: string; article: Article }>(`/articles/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   destroy: (id: string) =>
     adminFetch<{ message: string }>(`/articles/${id}`, { method: 'DELETE' }),
