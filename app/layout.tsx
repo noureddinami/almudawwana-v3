@@ -155,6 +155,15 @@ export default function RootLayout({
             });
           `}
         </Script>
+        <Script id="sw-register" strategy="afterInteractive">
+          {`
+            if ('serviceWorker' in navigator) {
+              window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js', { scope: '/' });
+              });
+            }
+          `}
+        </Script>
       </head>
       <body className="min-h-full bg-slate-50 text-slate-900 font-naskh antialiased">
         <OrganizationJsonLd />
