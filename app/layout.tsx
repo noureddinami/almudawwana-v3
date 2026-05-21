@@ -39,9 +39,8 @@ const reemKufi = Reem_Kufi({
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
-  viewportFit: 'cover',  // Extends into notch/safe areas
+  maximumScale: 5,
+  viewportFit: 'cover',
 };
 
 const BASE_URL = 'https://modawana.app'
@@ -83,18 +82,18 @@ export const metadata: Metadata = {
     description: 'ابحث وتصفّح القوانين والمدونات المغربية مجاناً — أكثر من آلاف المواد القانونية من المصادر الرسمية',
     images: [
       {
-        url: '/icon-512x512.png',
-        width: 512,
-        height: 512,
+        url: `${BASE_URL}/og-image.png`,
+        width: 1200,
+        height: 630,
         alt: 'المدوّنة — الموسوعة القانونية المغربية',
       },
     ],
   },
   twitter: {
-    card: 'summary',
+    card: 'summary_large_image',
     title: 'المدوّنة — الموسوعة القانونية المغربية',
     description: 'ابحث وتصفّح القوانين والمدونات المغربية مجاناً',
-    images: ['/icon-512x512.png'],
+    images: [`${BASE_URL}/og-image.png`],
   },
   alternates: {
     canonical: BASE_URL,

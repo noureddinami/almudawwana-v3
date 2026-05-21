@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'ar_MA',
     siteName: 'المدوّنة — Al-Mudawwana',
-    images: [{ url: `${BASE_URL}/icon-512x512.png`, width: 512, height: 512 }],
+    images: [{ url: `${BASE_URL}/og-image.png`, width: 1200, height: 630, alt: 'المدوّنة — الموسوعة القانونية المغربية' }],
   },
   twitter: {
     card: 'summary_large_image',
@@ -121,6 +121,7 @@ export default async function HomePage() {
       <CacheHydrator store="codes" cacheKey="all" data={codesList} />
       <Navbar />
 
+      <main>
       {/* ── Hero ─────────────────────────────────────────────── */}
       <section className="bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 text-white
                           pt-10 pb-12 sm:pt-20 sm:pb-24 px-4 relative overflow-hidden">
@@ -723,6 +724,7 @@ export default async function HomePage() {
         </div>
       </section>
 
+      </main>
       <Footer />
     </div>
   );
