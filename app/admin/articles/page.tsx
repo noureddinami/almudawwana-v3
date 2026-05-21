@@ -228,7 +228,7 @@ export default function AdminArticlesPage() {
       toast.success(r.message);
       setShowCreate(false);
       // Notify subscribers of new article
-      const selectedCode = codes.find(c => c.id === createForm.code_id);
+      const selectedCode = allCodes.find(c => c.id === createForm.code_id);
       const codeSlugNew = selectedCode?.slug ?? '';
       sendPushNotification({
         title: '📜 مادة قانونية جديدة',
