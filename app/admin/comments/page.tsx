@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
+import { sendPushNotification } from '@/lib/pushNotification';
 
 const STATUSES = ['pending', 'approved', 'rejected'];
 const STATUS_LABEL: Record<string, string> = {
@@ -53,6 +54,17 @@ export default function AdminCommentsPage() {
     try {
       await adminComments.update(id, { status: 'approved' });
       toast.success('تم نشر التعليق');
+      // Notify subscribers of new approved comment
+      const comment = data?.data.find(c => c.id === id);
+      if (comment) {
+        const articleNum = comment.article?.number ?? '';
+        const codeSlug   = comment.article?.code?.slug ?? '';
+        sendPushNotification({
+          title: '💬 تعليق جديد',
+          body: `تعليق جديد على المادة ${articleNum}${comment.article?.code?.title_ar ? ` — ${comment.article.code.title_ar}` : ''}`,
+          url: codeSlug && articleNum ? `/codes/${codeSlug}/المادة-${articleNum}` : '/',
+        });
+      }
       load();
     } catch (e: any) { toast.error(e.message); }
   };

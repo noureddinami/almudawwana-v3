@@ -135,14 +135,15 @@ export default function AdminArticlesPage() {
       toast.success('تم تحديث الحالة');
       setEditId(null);
       load();
-      // Notify subscribers when article becomes active
-      if (editStatus === 'in_force' || editStatus === 'amended') {
+      // Notify subscribers of article status change (skip draft)
+      if (editStatus !== 'draft') {
         const article = data?.data.find(a => a.id === id);
         if (article) {
           const codeSlug = (article as any).code?.slug ?? '';
+          const statusAr = STATUS_LABEL[editStatus] ?? editStatus;
           sendPushNotification({
             title: '⚖️ تحديث مادة قانونية',
-            body: `المادة ${article.number}${article.code_id ? ` — ${(article as any).code?.title_ar ?? ''}` : ''} — تم تحديث حالتها`,
+            body: `المادة ${article.number}${(article as any).code?.title_ar ? ` — ${(article as any).code.title_ar}` : ''} — ${statusAr}`,
             url: codeSlug ? `/codes/${codeSlug}/المادة-${article.number}` : '/',
           });
         }
@@ -226,6 +227,14 @@ export default function AdminArticlesPage() {
       });
       toast.success(r.message);
       setShowCreate(false);
+      // Notify subscribers of new article
+      const selectedCode = codes.find(c => c.id === createForm.code_id);
+      const codeSlugNew = selectedCode?.slug ?? '';
+      sendPushNotification({
+        title: '📜 مادة قانونية جديدة',
+        body: `المادة ${createForm.number.trim()}${selectedCode ? ` — ${selectedCode.title_ar}` : ''}`,
+        url: codeSlugNew ? `/codes/${codeSlugNew}/المادة-${createForm.number.trim()}` : '/',
+      });
       setCreateForm({ number: '', content_ar: '', content_fr: '', status: 'in_force', code_id: createForm.code_id, meta_description: '', keywords: '' });
       load();
     } catch (e: any) {
