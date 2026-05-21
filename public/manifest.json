@@ -2,6 +2,7 @@
   "name": "المدوّنة — الموسوعة القانونية المغربية",
   "short_name": "المدوّنة",
   "description": "الموسوعة القانونية المغربية الشاملة — Comprehensive Arabic legal reference guide for Moroccan laws",
+  "id": "app.modawana",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
