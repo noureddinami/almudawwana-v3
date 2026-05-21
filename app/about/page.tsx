@@ -148,7 +148,7 @@ export default function AboutPage() {
                                    rounded-lg text-sm font-bold shrink-0">1</span>
                   <div>
                     <p className="text-sm text-slate-700">افتح موقع المدوّنة في متصفح <strong>Chrome</strong></p>
-                    <p className="text-xs text-slate-400 mt-0.5">almudawwana-v3.vercel.app</p>
+                    <p className="text-xs text-slate-400 mt-0.5">modawana.app</p>
                   </div>
                 </li>
                 <li className="flex gap-3">
@@ -197,7 +197,7 @@ export default function AboutPage() {
                                    rounded-lg text-sm font-bold shrink-0">1</span>
                   <div>
                     <p className="text-sm text-slate-700">افتح موقع المدوّنة في متصفح <strong>Safari</strong></p>
-                    <p className="text-xs text-slate-400 mt-0.5">almudawwana-v3.vercel.app</p>
+                    <p className="text-xs text-slate-400 mt-0.5">modawana.app</p>
                   </div>
                 </li>
                 <li className="flex gap-3">
