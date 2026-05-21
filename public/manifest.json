@@ -12,6 +12,8 @@
   "lang": "ar",
   "dir": "rtl",
   "categories": ["reference", "productivity", "education"],
+  "prefer_related_applications": false,
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "icons": [
     {
       "src": "/icon-192x192.png",
