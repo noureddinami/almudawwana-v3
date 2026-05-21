@@ -67,6 +67,8 @@ export interface AdminUser extends User {
 export interface AdminCode extends Code {
   official_number: string | null
   promulgation_date: string | null
+  meta_description: string | null
+  keywords: string[] | null
   created_at: string
 }
 

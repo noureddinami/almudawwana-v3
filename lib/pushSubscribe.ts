@@ -22,22 +22,57 @@ export function isPushSupported(): boolean {
   )
 }
 
+// ── Last error ───────────────────────────────────────────────
+let _lastError = ''
+export function getLastPushError(): string { return _lastError }
+
+/** Get SW registration with timeout (mobile can be slow) */
+async function getSwRegistration(): Promise<ServiceWorkerRegistration> {
+  // Ensure SW is registered
+  const regs = await navigator.serviceWorker.getRegistrations()
+  if (regs.length === 0) {
+    await navigator.serviceWorker.register('/sw.js')
+  }
+
+  return Promise.race([
+    navigator.serviceWorker.ready,
+    new Promise<never>((_, reject) =>
+      setTimeout(
+        () => reject(new Error('انتهت مهلة انتظار Service Worker — أعِد تحميل الصفحة وحاول مجدداً')),
+        12000,
+      )
+    ),
+  ])
+}
+
 /** Subscribe the current browser to push notifications and save to DB.
- *  Returns true on success, false on failure. */
+ *  Returns true on success, false on failure (check getLastPushError()). */
 export async function subscribeToPush(): Promise<boolean> {
+  _lastError = ''
   try {
     const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
     if (!publicKey) {
+      _lastError = 'مفتاح VAPID غير مُعرَّف — تحقق من إعدادات الخادم'
       console.error('[Push] NEXT_PUBLIC_VAPID_PUBLIC_KEY is not defined')
       return false
     }
 
-    const reg = await navigator.serviceWorker.ready
+    const reg = await getSwRegistration().catch((e: Error) => {
+      _lastError = e.message
+      throw e
+    })
+
     const applicationServerKey = urlBase64ToUint8Array(publicKey)
 
     const sub = await reg.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey,
+    }).catch((e: Error) => {
+      _lastError = e.name === 'NotAllowedError'
+        ? 'الإذن مرفوض — يرجى السماح بالإشعارات من إعدادات المتصفح'
+        : `فشل الاشتراك: ${e.message}`
+      console.error('[Push] pushManager.subscribe error:', e.name, e.message)
+      throw e
     })
 
     const json = sub.toJSON()
@@ -45,6 +80,7 @@ export async function subscribeToPush(): Promise<boolean> {
     const auth   = (json.keys as any)?.auth
 
     if (!json.endpoint || !p256dh || !auth) {
+      _lastError = 'الاشتراك ناقص — بيانات مفقودة'
       console.error('[Push] Subscription missing keys', json)
       return false
     }
@@ -56,12 +92,15 @@ export async function subscribeToPush(): Promise<boolean> {
     })
 
     if (!res.ok) {
-      console.error('[Push] Server rejected subscription', await res.text())
+      const text = await res.text()
+      _lastError = `خطأ في الخادم (${res.status}): ${text}`
+      console.error('[Push] Server rejected subscription', res.status, text)
       return false
     }
 
     return true
   } catch (e: any) {
+    if (!_lastError) _lastError = e?.message ?? 'خطأ غير معروف'
     console.error('[Push] subscribeToPush error:', e?.name, e?.message)
     return false
   }
@@ -93,7 +132,10 @@ export async function getPushStatus(): Promise<'subscribed' | 'unsubscribed' | '
   if (!isPushSupported()) return 'unsupported'
   if (Notification.permission === 'denied') return 'denied'
   try {
-    const reg = await navigator.serviceWorker.ready
+    const reg = await Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000)),
+    ])
     const sub = await reg.pushManager.getSubscription()
     return sub ? 'subscribed' : 'unsubscribed'
   } catch {

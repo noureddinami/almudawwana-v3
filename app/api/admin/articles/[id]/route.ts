@@ -25,7 +25,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const { id } = await params
 
   const body = await req.json()
-  const allowed = ['content_ar','content_fr','status','number']
+  const allowed = ['content_ar','content_fr','status','number','meta_description','keywords']
   const data = Object.fromEntries(Object.entries(body).filter(([k]) => allowed.includes(k)))
 
   const { data: article, error } = await supabase

@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
 
   let query = supabase
     .from('codes')
-    .select('id, slug, title_ar, title_fr, type, status, official_number, total_articles, promulgation_date, source_url, created_at', { count: 'exact' })
+    .select('id, slug, title_ar, title_fr, type, status, official_number, total_articles, promulgation_date, source_url, meta_description, keywords, created_at', { count: 'exact' })
 
   if (q)      query = query.or(`title_ar.ilike.%${q}%,title_fr.ilike.%${q}%`)
   if (status) query = query.eq('status', status)
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
   const { supabase } = authResult
 
   const body = await req.json()
-  const { title_ar, title_fr, type, official_number, promulgation_date, status, source_url } = body
+  const { title_ar, title_fr, type, official_number, promulgation_date, status, source_url, meta_description, keywords } = body
 
   if (!title_ar) return NextResponse.json({ message: 'العنوان بالعربية مطلوب' }, { status: 422 })
   if (!VALID_TYPES.includes(type)) return NextResponse.json({ message: 'نوع القانون غير صالح' }, { status: 422 })
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
 
   const { data, error } = await supabase
     .from('codes')
-    .insert({ title_ar, title_fr, type, official_number, promulgation_date, status: status ?? 'in_force', source_url, slug })
+    .insert({ title_ar, title_fr, type, official_number, promulgation_date, status: status ?? 'in_force', source_url, slug, meta_description: meta_description || null, keywords: keywords?.length ? keywords : null })
     .select()
     .single()
 

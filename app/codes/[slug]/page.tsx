@@ -25,7 +25,7 @@ async function getCode(slug: string) {
     const decoded = decodeURIComponent(slug)
     const { data } = await supabase
       .from('codes')
-      .select('id, slug, title_ar, title_fr, type, status, official_number, promulgation_date, source_url, total_articles')
+      .select('id, slug, title_ar, title_fr, type, status, official_number, promulgation_date, source_url, total_articles, meta_description, keywords')
       .eq('slug', decoded)
       .single()
     return data
@@ -85,12 +85,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!code) return { title: 'غير موجود' }
 
   const title = code.title_ar
-  const description = `${title}${code.title_fr ? ` — ${code.title_fr}` : ''} — ${code.total_articles ?? 0} مادة قانونية. تصفّح جميع مواد هذا القانون على المدوّنة.`
+  const description = (code as any).meta_description
+    ?? `${title}${code.title_fr ? ` — ${code.title_fr}` : ''} — ${code.total_articles ?? 0} مادة قانونية. تصفّح جميع مواد هذا القانون على المدوّنة.`
+  const keywords = ((code as any).keywords as string[] | null)?.join(', ')
+    ?? `${code.title_ar}${code.title_fr ? `, ${code.title_fr}` : ''}, قانون مغربي, تشريع, المدونة, droit marocain`
   const url = `${BASE_URL}/codes/${code.slug}`
 
   return {
     title,
     description,
+    keywords,
     openGraph: {
       title: `${title} | المدوّنة`,
       description,

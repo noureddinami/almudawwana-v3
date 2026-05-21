@@ -36,11 +36,13 @@ type FormState = {
   title_ar: string; title_fr: string; type: string;
   official_number: string; promulgation_date: string; status: string;
   source_url: string; slug: string;
+  meta_description: string; keywords: string;
 };
 const emptyForm: FormState = {
   title_ar: '', title_fr: '', type: 'code',
   official_number: '', promulgation_date: '', status: 'in_force',
   source_url: '', slug: '',
+  meta_description: '', keywords: '',
 };
 
 /** Generate a slug from text: lowercase, spaces→hyphens, keep Arabic chars.
@@ -93,6 +95,8 @@ export default function AdminCodesPage() {
       status: c.status,
       source_url: (c as any).source_url ?? '',
       slug: c.slug ?? '',
+      meta_description: c.meta_description ?? '',
+      keywords: (c.keywords ?? []).join(', '),
     });
     setModal('edit');
   };
@@ -101,6 +105,9 @@ export default function AdminCodesPage() {
     e.preventDefault();
     setSaving(true);
     try {
+      const keywordsArr = form.keywords
+        ? form.keywords.split(',').map(k => k.trim()).filter(Boolean)
+        : [];
       const payload = {
         title_ar: form.title_ar,
         title_fr: form.title_fr || undefined,
@@ -110,6 +117,8 @@ export default function AdminCodesPage() {
         status: form.status,
         source_url: form.source_url || null,
         slug: form.slug || undefined,
+        meta_description: form.meta_description || null,
+        keywords: keywordsArr.length ? keywordsArr : null,
       };
       if (modal === 'create') {
         await adminCodes.create(payload);
@@ -477,6 +486,41 @@ export default function AdminCodesPage() {
                 <p className="mt-1 text-xs text-slate-400">
                   هذا الرابط يظهر للمستخدمين كزر «النص الرسمي» في صفحة القانون.
                 </p>
+              </div>
+
+              {/* ── SEO ────────────────────────────────────────── */}
+              <div className="border-t border-slate-100 pt-4 space-y-3">
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">SEO — محركات البحث</p>
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-sm font-medium text-slate-700">وصف الصفحة (meta description)</label>
+                    <span className={`text-xs ${form.meta_description.length > 160 ? 'text-red-500' : 'text-slate-400'}`}>
+                      {form.meta_description.length}/160
+                    </span>
+                  </div>
+                  <textarea
+                    rows={2}
+                    value={form.meta_description}
+                    onChange={e => setForm(f => ({ ...f, meta_description: e.target.value }))}
+                    placeholder="وصف مختصر يظهر في نتائج Google (120–160 حرف)..."
+                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg resize-none
+                               focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    الكلمات المفتاحية
+                    <span className="text-slate-400 font-normal mr-1 text-xs">(مفصولة بفواصل)</span>
+                  </label>
+                  <input
+                    value={form.keywords}
+                    onChange={e => setForm(f => ({ ...f, keywords: e.target.value }))}
+                    placeholder="مدونة الأسرة, code famille, طلاق, زواج, نفقة"
+                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg
+                               focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <p className="mt-1 text-xs text-slate-400">أضف المصطلحات العربية والفرنسية — كل كلمة مفصولة بفاصلة</p>
+                </div>
               </div>
 
               <div className="flex justify-end gap-3 pt-2">

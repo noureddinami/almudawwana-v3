@@ -6,8 +6,9 @@ import { PaginatedResponse } from '@/lib/api';
 import {
   Search, ChevronLeft, ChevronRight, RefreshCw,
   FileText, Pencil, Trash2, X, CheckSquare, Square, ChevronDown,
-  StickyNote, Send, Loader2, Plus, Save,
+  StickyNote, Send, Loader2, Plus, Save, Sparkles,
 } from 'lucide-react';
+import { extractKeywords, autoDescription } from '@/lib/seoKeywords';
 import toast from 'react-hot-toast';
 import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
 import { sendPushNotification } from '@/lib/pushNotification';
@@ -47,7 +48,7 @@ export default function AdminArticlesPage() {
 
   // create article form state
   const [showCreate, setShowCreate]     = useState(false);
-  const [createForm, setCreateForm]     = useState({ number: '', content_ar: '', content_fr: '', status: 'in_force', code_id: '' });
+  const [createForm, setCreateForm]     = useState({ number: '', content_ar: '', content_fr: '', status: 'in_force', code_id: '', meta_description: '', keywords: '' });
   const [createSaving, setCreateSaving] = useState(false);
 
   // notes panel state
@@ -211,16 +212,21 @@ export default function AdminArticlesPage() {
     if (!createForm.code_id) { toast.error('اختر القانون أولاً'); return; }
     setCreateSaving(true);
     try {
+      const keywordsArr = createForm.keywords
+        ? createForm.keywords.split(',').map(k => k.trim()).filter(Boolean)
+        : [];
       const r = await adminArticles.create({
-        code_id:    createForm.code_id,
-        number:     createForm.number.trim(),
-        content_ar: createForm.content_ar.trim(),
-        content_fr: createForm.content_fr.trim() || undefined,
-        status:     createForm.status,
+        code_id:          createForm.code_id,
+        number:           createForm.number.trim(),
+        content_ar:       createForm.content_ar.trim(),
+        content_fr:       createForm.content_fr.trim() || undefined,
+        status:           createForm.status,
+        meta_description: createForm.meta_description.trim() || undefined,
+        keywords:         keywordsArr.length ? keywordsArr : undefined,
       });
       toast.success(r.message);
       setShowCreate(false);
-      setCreateForm({ number: '', content_ar: '', content_fr: '', status: 'in_force', code_id: createForm.code_id });
+      setCreateForm({ number: '', content_ar: '', content_fr: '', status: 'in_force', code_id: createForm.code_id, meta_description: '', keywords: '' });
       load();
     } catch (e: any) {
       toast.error(e.message);
@@ -683,6 +689,65 @@ export default function AdminArticlesPage() {
                              focus:outline-none focus:ring-2 focus:ring-blue-500 leading-relaxed"
                   dir="ltr"
                 />
+              </div>
+
+              {/* ── SEO ─────────────────────────────────────── */}
+              <div className="border-t border-slate-100 pt-4 space-y-3">
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">SEO — محركات البحث</p>
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-sm font-medium text-slate-700">
+                      وصف الصفحة
+                      <span className="text-slate-400 font-normal mr-1 text-xs">(يُولَّد تلقائياً من النص)</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setCreateForm(f => ({
+                        ...f,
+                        meta_description: autoDescription(f.content_ar),
+                      }))}
+                      className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                    >
+                      <Sparkles className="w-3 h-3" />
+                      توليد تلقائي
+                    </button>
+                  </div>
+                  <textarea
+                    rows={2}
+                    value={createForm.meta_description}
+                    onChange={e => setCreateForm(f => ({ ...f, meta_description: e.target.value }))}
+                    placeholder="أتركه فارغاً للتوليد التلقائي من محتوى المادة..."
+                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl resize-none
+                               focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-sm font-medium text-slate-700">
+                      الكلمات المفتاحية
+                      <span className="text-slate-400 font-normal mr-1 text-xs">(مفصولة بفواصل)</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const codeTitle = allCodes.find(c => c.id === createForm.code_id)?.title_ar ?? '';
+                        const kws = extractKeywords(createForm.content_ar, [codeTitle, `المادة ${createForm.number}`]);
+                        setCreateForm(f => ({ ...f, keywords: kws.join(', ') }));
+                      }}
+                      className="text-xs text-emerald-600 hover:text-emerald-800 flex items-center gap-1"
+                    >
+                      <Sparkles className="w-3 h-3" />
+                      توليد تلقائي
+                    </button>
+                  </div>
+                  <input
+                    value={createForm.keywords}
+                    onChange={e => setCreateForm(f => ({ ...f, keywords: e.target.value }))}
+                    placeholder="مدونة الأسرة, زواج, طلاق — أو اضغط «توليد تلقائي»"
+                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl
+                               focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
               </div>
 
               <div className="flex gap-3 pt-2 sticky bottom-0 bg-white border-t border-slate-100 pb-1 -mx-6 px-6">

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Bell, BellOff, BellRing } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { isPushSupported, getPushStatus, subscribeToPush, unsubscribeFromPush } from '@/lib/pushSubscribe'
+import { isPushSupported, getPushStatus, subscribeToPush, unsubscribeFromPush, getLastPushError } from '@/lib/pushSubscribe'
 
 type Status = 'unsupported' | 'denied' | 'subscribed' | 'unsubscribed' | 'loading'
 
@@ -34,7 +34,8 @@ export default function NotificationBell({ className = '', labeled = false }: Pr
       toast.success('🔔 تم تفعيل الإشعارات بنجاح')
     } else {
       setStatus('unsubscribed')
-      toast.error('تعذّر تفعيل الإشعارات — تحقق من الاتصال')
+      const err = getLastPushError()
+      toast.error(err || 'تعذّر تفعيل الإشعارات — تحقق من الاتصال', { duration: 5000 })
     }
   }
 

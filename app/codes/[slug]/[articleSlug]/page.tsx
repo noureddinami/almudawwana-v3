@@ -11,6 +11,7 @@ import { ChevronLeft, Scale, ExternalLink, Eye, MessageSquare, BookMarked, Stick
 import ShareButton from '@/components/ShareButton';
 import CacheHydrator from '@/components/CacheHydrator';
 import { LegalArticleJsonLd, BreadcrumbJsonLd } from '@/components/JsonLd';
+import { extractKeywords, autoDescription } from '@/lib/seoKeywords';
 import ReportButton from '@/components/ReportButton';
 
 const BASE_URL = 'https://modawana.app'
@@ -108,13 +109,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const codeName = article.code?.title_ar ?? code.title_ar
   const title = `المادة ${article.number} — ${codeName}`
-  const contentPreview = article.content_ar?.slice(0, 200).replace(/\n/g, ' ') ?? ''
-  const description = `${title}. ${contentPreview}...`
   const url = `${BASE_URL}/codes/${codeSlug}/المادة-${article.number}`
+
+  // Description : custom si saisie, sinon auto depuis le contenu
+  const description = (article as any).meta_description
+    ?? autoDescription(article.content_ar ?? '', title)
+
+  // Keywords : custom si saisis, sinon extraits automatiquement du contenu
+  const keywordsArr: string[] = ((article as any).keywords as string[] | null)
+    ?? extractKeywords(article.content_ar ?? '', [codeName, `المادة ${article.number}`])
+  const keywords = keywordsArr.join(', ')
 
   return {
     title,
     description,
+    keywords,
     openGraph: {
       title: `${title} | المدوّنة`,
       description,

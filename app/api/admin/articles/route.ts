@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
   const { supabase } = authResult
 
   const body = await req.json()
-  const { code_id, number, content_ar, content_fr, status } = body
+  const { code_id, number, content_ar, content_fr, status, meta_description, keywords } = body
 
   if (!code_id || !number || !content_ar) {
     return NextResponse.json({ message: 'code_id, number, content_ar مطلوبة' }, { status: 422 })
@@ -77,6 +77,8 @@ export async function POST(req: NextRequest) {
       content_fr: content_fr ?? null,
       status: status ?? 'in_force',
       slug,
+      meta_description: meta_description || null,
+      keywords: keywords?.length ? keywords : null,
     })
     .select('*, code:codes(id, slug, title_ar)')
     .single()
