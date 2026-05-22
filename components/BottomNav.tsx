@@ -20,7 +20,7 @@ const MORE_LINKS = [
   { href: '/request-code', label: 'طلب إضافة نص قانوني', icon: FilePlus2, color: 'text-emerald-600', external: false },
   { href: '/contact',      label: 'تواصل معنا',          icon: Mail,      color: 'text-blue-600',    external: false },
   { href: '/login',        label: 'حسابي',               icon: User,      color: 'text-slate-600',   external: false },
-  { href: '/why',          label: 'لماذا المدوّنة؟',      icon: Info,      color: 'text-blue-600',    external: true  },
+  { href: '/why',          label: 'حول المدوّنة',          icon: Info,      color: 'text-blue-600',    external: true  },
 ];
 
 export default function BottomNav() {
@@ -96,7 +96,7 @@ export default function BottomNav() {
                       ? 'bg-blue-50 text-blue-700 font-medium'
                       : 'text-slate-700 hover:bg-slate-50 active:bg-slate-100'}`;
               return link.external ? (
-                <a key={link.href} href={link.href} className={cls}>
+                <a key={link.href} href={link.href} target="_blank" rel="noopener noreferrer" className={cls}>
                   <Icon className={`w-5 h-5 ${active ? 'text-blue-600' : link.color}`} />
                   {link.label}
                 </a>

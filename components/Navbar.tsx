@@ -9,7 +9,7 @@ import toast from 'react-hot-toast';
 
 const NAV_LINKS = [
   { href: '/',              label: 'الرئيسية',            anchor: false },
-  { href: '/why',           label: 'لماذا المدوّنة؟',      anchor: false },
+  { href: '/why',           label: 'حول المدوّنة',          anchor: false, blank: true },
   { href: '/codes',         label: 'النصوص القانونية',    anchor: false },
   { href: '/#latest',       label: 'آخر الإضافات',        anchor: true  },
   { href: '/search',        label: 'البحث',               anchor: false },
@@ -136,6 +136,8 @@ export default function Navbar() {
                 <a
                   key={link.href}
                   href={link.href}
+                  target={(link as any).blank ? '_blank' : undefined}
+                  rel={(link as any).blank ? 'noopener noreferrer' : undefined}
                   onClick={e => handleAnchorClick(e, link.href, link.anchor)}
                   className={`
                     px-3 py-2 text-sm rounded-lg transition-colors whitespace-nowrap font-medium
@@ -251,6 +253,8 @@ export default function Navbar() {
                   <a
                     key={link.href}
                     href={link.href}
+                    target={(link as any).blank ? '_blank' : undefined}
+                    rel={(link as any).blank ? 'noopener noreferrer' : undefined}
                     onClick={e => handleAnchorClick(e, link.href, link.anchor)}
                     className={`
                       flex items-center gap-2 px-3 py-2.5 text-sm rounded-lg transition-colors
