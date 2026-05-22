@@ -35,7 +35,9 @@ export default function CodesGrid({ codes }: { codes: any[] }) {
     const q = query.trim().toLowerCase();
     return codes.filter(c =>
       c.title_ar?.toLowerCase().includes(q) ||
-      c.title_fr?.toLowerCase().includes(q)
+      c.title_fr?.toLowerCase().includes(q) ||
+      c.official_number?.toLowerCase().includes(q) ||
+      (Array.isArray(c.keywords) && c.keywords.some((k: string) => k.toLowerCase().includes(q)))
     );
   }, [codes, query]);
 
@@ -151,6 +153,11 @@ export default function CodesGrid({ codes }: { codes: any[] }) {
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${meta.cls}`}>
                       {meta.label}
                     </span>
+                    {code.official_number && (
+                      <span className="text-xs bg-slate-50 text-slate-500 px-2 py-0.5 rounded-full border border-slate-200" dir="ltr">
+                        {highlight(code.official_number, query)}
+                      </span>
+                    )}
                     {code.total_articles > 0 ? (
                       <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">
                         {code.total_articles} مادة
