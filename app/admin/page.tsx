@@ -6,7 +6,7 @@ import { adminStats, adminComments, DashboardStats } from '@/lib/adminApi';
 import {
   Users, BookOpen, FileText, Eye, TrendingUp, AlertCircle,
   MessageSquare, CheckCircle, XCircle, Clock, UserCheck,
-  BarChart2, Activity, FilePlus2,
+  BarChart2, Activity, FilePlus2, Smartphone,
 } from 'lucide-react';
 
 /* ── helpers ─────────────────────────────────────────────────────────── */
@@ -113,17 +113,23 @@ function ActivityChart({ data }: { data: { date: string; count: number }[] }) {
 
 /* ── main page ───────────────────────────────────────────────────────── */
 
+interface PwaStats { total: number; ios: number; android: number; desktop: number; month: number; }
+
 export default function AdminDashboard() {
-  const [stats, setStats]     = useState<DashboardStats | null>(null);
-  const [error, setError]     = useState('');
-  const [loading, setLoading] = useState(true);
+  const [stats, setStats]       = useState<DashboardStats | null>(null);
+  const [pwaStats, setPwaStats] = useState<PwaStats | null>(null);
+  const [error, setError]       = useState('');
+  const [loading, setLoading]   = useState(true);
   const [approvingId, setApprovingId] = useState<string | null>(null);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [dismissed, setDismissed]     = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    adminStats.dashboard()
-      .then(setStats)
+    Promise.all([
+      adminStats.dashboard(),
+      fetch('/api/admin/pwa-stats').then(r => r.ok ? r.json() : null),
+    ])
+      .then(([dash, pwa]) => { setStats(dash); if (pwa) setPwaStats(pwa); })
       .catch(e => setError(e.message))
       .finally(() => setLoading(false));
   }, []);
@@ -155,6 +161,30 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-slate-900 font-kufi">لوحة التحكم</h1>
+
+      {/* ── PWA installs banner ── */}
+      {pwaStats && (
+        <div className="bg-white rounded-xl border border-slate-200 p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <Smartphone className="w-4 h-4 text-blue-500" />
+            <h2 className="font-semibold text-slate-800">تثبيتات التطبيق (PWA)</h2>
+            <span className="mr-auto text-xs text-slate-400">+{fmt(pwaStats.month)} هذا الشهر</span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {[
+              { label: 'إجمالي التثبيتات', value: pwaStats.total,   color: 'text-blue-600',    bg: 'bg-blue-50'    },
+              { label: 'Android',           value: pwaStats.android, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+              { label: 'iOS',               value: pwaStats.ios,     color: 'text-slate-600',   bg: 'bg-slate-50'   },
+              { label: 'Desktop',           value: pwaStats.desktop, color: 'text-violet-600',  bg: 'bg-violet-50'  },
+            ].map(s => (
+              <div key={s.label} className={`${s.bg} rounded-xl p-4 text-center`}>
+                <p className={`text-2xl font-bold ${s.color}`}>{fmt(s.value)}</p>
+                <p className="text-xs text-slate-500 mt-1">{s.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ── Row 1: KPI cards ── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">

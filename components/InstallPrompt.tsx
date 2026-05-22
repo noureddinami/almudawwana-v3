@@ -67,6 +67,7 @@ export default function InstallPrompt() {
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === 'accepted') {
       setVisible(false);
+      // Track via appinstalled event (fired automatically) — no double-call needed
     }
     setDeferredPrompt(null);
   }, [deferredPrompt]);
