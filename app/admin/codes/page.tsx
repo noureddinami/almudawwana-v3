@@ -353,11 +353,16 @@ export default function AdminCodesPage() {
                   value={form.title_ar}
                   onChange={e => {
                     const title = e.target.value;
+                    const autoKeywords = title
+                      .split(/\s+/)
+                      .map(w => w.replace(/[ً-ٟ]/g, '').trim())
+                      .filter(Boolean)
+                      .join(', ');
                     setForm(f => ({
                       ...f,
                       title_ar: title,
-                      // Auto-generate slug from title_fr if available, else from title_ar
                       slug: autoSlug(f.title_fr || title),
+                      keywords: autoKeywords,
                     }));
                   }}
                   className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg
