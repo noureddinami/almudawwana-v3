@@ -24,13 +24,21 @@ async function recordInstall(source: 'appinstalled' | 'standalone_launch') {
   try {
     const device_id = getDeviceId();
     const platform  = getPlatform();
-    await fetch('/api/pwa-install', {
+    const res = await fetch('/api/pwa-install', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ device_id, platform, source }),
     });
-    localStorage.setItem(TRACKED_KEY, '1');
-  } catch { /* silently ignore */ }
+    if (res.ok) {
+      localStorage.setItem(TRACKED_KEY, '1');
+      sessionStorage.removeItem('pwa_just_installed');
+    } else {
+      const body = await res.json().catch(() => ({}));
+      console.warn('[PwaInstallTracker] API error:', body);
+    }
+  } catch (e) {
+    console.warn('[PwaInstallTracker] fetch failed:', e);
+  }
 }
 
 function isStandalone(): boolean {
@@ -43,13 +51,20 @@ function isStandalone(): boolean {
 export default function PwaInstallTracker() {
   useEffect(() => {
     const alreadyTracked = localStorage.getItem(TRACKED_KEY);
+    if (alreadyTracked) return;
 
-    // Signal 1: appinstalled event (Android/Chrome, fires at install moment)
+    // Signal 1: appinstalled fired before React mounted (caught by inline script)
+    if (sessionStorage.getItem('pwa_just_installed')) {
+      recordInstall('appinstalled');
+      return;
+    }
+
+    // Signal 2: appinstalled fires after React mounts
     const onInstalled = () => recordInstall('appinstalled');
     window.addEventListener('appinstalled', onInstalled);
 
-    // Signal 2: first launch in standalone mode (catches iOS + missed Android)
-    if (!alreadyTracked && isStandalone()) {
+    // Signal 3: first launch in standalone mode (catches iOS + Android after install)
+    if (isStandalone()) {
       recordInstall('standalone_launch');
     }
 

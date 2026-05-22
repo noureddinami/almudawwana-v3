@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createPublicClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/server';
 
 export async function POST(req: NextRequest) {
   try {
@@ -9,15 +9,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'missing fields' }, { status: 400 });
     }
 
-    const supabase = createPublicClient();
+    const supabase = createServiceClient();
     const { error } = await supabase
       .from('pwa_installs')
-      .upsert({ device_id, platform, source }, { onConflict: 'device_id', ignoreDuplicates: true });
+      .insert({ device_id, platform, source });
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    // Ignore unique constraint violation (device already tracked)
+    if (error && !error.message.includes('unique') && !error.code?.includes('23505')) {
+      console.error('[pwa-install]', error.message);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
 
     return NextResponse.json({ ok: true });
-  } catch {
+  } catch (e: any) {
+    console.error('[pwa-install] catch:', e?.message);
     return NextResponse.json({ error: 'invalid request' }, { status: 400 });
   }
 }

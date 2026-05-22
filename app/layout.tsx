@@ -164,6 +164,10 @@ export default function RootLayout({
                 navigator.serviceWorker.register('/sw.js', { scope: '/' });
               });
             }
+            // Capture appinstalled before React mounts
+            window.addEventListener('appinstalled', function() {
+              sessionStorage.setItem('pwa_just_installed', '1');
+            });
           `}
         </Script>
       </head>
