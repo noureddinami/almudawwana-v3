@@ -9,7 +9,7 @@ import toast from 'react-hot-toast';
 
 const NAV_LINKS = [
   { href: '/',              label: 'الرئيسية',            anchor: false },
-  { href: '/#features',     label: 'لماذا المدوّنة؟',      anchor: true  },
+  { href: '/why',           label: 'لماذا المدوّنة؟',      anchor: false },
   { href: '/codes',         label: 'النصوص القانونية',    anchor: false },
   { href: '/#latest',       label: 'آخر الإضافات',        anchor: true  },
   { href: '/search',        label: 'البحث',               anchor: false },
@@ -84,7 +84,9 @@ export default function Navbar() {
 
   const isActive = (href: string) => {
     if (href === '/') return pathname === '/';
-    return pathname.startsWith(href.split('#')[0]) && href.split('#')[0] !== '/';
+    const base = href.split('#')[0];
+    if (!base || base === '/') return false;
+    return pathname.startsWith(base);
   };
 
   return (

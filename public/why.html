@@ -1,0 +1,1660 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>المدوّنة — موسوعتك القانونية المغربية</title>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════
+   TOKENS — couleurs exactes de l'app
+══════════════════════════════════ */
+:root {
+  --blue:       #3b5bdb;
+  --blue-dark:  #2b4ac7;
+  --blue-deep:  #1a3299;
+  --blue-light: #eef2ff;
+  --blue-mid:   #4c6ef5;
+  --green:      #2f9e44;
+  --green-bg:   #2b8a3e;
+  --bg:         #f0f2f8;
+  --card:       #ffffff;
+  --text:       #1a1a2e;
+  --text2:      #495057;
+  --muted:      #868e96;
+  --border:     #dee2e6;
+  --orange:     #e67700;
+  --orange-bg:  #fff3cd;
+  --r:          12px;
+  --r-lg:       20px;
+  --shadow:     0 2px 16px rgba(59,91,219,.10);
+  --shadow-lg:  0 8px 32px rgba(59,91,219,.18);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Noto Naskh Arabic',serif;
+  background:var(--bg);
+  color:var(--text);
+  overflow-x:hidden;
+  line-height:1.7;
+}
+a{text-decoration:none;color:inherit}
+img{max-width:100%;display:block}
+
+/* ══════════════════════════════════
+   UTILS
+══════════════════════════════════ */
+.wrap{width:100%;max-width:1100px;margin:0 auto;padding:0 20px}
+
+.tag{
+  display:inline-block;
+  font-size:11px;font-weight:600;
+  padding:3px 10px;border-radius:20px;
+}
+.tag-orange{background:var(--orange-bg);color:var(--orange)}
+.tag-blue  {background:var(--blue-light);color:var(--blue)}
+.tag-green {background:#d3f9d8;color:var(--green)}
+.tag-gray  {background:#f1f3f5;color:var(--muted)}
+
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:'Noto Naskh Arabic',serif;
+  font-size:15px;font-weight:600;
+  padding:13px 28px;border-radius:var(--r);
+  border:none;cursor:pointer;transition:.2s;
+}
+.btn-blue{background:var(--blue);color:#fff;box-shadow:var(--shadow)}
+.btn-blue:hover{background:var(--blue-dark);transform:translateY(-1px);box-shadow:var(--shadow-lg)}
+.btn-white{background:#fff;color:var(--blue);border:1.5px solid rgba(255,255,255,.4)}
+.btn-white:hover{background:rgba(255,255,255,.9)}
+.btn-outline{background:transparent;color:var(--blue);border:1.5px solid var(--blue)}
+.btn-outline:hover{background:var(--blue-light)}
+
+.section-label{
+  font-size:12px;font-weight:600;letter-spacing:.15em;
+  color:var(--blue);text-transform:uppercase;
+  margin-bottom:8px;
+}
+.section-title{
+  font-family:'Amiri',serif;
+  font-size:clamp(26px,4vw,38px);
+  font-weight:700;line-height:1.25;
+  color:var(--text);margin-bottom:12px;
+}
+.section-sub{
+  font-size:16px;color:var(--text2);
+  line-height:1.9;max-width:540px;
+}
+
+/* reveal */
+.rv{opacity:0;transform:translateY(28px);transition:.65s ease}
+.rv.in{opacity:1;transform:translateY(0)}
+.rv.d1{transition-delay:.08s}
+.rv.d2{transition-delay:.16s}
+.rv.d3{transition-delay:.24s}
+.rv.d4{transition-delay:.32s}
+
+/* ══════════════════════════════════
+   NAVBAR
+══════════════════════════════════ */
+.navbar{
+  position:fixed;top:0;left:0;right:0;z-index:200;
+  background:rgba(240,242,248,.92);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(59,91,219,.08);
+  transition:.3s;
+}
+.navbar.dark{
+  background:rgba(27,50,200,.97);
+  border-bottom-color:rgba(255,255,255,.08);
+}
+.navbar.dark .nav-logo-name{color:#fff}
+.navbar.dark .nav-link{color:rgba(255,255,255,.7)}
+.navbar.dark .nav-link:hover{color:#fff}
+.navbar.dark .nav-btn{background:#fff;color:var(--blue)}
+.navbar.dark .hamburger span{background:#fff}
+
+.nav-inner{
+  height:62px;display:flex;
+  align-items:center;justify-content:space-between;
+}
+.nav-logo{display:flex;align-items:center;gap:10px}
+.nav-logo-icon{
+  width:40px;height:40px;border-radius:10px;
+  background:var(--blue);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 8px rgba(59,91,219,.3);
+}
+.nav-logo-name{font-family:'Amiri',serif;font-size:22px;font-weight:700;color:var(--blue);transition:.3s;}
+.nav-logo-sub{
+  font-size:9px;color:var(--muted);letter-spacing:.1em;
+  display:block;line-height:1;margin-top:1px;
+}
+.nav-links{display:flex;align-items:center;gap:24px;list-style:none}
+.nav-link{
+  font-size:14px;font-weight:500;
+  color:var(--text2);transition:.2s;
+}
+.nav-link:hover{color:var(--blue)}
+.nav-btn{
+  font-family:'Noto Naskh Arabic',serif;
+  font-size:13px;font-weight:600;
+  background:var(--blue);color:#fff;
+  padding:8px 20px;border-radius:var(--r);
+  border:none;cursor:pointer;transition:.2s;
+  display:inline-flex;align-items:center;gap:6px;
+}
+.nav-btn:hover{background:var(--blue-dark)}
+.hamburger{
+  display:none;flex-direction:column;gap:5px;
+  background:none;border:none;cursor:pointer;padding:4px;
+}
+.hamburger span{width:22px;height:2px;background:var(--text);border-radius:2px;transition:.3s;display:block}
+.mobile-menu{
+  display:none;flex-direction:column;
+  background:var(--blue-deep);
+  padding:12px 20px 20px;
+  border-top:1px solid rgba(255,255,255,.08);
+}
+.mobile-menu.open{display:flex}
+.mobile-menu .nav-link{color:rgba(255,255,255,.75);padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:15px}
+.mobile-menu .nav-btn{margin-top:16px;justify-content:center;width:100%}
+
+/* ══════════════════════════════════
+   HERO — bleu royal exactement comme l'app
+══════════════════════════════════ */
+.hero{
+  background:linear-gradient(160deg,#3b5bdb 0%,#2b4ac7 50%,#1a3299 100%);
+  padding:120px 0 80px;
+  position:relative;overflow:hidden;
+  min-height:100vh;display:flex;align-items:center;
+}
+/* cercles décoratifs comme dans l'app */
+.hero::before{
+  content:'';position:absolute;
+  width:500px;height:500px;border-radius:50%;
+  background:rgba(255,255,255,.04);
+  top:-120px;left:-80px;pointer-events:none;
+}
+.hero::after{
+  content:'';position:absolute;
+  width:300px;height:300px;border-radius:50%;
+  background:rgba(255,255,255,.04);
+  bottom:-60px;right:10%;pointer-events:none;
+}
+.hero-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:60px;align-items:center;position:relative;z-index:2;
+}
+/* pill badge comme dans l'app */
+.hero-pill{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.2);
+  border-radius:50px;
+  padding:7px 16px;
+  font-size:13px;color:rgba(255,255,255,.9);
+  margin-bottom:20px;
+  backdrop-filter:blur(8px);
+}
+.hero-pill-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:#69db7c;
+  animation:blink 2s infinite;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+
+.hero-title{
+  font-family:'Amiri',serif;
+  font-size:clamp(52px,8vw,88px);
+  font-weight:700;color:#fff;
+  line-height:.95;margin-bottom:6px;
+}
+.hero-tagline{
+  font-size:20px;color:rgba(255,255,255,.9);
+  margin-bottom:10px;
+  font-family:'Noto Naskh Arabic',serif;
+}
+.hero-desc{
+  font-size:16px;color:rgba(255,255,255,.72);
+  line-height:1.9;margin-bottom:32px;
+  max-width:440px;
+}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:44px}
+
+/* stats exactement comme l'app — grille 2x2 */
+.hero-stats{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;
+}
+.hero-stat{
+  background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:var(--r);
+  padding:16px 20px;
+  backdrop-filter:blur(8px);
+}
+.hero-stat-num{
+  font-family:'Amiri',serif;font-size:28px;font-weight:700;color:#fff;
+  line-height:1;
+}
+.hero-stat-label{font-size:12px;color:rgba(255,255,255,.65);margin-top:3px}
+
+/* ══════════ PHONE MOCKUP ══════════ */
+.hero-visual{position:relative;display:flex;justify-content:center;align-items:center}
+.phone-wrap{position:relative;animation:float 5s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0) rotate(-1.5deg)}50%{transform:translateY(-14px) rotate(1deg)}}
+
+.phone{
+  width:260px;
+  background:#fff;
+  border-radius:36px;
+  border:5px solid rgba(0,0,0,.18);
+  box-shadow:
+    0 40px 80px rgba(0,0,0,.35),
+    0 0 0 1px rgba(255,255,255,.06),
+    inset 0 0 0 1px rgba(255,255,255,.04);
+  overflow:hidden;
+}
+.phone-status{
+  background:var(--blue);
+  padding:10px 16px 6px;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.phone-status-time{font-size:10px;color:#fff;font-weight:600;font-family:monospace}
+.phone-status-icons{font-size:9px;color:rgba(255,255,255,.8)}
+
+/* Hero screen of the phone */
+.pscreen-hero{
+  background:linear-gradient(160deg,#3b5bdb,#2b4ac7 70%,#1a3299);
+  padding:20px 14px 16px;text-align:center;
+}
+.pscreen-app-icon{
+  width:52px;height:52px;border-radius:14px;
+  background:rgba(255,255,255,.18);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 10px;
+  border:1px solid rgba(255,255,255,.25);
+}
+.pscreen-pill{
+  display:inline-block;
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);
+  border-radius:30px;padding:3px 10px;
+  font-size:8px;color:rgba(255,255,255,.85);margin-bottom:8px;
+}
+.pscreen-title{
+  font-family:'Amiri',serif;font-size:28px;font-weight:700;color:#fff;
+  line-height:1;margin-bottom:4px;
+}
+.pscreen-sub{font-size:10px;color:rgba(255,255,255,.8);margin-bottom:10px}
+
+.pscreen-search{
+  background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);
+  border-radius:10px;padding:7px 10px;
+  display:flex;align-items:center;gap:6px;margin-bottom:10px;
+}
+.pscreen-search-text{font-size:9px;color:rgba(255,255,255,.65);flex:1;text-align:right}
+.pscreen-search-btn{
+  background:rgba(255,255,255,.2);border-radius:6px;
+  padding:3px 8px;font-size:8px;color:#fff;font-weight:600;white-space:nowrap;
+}
+
+.pscreen-stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:4px}
+.pscreen-stat-card{
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);
+  border-radius:8px;padding:8px 10px;text-align:right;
+}
+.pscreen-stat-n{font-family:'Amiri',serif;font-size:16px;font-weight:700;color:#fff}
+.pscreen-stat-l{font-size:7px;color:rgba(255,255,255,.65);display:block}
+
+/* laws list section */
+.pscreen-laws{background:#f0f2f8;padding:10px 12px}
+.pscreen-laws-title{
+  font-family:'Amiri',serif;font-size:13px;font-weight:700;color:var(--text);
+  margin-bottom:4px;
+}
+.pscreen-laws-sub{font-size:7px;color:var(--muted);margin-bottom:8px}
+
+.pscreen-law-item{
+  background:#fff;border-radius:8px;
+  display:flex;align-items:center;
+  padding:7px 10px;margin-bottom:5px;
+  border:1px solid var(--border);gap:6px;
+}
+.pscreen-law-tag{font-size:7px;padding:2px 6px;border-radius:10px;flex-shrink:0}
+.pscreen-law-name{flex:1;font-size:10px;color:var(--text);text-align:right;font-weight:600}
+.pscreen-law-arrow{color:var(--muted);font-size:10px}
+
+.pscreen-nav{
+  background:#fff;
+  display:flex;border-top:1px solid var(--border);
+}
+.pscreen-nav-item{
+  flex:1;padding:7px 0 5px;text-align:center;font-size:16px;
+}
+.pscreen-nav-item.active{color:var(--blue);border-top:2px solid var(--blue)}
+.pscreen-nav-item:not(.active){color:var(--muted)}
+.pscreen-nav-label{font-size:6px;display:block;margin-top:1px;color:inherit;font-family:'Noto Naskh Arabic',serif}
+
+/* floating badges */
+.float-badge{
+  position:absolute;
+  background:#fff;border-radius:var(--r);
+  padding:10px 14px;
+  box-shadow:0 4px 20px rgba(0,0,0,.12);
+  display:flex;align-items:center;gap:8px;
+  min-width:150px;
+}
+.float-badge-icon{
+  width:34px;height:34px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;flex-shrink:0;
+}
+.float-badge-title{font-size:11px;font-weight:600;color:var(--text);display:block}
+.float-badge-sub{font-size:10px;color:var(--muted);display:block;margin-top:1px}
+.badge-tl{top:30px;left:-150px;animation:fb1 4s ease-in-out infinite}
+.badge-br{bottom:60px;right:-150px;animation:fb2 5s ease-in-out infinite}
+@keyframes fb1{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes fb2{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+
+/* ══════════════════════════════════
+   CONCEPT SECTION
+══════════════════════════════════ */
+.concept{padding:96px 0;background:#fff}
+.concept-grid{display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:center}
+
+/* cards exactly like the app's law cards */
+.app-card{
+  background:#fff;border-radius:var(--r);
+  border:1px solid var(--border);
+  padding:20px;
+  display:flex;align-items:center;gap:14px;
+  transition:.25s;
+  box-shadow:0 1px 6px rgba(0,0,0,.04);
+}
+.app-card:hover{border-color:var(--blue);box-shadow:var(--shadow);transform:translateY(-2px)}
+.app-card-icon{
+  width:44px;height:44px;border-radius:11px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;flex-shrink:0;
+}
+.app-card-body{flex:1}
+.app-card-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:3px;font-family:'Amiri',serif}
+.app-card-desc{font-size:12px;color:var(--muted);line-height:1.7}
+
+.concept-cards{display:flex;flex-direction:column;gap:10px}
+
+/* ══════════════════════════════════
+   FEATURES SECTION
+══════════════════════════════════ */
+.features{padding:96px 0;background:var(--bg)}
+.features-intro{text-align:center;margin-bottom:56px}
+.features-intro .section-sub{margin:0 auto}
+
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+
+.feat-card{
+  background:#fff;border-radius:var(--r);
+  border:1px solid var(--border);
+  padding:28px 22px;
+  transition:.25s;
+  box-shadow:0 1px 6px rgba(0,0,0,.04);
+}
+.feat-card:hover{
+  border-color:var(--blue);
+  box-shadow:var(--shadow);
+  transform:translateY(-3px);
+}
+.feat-icon{
+  width:48px;height:48px;border-radius:12px;
+  background:var(--blue-light);
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;margin-bottom:16px;
+  transition:.25s;
+}
+.feat-card:hover .feat-icon{background:var(--blue);filter:grayscale(0)}
+.feat-title{font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px;font-family:'Amiri',serif}
+.feat-desc{font-size:13px;color:var(--text2);line-height:1.85}
+
+/* ══════════════════════════════════
+   SCREENS SHOWCASE — app screenshots
+══════════════════════════════════ */
+.screens{padding:96px 0;background:#fff;overflow:hidden}
+.screens-header{text-align:center;margin-bottom:56px}
+
+.screens-row{
+  display:flex;gap:16px;
+  justify-content:center;align-items:flex-end;
+  flex-wrap:nowrap;
+  padding-bottom:8px;
+}
+
+.screen-card{
+  flex-shrink:0;
+  background:var(--text);
+  border-radius:28px;
+  border:4px solid #1a1a2e;
+  box-shadow:0 24px 56px rgba(0,0,0,.22);
+  overflow:hidden;
+  transition:.3s;
+}
+.screen-card:hover{transform:translateY(-6px) scale(1.02);box-shadow:0 32px 72px rgba(0,0,0,.28)}
+.screen-card.main{width:200px}
+.screen-card.side{width:180px;opacity:.75;transform:scale(.95) translateY(16px)}
+.screen-card.side:hover{opacity:1}
+
+.screen-status{
+  background:var(--blue);padding:8px 14px 4px;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.ss-time{font-size:9px;color:#fff;font-family:monospace;font-weight:600}
+.ss-icons{font-size:8px;color:rgba(255,255,255,.8)}
+
+/* ══════════════════════════════════
+   PWA INSTALL
+══════════════════════════════════ */
+.pwa{padding:96px 0;background:var(--bg)}
+.pwa-grid{display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:start}
+
+.pwa-tabs{display:flex;gap:0;margin-bottom:28px;background:#fff;border-radius:var(--r);padding:4px;border:1px solid var(--border)}
+.pwa-tab{
+  flex:1;text-align:center;padding:10px;
+  font-size:13px;font-weight:600;
+  border-radius:10px;border:none;background:none;cursor:pointer;
+  color:var(--muted);transition:.2s;
+  font-family:'Noto Naskh Arabic',serif;
+}
+.pwa-tab.active{background:var(--blue);color:#fff;box-shadow:0 2px 8px rgba(59,91,219,.25)}
+
+.pwa-panel{display:none}
+.pwa-panel.active{display:flex;flex-direction:column;gap:0}
+
+.step{display:flex;gap:16px;padding-bottom:28px;position:relative}
+.step:not(:last-child)::before{
+  content:'';position:absolute;
+  right:21px;top:42px;bottom:0;width:2px;
+  background:linear-gradient(to bottom,var(--blue-light),transparent);
+}
+.step-num{
+  width:44px;height:44px;border-radius:50%;
+  background:var(--blue);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;font-weight:700;flex-shrink:0;z-index:1;
+  box-shadow:0 2px 8px rgba(59,91,219,.3);
+  font-family:'Noto Naskh Arabic',serif;
+}
+.step-content{padding-top:8px}
+.step-platform{font-size:10px;color:var(--blue);font-weight:600;letter-spacing:.1em;margin-bottom:4px;text-transform:uppercase}
+.step-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px}
+.step-desc{font-size:13px;color:var(--text2);line-height:1.85}
+.step-tip{
+  display:inline-flex;align-items:center;gap:6px;
+  margin-top:10px;background:var(--blue-light);border-radius:8px;
+  padding:6px 12px;font-size:11px;color:var(--blue);font-weight:500;
+}
+
+/* install visual */
+.pwa-visual{position:sticky;top:100px}
+.pwa-phone{
+  width:240px;margin:0 auto;
+  background:#fff;border-radius:32px;
+  border:4px solid #ddd;
+  box-shadow:0 20px 60px rgba(0,0,0,.15);
+  overflow:hidden;
+}
+.pwa-notch{background:#1a1a2e;height:20px;display:flex;align-items:center;justify-content:center}
+.pwa-notch-pill{width:60px;height:7px;background:#0a0a1a;border-radius:10px}
+
+.install-url{
+  background:var(--bg);padding:8px 14px;
+  display:flex;align-items:center;gap:6px;
+  border-bottom:1px solid var(--border);
+}
+.install-url-text{
+  flex:1;text-align:center;
+  font-size:10px;color:var(--text2);font-weight:500;
+  background:#fff;border-radius:20px;padding:4px 10px;
+  border:1px solid var(--border);
+}
+.install-url-share{font-size:14px;color:var(--blue)}
+
+.install-banner{
+  background:var(--blue);padding:12px 14px;
+  display:flex;align-items:center;gap:10px;
+}
+.install-banner-icon{font-size:22px}
+.install-banner-info{flex:1}
+.install-banner-title{font-size:11px;color:#fff;font-weight:700;display:block}
+.install-banner-sub{font-size:9px;color:rgba(255,255,255,.75);display:block;margin-top:1px}
+.install-banner-btn{
+  background:#fff;color:var(--blue);font-size:10px;
+  font-weight:700;padding:5px 10px;border-radius:6px;border:none;cursor:pointer;
+  white-space:nowrap;font-family:'Noto Naskh Arabic',serif;
+}
+
+.install-body{padding:12px 14px}
+.install-preview-card{
+  background:var(--bg);border-radius:var(--r);padding:12px;
+  border:1px solid var(--border);
+}
+.install-prev-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.install-prev-icon{
+  width:36px;height:36px;border-radius:9px;
+  background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:18px;
+}
+.install-prev-name{font-family:'Amiri',serif;font-size:15px;font-weight:700;color:var(--text)}
+.install-prev-url{font-size:9px;color:var(--muted);display:block;margin-top:1px}
+.install-prev-desc{font-size:10px;color:var(--text2);line-height:1.7;margin-bottom:10px}
+.install-add-btn{
+  width:100%;background:var(--blue);color:#fff;
+  border:none;border-radius:9px;padding:10px;
+  font-size:12px;font-weight:600;cursor:pointer;
+  font-family:'Noto Naskh Arabic',serif;
+}
+
+.install-offline{
+  margin-top:10px;background:var(--blue-light);border-radius:9px;
+  padding:8px 12px;display:flex;align-items:center;gap:8px;
+  border:1px solid rgba(59,91,219,.15);
+}
+.install-offline-icon{font-size:16px}
+.install-offline-title{font-size:10px;font-weight:600;color:var(--blue);display:block}
+.install-offline-sub{font-size:8px;color:var(--text2);display:block;margin-top:1px}
+
+/* ══════════════════════════════════
+   CODES SECTION — list style like app
+══════════════════════════════════ */
+.codes{padding:96px 0;background:#fff}
+.codes-header{
+  display:flex;align-items:baseline;justify-content:space-between;
+  margin-bottom:8px;
+}
+.codes-view-all{font-size:14px;color:var(--blue);font-weight:600;display:flex;align-items:center;gap:4px}
+.codes-sub{font-size:13px;color:var(--muted);margin-bottom:28px}
+
+.codes-list{display:flex;flex-direction:column;gap:0;border-radius:var(--r);overflow:hidden;border:1px solid var(--border);background:#fff;box-shadow:0 2px 12px rgba(0,0,0,.04)}
+
+/* exactly like app list items */
+.code-item{
+  display:flex;align-items:center;
+  padding:14px 18px;border-bottom:1px solid var(--border);
+  transition:.2s;cursor:pointer;gap:12px;
+}
+.code-item:last-child{border-bottom:none}
+.code-item:hover{background:var(--blue-light)}
+.code-item-icon{
+  width:38px;height:38px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;flex-shrink:0;
+}
+.code-item-info{flex:1;text-align:right}
+.code-item-name{font-size:15px;font-weight:700;color:var(--text);font-family:'Amiri',serif}
+.code-item-meta{font-size:12px;color:var(--muted);margin-top:2px}
+.code-item-right{display:flex;align-items:center;gap:8px}
+.code-item-arrow{color:var(--muted);font-size:14px}
+
+.codes-btn-all{
+  width:100%;margin-top:14px;
+  background:#fff;border:1.5px solid var(--border);
+  color:var(--text);padding:14px;border-radius:var(--r);
+  font-size:14px;font-weight:600;cursor:pointer;
+  transition:.2s;font-family:'Noto Naskh Arabic',serif;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.codes-btn-all:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light)}
+
+/* ══════════════════════════════════
+   ABOUT / MISSION
+══════════════════════════════════ */
+.about{
+  padding:96px 0;
+  background:linear-gradient(160deg,#3b5bdb 0%,#2b4ac7 60%,#1a3299 100%);
+  position:relative;overflow:hidden;
+}
+.about::before{
+  content:'';position:absolute;
+  width:400px;height:400px;border-radius:50%;
+  background:rgba(255,255,255,.04);
+  top:-80px;right:-80px;pointer-events:none;
+}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:center;position:relative;z-index:1}
+
+.about-quote{
+  font-family:'Amiri',serif;font-size:clamp(20px,3vw,26px);
+  font-style:italic;color:#fff;
+  line-height:1.8;
+  border-right:3px solid rgba(255,255,255,.4);
+  padding-right:24px;margin-bottom:24px;
+}
+.about-text{font-size:15px;color:rgba(255,255,255,.75);line-height:2}
+
+.about-values{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.about-val{
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:var(--r);padding:18px;
+  transition:.25s;
+}
+.about-val:hover{background:rgba(255,255,255,.14)}
+.about-val-icon{font-size:22px;margin-bottom:8px}
+.about-val-title{font-size:13px;font-weight:700;color:#fff;margin-bottom:4px}
+.about-val-desc{font-size:12px;color:rgba(255,255,255,.6);line-height:1.7}
+
+/* ══════════════════════════════════
+   CTA
+══════════════════════════════════ */
+.cta{
+  padding:80px 0;background:var(--bg);text-align:center;
+}
+.cta-card{
+  background:#fff;border-radius:var(--r-lg);
+  border:1px solid var(--border);
+  padding:56px 48px;
+  box-shadow:0 4px 24px rgba(0,0,0,.06);
+  max-width:680px;margin:0 auto;
+}
+.cta-icon{
+  width:64px;height:64px;border-radius:18px;
+  background:var(--blue);display:flex;align-items:center;justify-content:center;
+  margin:0 auto 20px;font-size:28px;
+  box-shadow:0 4px 16px rgba(59,91,219,.3);
+}
+.cta-title{
+  font-family:'Amiri',serif;font-size:clamp(28px,4vw,36px);
+  font-weight:700;color:var(--text);margin-bottom:12px;
+}
+.cta-desc{font-size:16px;color:var(--text2);line-height:1.9;margin-bottom:32px}
+.cta-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.cta-store{
+  display:flex;align-items:center;gap:10px;
+  background:var(--text);color:#fff;
+  padding:12px 20px;border-radius:var(--r);
+  font-size:13px;font-weight:600;
+  transition:.2s;font-family:'Noto Naskh Arabic',serif;
+}
+.cta-store:hover{background:var(--blue);transform:translateY(-1px)}
+.cta-store-icon{font-size:22px}
+.cta-store-text{line-height:1.2}
+.cta-store-label{font-size:9px;opacity:.7;display:block}
+.cta-store-name{display:block}
+
+/* ══════════════════════════════════
+   FOOTER
+══════════════════════════════════ */
+footer{background:var(--text);padding:56px 0 24px}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:48px;margin-bottom:40px}
+.footer-logo{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.footer-logo-icon{
+  width:36px;height:36px;border-radius:9px;
+  background:var(--blue);display:flex;align-items:center;justify-content:center;
+}
+.footer-logo-name{font-family:'Amiri',serif;font-size:20px;font-weight:700;color:#fff}
+.footer-desc{font-size:13px;color:#6c757d;line-height:1.9;max-width:260px;margin-bottom:16px}
+.footer-disclaimer{font-size:10px;color:#495057;border-top:1px solid #2d3748;padding-top:12px}
+.footer-col-title{font-size:10px;color:#6c757d;letter-spacing:.2em;text-transform:uppercase;margin-bottom:14px;font-weight:600}
+.footer-links{list-style:none;display:flex;flex-direction:column;gap:9px}
+.footer-link{font-size:13px;color:#6c757d;transition:.2s}
+.footer-link:hover{color:#fff}
+.footer-bottom{
+  border-top:1px solid #2d3748;padding-top:20px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:8px;
+}
+.footer-copy{font-size:11px;color:#495057}
+.footer-domain{font-size:13px;color:var(--blue)}
+
+/* ══════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════ */
+@media(max-width:900px){
+  .hero-grid,.concept-grid,.pwa-grid,.about-grid,.footer-grid{grid-template-columns:1fr;gap:40px}
+  .hero-visual{order:-1}
+  .pwa-visual{display:none}
+  .features-grid{grid-template-columns:1fr 1fr}
+  .screens-row .screen-card.side{display:none}
+  .footer-grid{grid-template-columns:1fr}
+  .float-badge{display:none}
+}
+@media(max-width:600px){
+  .nav-links,.nav-btn{display:none}
+  .hamburger{display:flex}
+  .hero-stats{grid-template-columns:1fr 1fr}
+  .features-grid{grid-template-columns:1fr}
+  .about-values{grid-template-columns:1fr}
+  .cta-card{padding:36px 24px}
+  .footer-bottom{flex-direction:column;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ NAVBAR ══ -->
+<nav class="navbar" id="nav">
+  <div class="wrap">
+    <div class="nav-inner">
+      <a href="#" class="nav-logo">
+        <div id="logo-light" style="display:flex;align-items:center"><svg width="200" height="44" viewBox="0 0 280 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(226,0) scale(0.3)">
+    <path d="M28 68 L28 132 L70 162 L70 38 Z" fill="#2152cc"/>
+    <path d="M172 68 L172 132 L130 162 L130 38 Z" fill="#2152cc"/>
+    <path d="M28 68 L70 38 L100 22 L70 38 Z" fill="#2152cc"/>
+    <path d="M172 68 L130 38 L100 22 L130 38 Z" fill="#2152cc"/>
+    <path d="M28 132 L70 162 L100 178 L70 162 Z" fill="#2152cc"/>
+    <path d="M172 132 L130 162 L100 178 L130 162 Z" fill="#2152cc"/>
+    <path d="M70 36 L100 20 L130 36 L130 164 L100 180 L70 164 Z" fill="#4a7fd4"/>
+    <ellipse cx="100" cy="152" rx="13" ry="4.5" fill="white" opacity="0.9"/>
+    <rect x="98" y="72" width="4" height="80" rx="2" fill="white"/>
+    <ellipse cx="100" cy="72" rx="4.5" ry="3" fill="white"/>
+    <path d="M96.5 72 Q100 63 103.5 72" fill="white"/>
+    <path d="M50 94 Q100 87 150 94" stroke="white" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+    <circle cx="54" cy="94" r="3.5" fill="white"/>
+    <circle cx="146" cy="94" r="3.5" fill="white"/>
+    <line x1="54" y1="97" x2="48" y2="116" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+    <line x1="66" y1="97" x2="72" y2="116" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M46 116 Q59 112 74 116" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+    <line x1="146" y1="97" x2="140" y2="116" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+    <line x1="134" y1="97" x2="128" y2="116" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M126 116 Q139 112 154 116" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  </g>
+  <text x="218" y="38" font-family="Amiri, serif" font-size="32" font-weight="700" fill="#1a2f6e" text-anchor="end" direction="rtl">المدوّنة</text>
+  <text x="218" y="52" font-family="monospace" font-size="8" fill="#7a96c8" text-anchor="end" letter-spacing="2">AL-MUDAWWANA</text>
+</svg></div>
+        <div id="logo-dark" style="display:none;align-items:center"><svg width="200" height="44" viewBox="0 0 280 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(226,0) scale(0.3)">
+    <path d="M28 68 L28 132 L70 162 L70 38 Z" fill="rgba(255,255,255,0.2)"/>
+    <path d="M172 68 L172 132 L130 162 L130 38 Z" fill="rgba(255,255,255,0.2)"/>
+    <path d="M28 68 L70 38 L100 22 L70 38 Z" fill="rgba(255,255,255,0.2)"/>
+    <path d="M172 68 L130 38 L100 22 L130 38 Z" fill="rgba(255,255,255,0.2)"/>
+    <path d="M28 132 L70 162 L100 178 L70 162 Z" fill="rgba(255,255,255,0.2)"/>
+    <path d="M172 132 L130 162 L100 178 L130 162 Z" fill="rgba(255,255,255,0.2)"/>
+    <path d="M70 36 L100 20 L130 36 L130 164 L100 180 L70 164 Z" fill="rgba(255,255,255,0.32)"/>
+    <ellipse cx="100" cy="152" rx="13" ry="4.5" fill="white" opacity="0.9"/>
+    <rect x="98" y="72" width="4" height="80" rx="2" fill="white"/>
+    <ellipse cx="100" cy="72" rx="4.5" ry="3" fill="white"/>
+    <path d="M96.5 72 Q100 63 103.5 72" fill="white"/>
+    <path d="M50 94 Q100 87 150 94" stroke="white" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+    <circle cx="54" cy="94" r="3.5" fill="white"/>
+    <circle cx="146" cy="94" r="3.5" fill="white"/>
+    <line x1="54" y1="97" x2="48" y2="116" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+    <line x1="66" y1="97" x2="72" y2="116" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M46 116 Q59 112 74 116" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+    <line x1="146" y1="97" x2="140" y2="116" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+    <line x1="134" y1="97" x2="128" y2="116" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M126 116 Q139 112 154 116" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  </g>
+  <text x="218" y="38" font-family="Amiri, serif" font-size="32" font-weight="700" fill="white" text-anchor="end" direction="rtl">المدوّنة</text>
+  <text x="218" y="52" font-family="monospace" font-size="8" fill="rgba(255,255,255,0.55)" text-anchor="end" letter-spacing="2">AL-MUDAWWANA</text>
+</svg></div>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#concept" class="nav-link">المفهوم</a></li>
+        <li><a href="#features" class="nav-link">المميزات</a></li>
+        <li><a href="#install" class="nav-link">التثبيت</a></li>
+        <li><a href="#codes" class="nav-link">القوانين</a></li>
+        <li><a href="#about" class="nav-link">عن المشروع</a></li>
+      </ul>
+      <a href="https://modawana.app" class="nav-btn" style="display:inline-flex;align-items:center;gap:8px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        ابدأ البحث
+      </a>
+      <button class="hamburger" id="ham"><span></span><span></span><span></span></button>
+    </div>
+    <div class="mobile-menu" id="mob">
+      <a href="#concept" class="nav-link">المفهوم</a>
+      <a href="#features" class="nav-link">المميزات</a>
+      <a href="#install" class="nav-link">التثبيت</a>
+      <a href="#codes" class="nav-link">القوانين</a>
+      <a href="#about" class="nav-link">عن المشروع</a>
+      <a href="https://modawana.app" class="nav-btn">ابدأ البحث مجاناً ←</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ══ HERO ══ -->
+<section class="hero">
+  <div class="wrap">
+    <div class="hero-grid">
+
+      <div>
+        <div class="hero-pill">
+          <div class="hero-pill-dot"></div>
+          متاح الآن — مجاني وشامل
+        </div>
+        <h1 class="hero-title">المدوّنة</h1>
+        <p class="hero-tagline">الوصول السهل إلى القانون المغربي</p>
+        <p class="hero-desc">ابحث وتصفح أكثر من 3,706 مادة قانونية من القوانين والمدونات المغربية الرسمية — مجاناً، بدون تسجيل.</p>
+        <div class="hero-actions">
+          <a href="https://modawana.app" class="btn btn-white">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            ابحث الآن
+          </a>
+          <a href="#install" class="btn" style="background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.25)">
+            📲 ثبّت التطبيق
+          </a>
+        </div>
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <div class="hero-stat-num">3,706</div>
+            <div class="hero-stat-label">مادة قانونية</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-num">10</div>
+            <div class="hero-stat-label">قانون ومدونة</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-num" style="font-size:22px">مجاني</div>
+            <div class="hero-stat-label">وصول حر للجميع</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-num">3</div>
+            <div class="hero-stat-label">أوضاع بحث</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phone -->
+      <div class="hero-visual">
+        <div class="phone-wrap">
+          <!-- Floating badges -->
+          <div class="float-badge badge-tl">
+            <div class="float-badge-icon" style="background:#d3f9d8;font-size:18px">📥</div>
+            <div>
+              <span class="float-badge-title">تحميل بدون إنترنت</span>
+              <span class="float-badge-sub">القراءة في أي وقت</span>
+            </div>
+          </div>
+          <div class="float-badge badge-br">
+            <div class="float-badge-icon" style="background:var(--blue-light)">⚡</div>
+            <div>
+              <span class="float-badge-title">بحث فوري بالرقم</span>
+              <span class="float-badge-sub">الفصل 25 — م. 25</span>
+            </div>
+          </div>
+
+          <div class="phone">
+            <div class="phone-status">
+              <span class="phone-status-time">23:13</span>
+              <span class="phone-status-icons">▪▪▪ ☁ 🔋</span>
+            </div>
+            <!-- Hero screen -->
+            <div class="pscreen-hero">
+              <div class="pscreen-app-icon">
+                <svg width="28" height="28" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M28 68 L28 132 L70 162 L70 38 Z" fill="rgba(255,255,255,0.7)"/>
+  <path d="M172 68 L172 132 L130 162 L130 38 Z" fill="rgba(255,255,255,0.7)"/>
+  <path d="M28 68 L70 38 L100 22 L70 38 Z" fill="rgba(255,255,255,0.7)"/>
+  <path d="M172 68 L130 38 L100 22 L130 38 Z" fill="rgba(255,255,255,0.7)"/>
+  <path d="M28 132 L70 162 L100 178 L70 162 Z" fill="rgba(255,255,255,0.7)"/>
+  <path d="M172 132 L130 162 L100 178 L130 162 Z" fill="rgba(255,255,255,0.7)"/>
+  <path d="M70 36 L100 20 L130 36 L130 164 L100 180 L70 164 Z" fill="rgba(255,255,255,0.9)"/>
+  <ellipse cx="100" cy="152" rx="13" ry="4.5" fill="white"/>
+  <rect x="98" y="72" width="4" height="80" rx="2" fill="white"/>
+  <ellipse cx="100" cy="72" rx="4.5" ry="3" fill="white"/>
+  <path d="M96.5 72 Q100 63 103.5 72" fill="white"/>
+  <path d="M50 94 Q100 87 150 94" stroke="white" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+  <circle cx="54" cy="94" r="3.5" fill="white"/>
+  <circle cx="146" cy="94" r="3.5" fill="white"/>
+  <line x1="54" y1="97" x2="48" y2="116" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+  <line x1="66" y1="97" x2="72" y2="116" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M46 116 Q59 112 74 116" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  <line x1="146" y1="97" x2="140" y2="116" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+  <line x1="134" y1="97" x2="128" y2="116" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M126 116 Q139 112 154 116" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+</svg>
+              </div>
+              <div class="pscreen-pill">موسوعتك القانونية المغربية — مجانية وشاملة</div>
+              <div class="pscreen-title">المدوّنة</div>
+              <div class="pscreen-sub">الوصول السهل إلى القانون المغربي</div>
+              <div class="pscreen-search">
+                <div class="pscreen-search-btn">ابحث الآن</div>
+                <span class="pscreen-search-text">ابحث في القوانين المغربية...</span>
+                <span style="color:rgba(255,255,255,.5);font-size:12px">🔍</span>
+              </div>
+              <div class="pscreen-stats-grid">
+                <div class="pscreen-stat-card">
+                  <span class="pscreen-stat-n">3,706</span>
+                  <span class="pscreen-stat-l">مادة قانونية</span>
+                </div>
+                <div class="pscreen-stat-card">
+                  <span class="pscreen-stat-n">10</span>
+                  <span class="pscreen-stat-l">قانون ومدونة</span>
+                </div>
+                <div class="pscreen-stat-card">
+                  <span class="pscreen-stat-n" style="font-size:13px">مجاني</span>
+                  <span class="pscreen-stat-l">وصول حر للجميع</span>
+                </div>
+                <div class="pscreen-stat-card">
+                  <span class="pscreen-stat-n">3</span>
+                  <span class="pscreen-stat-l">أوضاع بحث</span>
+                </div>
+              </div>
+            </div>
+            <!-- Laws section -->
+            <div class="pscreen-laws">
+              <div class="pscreen-laws-title">القوانين المتاحة</div>
+              <div class="pscreen-laws-sub">المصدر: الجريدة الرسمية المغربية</div>
+              <div class="pscreen-law-item">
+                <span class="pscreen-law-arrow">‹</span>
+                <span class="pscreen-law-name">الدستور</span>
+                <span class="pscreen-law-tag tag-orange">دستور</span>
+              </div>
+              <div class="pscreen-law-item">
+                <span class="pscreen-law-arrow">‹</span>
+                <span class="pscreen-law-name">المسطرة الجنائية</span>
+                <span class="pscreen-law-tag tag-blue">قانون</span>
+              </div>
+              <div class="pscreen-law-item">
+                <span class="pscreen-law-arrow">‹</span>
+                <span class="pscreen-law-name">مجموعة القانون الجنائي</span>
+                <span class="pscreen-law-tag tag-blue">قانون</span>
+              </div>
+            </div>
+            <div class="pscreen-nav">
+              <div class="pscreen-nav-item active">🏠<span class="pscreen-nav-label">الرئيسية</span></div>
+              <div class="pscreen-nav-item"><svg width="14" height="14" viewBox="0 0 200 200" fill="none"><path d="M28 68 L28 132 L70 162 L70 38 Z" fill="#2152cc"/><path d="M172 68 L172 132 L130 162 L130 38 Z" fill="#2152cc"/><path d="M28 68 L70 38 L100 22 L70 38 Z" fill="#2152cc"/><path d="M172 68 L130 38 L100 22 L130 38 Z" fill="#2152cc"/><path d="M28 132 L70 162 L100 178 L70 162 Z" fill="#2152cc"/><path d="M172 132 L130 162 L100 178 L130 162 Z" fill="#2152cc"/><path d="M70 36 L100 20 L130 36 L130 164 L100 180 L70 164 Z" fill="#4a7fd4"/><rect x="98" y="72" width="4" height="80" rx="2" fill="white"/><path d="M96.5 72 Q100 63 103.5 72" fill="white"/><path d="M50 94 Q100 87 150 94" stroke="white" stroke-width="3.5" stroke-linecap="round" fill="none"/><circle cx="54" cy="94" r="3.5" fill="white"/><circle cx="146" cy="94" r="3.5" fill="white"/><line x1="54" y1="97" x2="48" y2="116" stroke="white" stroke-width="2.2" stroke-linecap="round"/><line x1="66" y1="97" x2="72" y2="116" stroke="white" stroke-width="2.2" stroke-linecap="round"/><path d="M46 116 Q59 112 74 116" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="146" y1="97" x2="140" y2="116" stroke="white" stroke-width="2.2" stroke-linecap="round"/><line x1="134" y1="97" x2="128" y2="116" stroke="white" stroke-width="2.2" stroke-linecap="round"/><path d="M126 116 Q139 112 154 116" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/><ellipse cx="100" cy="152" rx="13" ry="4.5" fill="white" opacity="0.9"/></svg><span class="pscreen-nav-label">القوانين</span></div>
+              <div class="pscreen-nav-item">🔍<span class="pscreen-nav-label">البحث</span></div>
+              <div class="pscreen-nav-item">📥<span class="pscreen-nav-label">المحمّلة</span></div>
+              <div class="pscreen-nav-item">···<span class="pscreen-nav-label">المزيد</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══ CONCEPT ══ -->
+<section class="concept" id="concept">
+  <div class="wrap">
+    <div class="concept-grid">
+
+      <div class="concept-cards rv">
+        <div class="app-card rv d1">
+          <div class="app-card-icon" style="background:#eef2ff">📜</div>
+          <div class="app-card-body">
+            <div class="app-card-title">نصوص رسمية موثّقة</div>
+            <div class="app-card-desc">مأخوذة مباشرة من الجريدة الرسمية للمملكة المغربية</div>
+          </div>
+          <span class="tag tag-blue">رسمي</span>
+        </div>
+        <div class="app-card rv d2">
+          <div class="app-card-icon" style="background:#fff3cd">🔍</div>
+          <div class="app-card-body">
+            <div class="app-card-title">بحث بالرقم أو النص</div>
+            <div class="app-card-desc">ابحث بالفصل، المادة، أو كلمة مفتاحية — نتائج فورية</div>
+          </div>
+          <span class="tag tag-orange">بحث</span>
+        </div>
+        <div class="app-card rv d3">
+          <div class="app-card-icon" style="background:#d3f9d8">📲</div>
+          <div class="app-card-body">
+            <div class="app-card-title">قراءة بدون إنترنت</div>
+            <div class="app-card-desc">حمّل أي قانون للقراءة في أي وقت حتى بدون اتصال</div>
+          </div>
+          <span class="tag tag-green">Offline</span>
+        </div>
+        <div class="app-card rv d4">
+          <div class="app-card-icon" style="background:#eef2ff">🆓</div>
+          <div class="app-card-body">
+            <div class="app-card-title">مجاني للجميع دائماً</div>
+            <div class="app-card-desc">لا اشتراك ولا إعلانات — المعرفة القانونية حق</div>
+          </div>
+          <span class="tag tag-blue">مجاني</span>
+        </div>
+      </div>
+
+      <div class="rv d2">
+        <div class="section-label">ما هي المدوّنة؟</div>
+        <h2 class="section-title">مرجعك القانوني<br>في يدك — دائماً</h2>
+        <p class="section-sub">المدوّنة تطبيق PWA مغربي يجمع القوانين والمدونات الرسمية في مكان واحد، مع بحث ذكي وإمكانية التحميل للقراءة بدون إنترنت. مجاني تماماً، بدون تسجيل.</p>
+        <div style="margin-top:28px;display:flex;gap:10px;flex-wrap:wrap">
+          <a href="https://modawana.app" class="btn btn-blue">ابدأ الآن مجاناً</a>
+          <a href="#install" class="btn btn-outline">تثبيت التطبيق</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══ FEATURES ══ -->
+<section class="features" id="features">
+  <div class="wrap">
+    <div class="features-intro rv">
+      <div class="section-label">المميزات</div>
+      <h2 class="section-title">كل ما تحتاجه في تطبيق واحد</h2>
+      <p class="section-sub">من البحث البسيط بالرقم إلى القراءة الكاملة بدون إنترنت — المدوّنة معك في كل حالة.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feat-card rv">
+        <div class="feat-icon">🔢</div>
+        <div class="feat-title">البحث برقم المادة</div>
+        <div class="feat-desc">اكتب رقم الفصل أو المادة مباشرة واصل للنص في ثانية واحدة مع المواد المشابهة</div>
+      </div>
+      <div class="feat-card rv d1">
+        <div class="feat-icon">📝</div>
+        <div class="feat-title">البحث بالنص الحر</div>
+        <div class="feat-desc">ابحث بكلمة مفتاحية أو جملة في كامل محتوى القوانين والمدونات المتاحة</div>
+      </div>
+      <div class="feat-card rv d2">
+        <div class="feat-icon">📶</div>
+        <div class="feat-title">القراءة بدون إنترنت</div>
+        <div class="feat-desc">حمّل أي قانون على جهازك واقرأه في أي وقت حتى داخل قاعة المحكمة</div>
+      </div>
+      <div class="feat-card rv">
+        <div class="feat-icon">⚖️</div>
+        <div class="feat-title">تصفح حسب النوع</div>
+        <div class="feat-desc">فلتر القوانين حسب النوع: دساتير، قوانين عادية، تنظيمية، مراسيم، مدونات</div>
+      </div>
+      <div class="feat-card rv d1">
+        <div class="feat-icon">📤</div>
+        <div class="feat-title">طلب إضافة قانون</div>
+        <div class="feat-desc">لم تجد القانون الذي تبحث عنه؟ اطلب إضافته وسنعمل على توفيره</div>
+      </div>
+      <div class="feat-card rv d2">
+        <div class="feat-icon">📱</div>
+        <div class="feat-title">تطبيق PWA كامل</div>
+        <div class="feat-desc">ثبّته على هاتفك iPhone أو Android — يعمل كتطبيق أصلي بدون متجر تطبيقات</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ SCREENS SHOWCASE ══ -->
+<section class="screens">
+  <div class="wrap">
+    <div class="screens-header rv">
+      <div class="section-label">واجهة التطبيق</div>
+      <h2 class="section-title">تصميم بسيط وسهل الاستخدام</h2>
+      <p class="section-sub" style="margin:0 auto">واجهة مصممة خصيصاً باللغة العربية — سهلة لكل المستخدمين.</p>
+    </div>
+    <div class="screens-row">
+
+      <!-- Screen 1: Home -->
+      <div class="screen-card side rv d1">
+        <div class="screen-status">
+          <span class="ss-time">23:13</span>
+          <span class="ss-icons">▪▪ 🔋</span>
+        </div>
+        <div style="background:linear-gradient(160deg,#3b5bdb,#1a3299);padding:16px 12px;text-align:center">
+          <div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,.15);margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:18px">⚖️</div>
+          <div style="font-size:8px;color:rgba(255,255,255,.7);margin-bottom:4px">موسوعتك القانونية المغربية</div>
+          <div style="font-family:'Amiri',serif;font-size:22px;font-weight:700;color:#fff;margin-bottom:8px">المدوّنة</div>
+          <div style="background:rgba(255,255,255,.15);border-radius:8px;padding:6px 10px;display:flex;align-items:center;gap:6px;margin-bottom:8px">
+            <span style="font-size:8px;color:rgba(255,255,255,.6);flex:1;text-align:right">ابحث في القوانين...</span>
+            <span style="font-size:10px">🔍</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
+            <div style="background:rgba(255,255,255,.12);border-radius:8px;padding:7px;text-align:right">
+              <div style="font-family:'Amiri',serif;font-size:14px;font-weight:700;color:#fff">3,706</div>
+              <div style="font-size:7px;color:rgba(255,255,255,.6)">مادة قانونية</div>
+            </div>
+            <div style="background:rgba(255,255,255,.12);border-radius:8px;padding:7px;text-align:right">
+              <div style="font-family:'Amiri',serif;font-size:14px;font-weight:700;color:#fff">10</div>
+              <div style="font-size:7px;color:rgba(255,255,255,.6)">قانون ومدونة</div>
+            </div>
+          </div>
+        </div>
+        <div style="padding:10px 12px;background:#f0f2f8">
+          <div style="font-family:'Amiri',serif;font-size:13px;font-weight:700;color:#1a1a2e;margin-bottom:6px">القوانين المتاحة</div>
+          <div style="background:#fff;border-radius:8px;overflow:hidden;border:1px solid #dee2e6">
+            <div style="padding:8px 10px;border-bottom:1px solid #f1f3f5;display:flex;align-items:center;gap:6px">
+              <span style="font-size:8px;color:#333;flex:1;text-align:right;font-weight:600">الدستور</span>
+              <span style="font-size:7px;background:#fff3cd;color:#e67700;padding:2px 6px;border-radius:10px">دستور</span>
+            </div>
+            <div style="padding:8px 10px;border-bottom:1px solid #f1f3f5;display:flex;align-items:center;gap:6px">
+              <span style="font-size:8px;color:#333;flex:1;text-align:right;font-weight:600">المسطرة الجنائية</span>
+              <span style="font-size:7px;background:#eef2ff;color:#3b5bdb;padding:2px 6px;border-radius:10px">قانون</span>
+            </div>
+            <div style="padding:8px 10px;display:flex;align-items:center;gap:6px">
+              <span style="font-size:8px;color:#333;flex:1;text-align:right;font-weight:600">القانون الجنائي</span>
+              <span style="font-size:7px;background:#eef2ff;color:#3b5bdb;padding:2px 6px;border-radius:10px">قانون</span>
+            </div>
+          </div>
+        </div>
+        <div style="background:#fff;display:flex;border-top:1px solid #dee2e6">
+          <div style="flex:1;padding:6px 0;text-align:center;font-size:13px;color:#3b5bdb;border-top:2px solid #3b5bdb">🏠</div>
+          <div style="flex:1;padding:6px 0;text-align:center;font-size:13px;color:#868e96">⚖️</div>
+          <div style="flex:1;padding:6px 0;text-align:center;font-size:13px;color:#868e96">🔍</div>
+          <div style="flex:1;padding:6px 0;text-align:center;font-size:13px;color:#868e96">📥</div>
+          <div style="flex:1;padding:6px 0;text-align:center;font-size:13px;color:#868e96">···</div>
+        </div>
+      </div>
+
+      <!-- Screen 2: Search (MAIN) -->
+      <div class="screen-card main rv d2">
+        <div class="screen-status">
+          <span class="ss-time">23:13</span>
+          <span class="ss-icons">▪▪ 🔋</span>
+        </div>
+        <div style="background:#f0f2f8;padding:16px 14px 12px">
+          <div style="font-family:'Amiri',serif;font-size:18px;font-weight:700;color:#1a1a2e;text-align:right;margin-bottom:12px">البحث في القوانين</div>
+          <div style="background:#fff;border-radius:10px;padding:4px;display:flex;gap:4px;margin-bottom:12px;border:1px solid #dee2e6">
+            <div style="flex:1;background:#3b5bdb;border-radius:8px;padding:8px;text-align:center;font-size:13px;color:#fff;font-weight:600">#</div>
+            <div style="flex:1;padding:8px;text-align:center;font-size:13px;color:#868e96">🔍</div>
+          </div>
+          <div style="margin-bottom:8px">
+            <div style="font-size:9px;color:#868e96;text-align:right;margin-bottom:4px">القانون</div>
+            <div style="background:#fff;border-radius:8px;border:1px solid #dee2e6;padding:8px 12px;display:flex;align-items:center;justify-content:space-between">
+              <span style="font-size:10px;color:#868e96">✕</span>
+              <span style="font-size:11px;color:#1a1a2e;font-weight:600">مجموعة القانون الجنائي</span>
+            </div>
+          </div>
+          <div style="margin-bottom:10px">
+            <div style="font-size:9px;color:#868e96;text-align:right;margin-bottom:4px">رقم الفصل / المادة</div>
+            <div style="background:#fff;border-radius:8px;border:2px solid #3b5bdb;padding:8px 12px;text-align:left">
+              <span style="font-size:13px;color:#1a1a2e;font-weight:600">25</span>
+            </div>
+          </div>
+          <div style="background:#3b5bdb;border-radius:10px;padding:11px;text-align:center;color:#fff;font-size:13px;font-weight:600;margin-bottom:10px">بحث</div>
+          <div style="font-size:9px;color:#868e96;text-align:center;margin-bottom:10px">يعرض المادة المطلوبة + المواد المشابهة</div>
+          <div style="background:#fff;border-radius:10px;border:1px solid #dee2e6;padding:12px;overflow:hidden">
+            <div style="font-size:9px;color:#868e96;text-align:right;margin-bottom:8px">📖 1 نتيجة للمادة رقم "25" في مجموعة القانون الجنائي</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #f1f3f5">
+              <span style="font-size:9px;color:#3b5bdb;background:#eef2ff;padding:3px 8px;border-radius:8px;font-weight:600">م. 25</span>
+              <span style="font-size:10px;color:#495057;font-weight:600">مجموعة القانون الجنائي</span>
+            </div>
+            <div style="font-family:'Amiri',serif;font-size:12px;color:#1a1a2e;line-height:1.8;text-align:right">الإقامة الإجبارية هي أن تحدد المحكمة مكاناً للإقامة أو دائرة محدودة لا يجوز للمحكوم عليه الابتعاد عنها...</div>
+          </div>
+        </div>
+        <div style="background:#fff;display:flex;border-top:1px solid #dee2e6">
+          <div style="flex:1;padding:6px 0;text-align:center;font-size:13px;color:#868e96">🏠</div>
+          <div style="flex:1;padding:6px 0;text-align:center;font-size:13px;color:#868e96">⚖️</div>
+          <div style="flex:1;padding:6px 0;text-align:center;font-size:13px;color:#3b5bdb;border-top:2px solid #3b5bdb">🔍</div>
+          <div style="flex:1;padding:6px 0;text-align:center;font-size:13px;color:#868e96">📥</div>
+          <div style="flex:1;padding:6px 0;text-align:center;font-size:13px;color:#868e96">···</div>
+        </div>
+      </div>
+
+      <!-- Screen 3: Laws list -->
+      <div class="screen-card side rv d3">
+        <div class="screen-status">
+          <span class="ss-time">23:13</span>
+          <span class="ss-icons">▪▪ 🔋</span>
+        </div>
+        <div style="background:linear-gradient(160deg,#3b5bdb,#1a3299);padding:14px 12px">
+          <div style="font-family:'Amiri',serif;font-size:16px;font-weight:700;color:#fff;text-align:right;margin-bottom:4px">جميع القوانين والمدونات</div>
+          <div style="font-size:8px;color:rgba(255,255,255,.7);text-align:right;margin-bottom:10px">المصدر: الجريدة الرسمية المغربية</div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px">
+            <span style="background:rgba(255,255,255,.12);border-radius:20px;padding:3px 8px;font-size:7px;color:rgba(255,255,255,.8)">الدساتير (1)</span>
+            <span style="background:rgba(255,255,255,.12);border-radius:20px;padding:3px 8px;font-size:7px;color:rgba(255,255,255,.8)">القوانين العادية (4)</span>
+            <span style="background:rgba(255,255,255,.12);border-radius:20px;padding:3px 8px;font-size:7px;color:rgba(255,255,255,.8)">المدونات (2)</span>
+            <span style="background:rgba(255,255,255,.12);border-radius:20px;padding:3px 8px;font-size:7px;color:rgba(255,255,255,.8)">المراسيم (1)</span>
+          </div>
+        </div>
+        <div style="background:#f0f2f8;padding:10px 12px;flex:1">
+          <div style="font-family:'Amiri',serif;font-size:13px;font-weight:700;color:#1a1a2e;margin-bottom:8px">● الدساتير</div>
+          <div style="background:#fff;border-radius:10px;border:1px solid #dee2e6;margin-bottom:10px">
+            <div style="padding:10px 12px;display:flex;align-items:center;gap:8px">
+              <span style="font-size:10px;color:#868e96">‹</span>
+              <div style="flex:1;text-align:right">
+                <div style="font-size:11px;font-weight:700;color:#1a1a2e">الدستور</div>
+                <div style="font-size:8px;color:#868e96">dostor · 2011</div>
+                <span style="font-size:7px;background:#fff3cd;color:#e67700;padding:2px 6px;border-radius:8px">دستور</span>
+              </div>
+              <div style="width:28px;height:28px;background:#eef2ff;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px">📄</div>
+            </div>
+          </div>
+          <div style="font-family:'Amiri',serif;font-size:13px;font-weight:700;color:#1a1a2e;margin-bottom:8px">🟣 القوانين التنظيمية</div>
+          <div style="background:#fff;border-radius:10px;border:1px solid #dee2e6">
+            <div style="padding:10px 12px;display:flex;align-items:center;gap:8px">
+              <span style="font-size:10px;color:#868e96">‹</span>
+              <div style="flex:1;text-align:right">
+                <div style="font-size:11px;font-weight:700;color:#1a1a2e">ميثاق المرافق العمومية</div>
+              </div>
+              <div style="width:28px;height:28px;background:#eef2ff;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px">📄</div>
+            </div>
+          </div>
+        </div>
+        <div style="background:#fff;display:flex;border-top:1px solid #dee2e6">
+          <div style="flex:1;padding:6px 0;text-align:center;font-size:13px;color:#868e96">🏠</div>
+          <div style="flex:1;padding:6px 0;text-align:center;font-size:13px;color:#3b5bdb;border-top:2px solid #3b5bdb">⚖️</div>
+          <div style="flex:1;padding:6px 0;text-align:center;font-size:13px;color:#868e96">🔍</div>
+          <div style="flex:1;padding:6px 0;text-align:center;font-size:13px;color:#868e96">📥</div>
+          <div style="flex:1;padding:6px 0;text-align:center;font-size:13px;color:#868e96">···</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══ PWA INSTALL ══ -->
+<section class="pwa" id="install">
+  <div class="wrap">
+    <div style="text-align:center;margin-bottom:56px" class="rv">
+      <div class="section-label">تثبيت التطبيق</div>
+      <h2 class="section-title">ثبّت المدوّنة في ثوانٍ</h2>
+      <p class="section-sub" style="margin:0 auto">لا تحميل من المتجر — فقط زيارة الموقع وإضافته للشاشة الرئيسية مباشرة.</p>
+    </div>
+    <div class="pwa-grid">
+
+      <div class="rv">
+        <div class="pwa-tabs">
+          <button class="pwa-tab active" onclick="tab('ios',this)">📱 iPhone / iOS</button>
+          <button class="pwa-tab" onclick="tab('android',this)">🤖 Android</button>
+        </div>
+
+        <div class="pwa-panel active" id="ios">
+          <div class="step">
+            <div class="step-num">١</div>
+            <div class="step-content">
+              <div class="step-platform">Safari فقط</div>
+              <div class="step-title">افتح modawana.app في Safari</div>
+              <div class="step-desc">تأكد من استخدام متصفح Safari وليس Chrome — شرط ضروري لتثبيت PWA على iPhone.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">٢</div>
+            <div class="step-content">
+              <div class="step-platform">زر المشاركة</div>
+              <div class="step-title">اضغط أيقونة المشاركة ⬆️</div>
+              <div class="step-desc">في شريط الأدوات السفلي، اضغط المربع مع السهم للأعلى.</div>
+              <div class="step-tip">💡 تجدها في منتصف الشريط السفلي</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">٣</div>
+            <div class="step-content">
+              <div class="step-platform">القائمة</div>
+              <div class="step-title">اختر «إضافة إلى الشاشة الرئيسية»</div>
+              <div class="step-desc">مرر للأسفل في القائمة واضغط على خيار الإضافة.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">٤</div>
+            <div class="step-content">
+              <div class="step-platform">تأكيد</div>
+              <div class="step-title">اضغط «إضافة» ✓</div>
+              <div class="step-desc">أيقونة المدوّنة ستظهر على شاشتك — يعمل الآن كتطبيق أصلي!</div>
+              <div class="step-tip">🎉 مجاني، بدون إعلانات، بدون متجر</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pwa-panel" id="android">
+          <div class="step">
+            <div class="step-num">١</div>
+            <div class="step-content">
+              <div class="step-platform">Chrome / Edge</div>
+              <div class="step-title">افتح modawana.app في Chrome</div>
+              <div class="step-desc">يعمل مع Chrome وEdge. ستظهر رسالة تثبيت تلقائية في أسفل الشاشة.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">٢</div>
+            <div class="step-content">
+              <div class="step-platform">رسالة التثبيت</div>
+              <div class="step-title">اضغط «تثبيت» في الرسالة</div>
+              <div class="step-desc">ستظهر «إضافة المدوّنة إلى الشاشة الرئيسية» — اضغطها مباشرة.</div>
+              <div class="step-tip">📌 إن لم تظهر: ثلاث نقاط ⋮ ثم «تثبيت التطبيق»</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">٣</div>
+            <div class="step-content">
+              <div class="step-platform">تأكيد</div>
+              <div class="step-title">اضغط «تثبيت» في نافذة التأكيد ✓</div>
+              <div class="step-desc">أيقونة المدوّنة على الشاشة الرئيسية — سريع وخفيف تماماً كتطبيق أصلي!</div>
+              <div class="step-tip">🎉 قريباً على Google Play Store</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pwa-visual rv d2">
+        <div class="pwa-phone">
+          <div class="pwa-notch"><div class="pwa-notch-pill"></div></div>
+          <div class="install-url">
+            <span style="font-size:12px">🔒</span>
+            <div class="install-url-text">modawana.app</div>
+            <span class="install-url-share">⬆</span>
+          </div>
+          <div class="install-banner">
+            <span class="install-banner-icon">⚖️</span>
+            <div class="install-banner-info">
+              <span class="install-banner-title">المدوّنة — القانون في يدك</span>
+              <span class="install-banner-sub">أضفه إلى الشاشة الرئيسية</span>
+            </div>
+            <button class="install-banner-btn">تثبيت</button>
+          </div>
+          <div class="install-body">
+            <div class="install-preview-card">
+              <div class="install-prev-row">
+                <div class="install-prev-icon" style="background:var(--blue)"><svg width="28" height="28" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M28 68 L28 132 L70 162 L70 38 Z" fill="rgba(255,255,255,0.7)"/>
+  <path d="M172 68 L172 132 L130 162 L130 38 Z" fill="rgba(255,255,255,0.7)"/>
+  <path d="M28 68 L70 38 L100 22 L70 38 Z" fill="rgba(255,255,255,0.7)"/>
+  <path d="M172 68 L130 38 L100 22 L130 38 Z" fill="rgba(255,255,255,0.7)"/>
+  <path d="M28 132 L70 162 L100 178 L70 162 Z" fill="rgba(255,255,255,0.7)"/>
+  <path d="M172 132 L130 162 L100 178 L130 162 Z" fill="rgba(255,255,255,0.7)"/>
+  <path d="M70 36 L100 20 L130 36 L130 164 L100 180 L70 164 Z" fill="rgba(255,255,255,0.9)"/>
+  <ellipse cx="100" cy="152" rx="13" ry="4.5" fill="white"/>
+  <rect x="98" y="72" width="4" height="80" rx="2" fill="white"/>
+  <ellipse cx="100" cy="72" rx="4.5" ry="3" fill="white"/>
+  <path d="M96.5 72 Q100 63 103.5 72" fill="white"/>
+  <path d="M50 94 Q100 87 150 94" stroke="white" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+  <circle cx="54" cy="94" r="3.5" fill="white"/>
+  <circle cx="146" cy="94" r="3.5" fill="white"/>
+  <line x1="54" y1="97" x2="48" y2="116" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+  <line x1="66" y1="97" x2="72" y2="116" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M46 116 Q59 112 74 116" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  <line x1="146" y1="97" x2="140" y2="116" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+  <line x1="134" y1="97" x2="128" y2="116" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M126 116 Q139 112 154 116" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+</svg></div>
+                <div>
+                  <div class="install-prev-name">المدوّنة</div>
+                  <span class="install-prev-url">modawana.app</span>
+                </div>
+              </div>
+              <div class="install-prev-desc">موسوعة قانونية مغربية — بحث وقراءة وتحميل القوانين مجاناً</div>
+              <button class="install-add-btn">إضافة إلى الشاشة الرئيسية</button>
+            </div>
+            <div class="install-offline">
+              <span class="install-offline-icon">📶</span>
+              <div>
+                <span class="install-offline-title">يعمل بدون إنترنت</span>
+                <span class="install-offline-sub">للقوانين المحمّلة مسبقاً</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══ CODES ══ -->
+<section class="codes" id="codes">
+  <div class="wrap">
+    <div class="codes-header rv">
+      <div>
+        <div class="section-label">المحتوى القانوني</div>
+        <h2 class="section-title" style="margin-bottom:0">القوانين المتاحة</h2>
+      </div>
+      <a href="https://modawana.app/codes" class="codes-view-all">عرض الكل ‹</a>
+    </div>
+    <p class="codes-sub rv">10 قانون ومدونة — المصدر: الجريدة الرسمية المغربية</p>
+
+    <div class="codes-list rv">
+      <a href="https://modawana.app" class="code-item">
+        <span class="code-item-arrow">‹</span>
+        <div class="code-item-info">
+          <div class="code-item-name">الدستور</div>
+          <div class="code-item-meta">dostor · 2011</div>
+        </div>
+        <div class="code-item-right">
+          <span class="tag tag-orange">دستور</span>
+          <div class="code-item-icon" style="background:#fff3cd">📄</div>
+        </div>
+      </a>
+      <a href="https://modawana.app" class="code-item">
+        <span class="code-item-arrow">‹</span>
+        <div class="code-item-info">
+          <div class="code-item-name">القانون رقم 18.12 المتعلق بالتعويض عن حوادث الشغل</div>
+          <div class="code-item-meta">197 مادة · قانون</div>
+        </div>
+        <div class="code-item-right">
+          <span class="tag tag-blue">قانون</span>
+          <div class="code-item-icon" style="background:#eef2ff">📄</div>
+        </div>
+      </a>
+      <a href="https://modawana.app" class="code-item">
+        <span class="code-item-arrow">‹</span>
+        <div class="code-item-info">
+          <div class="code-item-name">المسطرة الجنائية</div>
+          <div class="code-item-meta">قانون</div>
+        </div>
+        <div class="code-item-right">
+          <span class="tag tag-blue">قانون</span>
+          <div class="code-item-icon" style="background:#eef2ff">📄</div>
+        </div>
+      </a>
+      <a href="https://modawana.app" class="code-item">
+        <span class="code-item-arrow">‹</span>
+        <div class="code-item-info">
+          <div class="code-item-name">المسطرة المدنية</div>
+          <div class="code-item-meta">قانون</div>
+        </div>
+        <div class="code-item-right">
+          <span class="tag tag-blue">قانون</span>
+          <div class="code-item-icon" style="background:#eef2ff">📄</div>
+        </div>
+      </a>
+      <a href="https://modawana.app" class="code-item">
+        <span class="code-item-arrow">‹</span>
+        <div class="code-item-info">
+          <div class="code-item-name">مجموعة القانون الجنائي</div>
+          <div class="code-item-meta">قانون</div>
+        </div>
+        <div class="code-item-right">
+          <span class="tag tag-blue">قانون</span>
+          <div class="code-item-icon" style="background:#eef2ff">📄</div>
+        </div>
+      </a>
+      <a href="https://modawana.app" class="code-item">
+        <span class="code-item-arrow">‹</span>
+        <div class="code-item-info">
+          <div class="code-item-name">الميثاق الوطني للاتمركز الإداري</div>
+          <div class="code-item-meta">decree</div>
+        </div>
+        <div class="code-item-right">
+          <span class="tag tag-gray">decree</span>
+          <div class="code-item-icon" style="background:#f1f3f5">📄</div>
+        </div>
+      </a>
+    </div>
+
+    <button class="codes-btn-all rv" onclick="window.open('https://modawana.app/codes')">
+      📖 عرض جميع القوانين (10)
+    </button>
+  </div>
+</section>
+
+<!-- ══ ABOUT ══ -->
+<section class="about" id="about">
+  <div class="wrap">
+    <div class="about-grid">
+      <div class="rv">
+        <div class="section-label" style="color:rgba(255,255,255,.6)">رسالتنا</div>
+        <blockquote class="about-quote">«معرفة القانون حق لكل مواطن — لا يُشترط أن تكون محامياً لتعرف حقوقك.»</blockquote>
+        <p class="about-text">المدوّنة وُلدت من قناعة بسيطة: الوصول للنصوص القانونية الرسمية يجب أن يكون سهلاً ومجانياً للجميع. نعمل على جمع وتنظيم القوانين المغربية بأسلوب واضح يخدم الجميع — من المحامي إلى الطالب إلى المواطن العادي.</p>
+        <div style="margin-top:24px">
+          <a href="https://modawana.app" class="btn btn-white">اكتشف التطبيق</a>
+        </div>
+      </div>
+      <div class="about-values rv d2">
+        <div class="about-val">
+          <div class="about-val-icon"><svg width="24" height="24" viewBox="0 0 200 200" fill="none"><path d="M28 68 L28 132 L70 162 L70 38 Z" fill="#2152cc"/><path d="M172 68 L172 132 L130 162 L130 38 Z" fill="#2152cc"/><path d="M28 68 L70 38 L100 22 L70 38 Z" fill="#2152cc"/><path d="M172 68 L130 38 L100 22 L130 38 Z" fill="#2152cc"/><path d="M28 132 L70 162 L100 178 L70 162 Z" fill="#2152cc"/><path d="M172 132 L130 162 L100 178 L130 162 Z" fill="#2152cc"/><path d="M70 36 L100 20 L130 36 L130 164 L100 180 L70 164 Z" fill="#4a7fd4"/><rect x="98" y="72" width="4" height="80" rx="2" fill="white"/><path d="M96.5 72 Q100 63 103.5 72" fill="white"/><path d="M50 94 Q100 87 150 94" stroke="white" stroke-width="3.5" stroke-linecap="round" fill="none"/><circle cx="54" cy="94" r="3.5" fill="white"/><circle cx="146" cy="94" r="3.5" fill="white"/><line x1="54" y1="97" x2="48" y2="116" stroke="white" stroke-width="2.2" stroke-linecap="round"/><line x1="66" y1="97" x2="72" y2="116" stroke="white" stroke-width="2.2" stroke-linecap="round"/><path d="M46 116 Q59 112 74 116" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/><line x1="146" y1="97" x2="140" y2="116" stroke="white" stroke-width="2.2" stroke-linecap="round"/><line x1="134" y1="97" x2="128" y2="116" stroke="white" stroke-width="2.2" stroke-linecap="round"/><path d="M126 116 Q139 112 154 116" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/><ellipse cx="100" cy="152" rx="13" ry="4.5" fill="white" opacity="0.9"/></svg></div>
+          <div class="about-val-title">الدقة والمصداقية</div>
+          <div class="about-val-desc">كل النصوص من الجريدة الرسمية مع الإسناد الكامل</div>
+        </div>
+        <div class="about-val">
+          <div class="about-val-icon">🆓</div>
+          <div class="about-val-title">مجاني للجميع</div>
+          <div class="about-val-desc">لا اشتراكات — المعرفة القانونية ليست سلعة</div>
+        </div>
+        <div class="about-val">
+          <div class="about-val-icon">📲</div>
+          <div class="about-val-title">على كل الأجهزة</div>
+          <div class="about-val-desc">PWA يعمل على iOS وAndroid والويب بدون متجر</div>
+        </div>
+        <div class="about-val">
+          <div class="about-val-icon">🔒</div>
+          <div class="about-val-title">خصوصية تامة</div>
+          <div class="about-val-desc">لا تتبع ولا إعلانات — بحثك القانوني يبقى سراً</div>
+        </div>
+        <div class="about-val">
+          <div class="about-val-icon">🔄</div>
+          <div class="about-val-title">تحديث مستمر</div>
+          <div class="about-val-desc">مراقبة الجريدة الرسمية وتحديث عند كل تشريع جديد</div>
+        </div>
+        <div class="about-val">
+          <div class="about-val-icon">📤</div>
+          <div class="about-val-title">مشاركة مفتوحة</div>
+          <div class="about-val-desc">اطلب إضافة أي قانون لم يتوفر بعد في المنصة</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ CTA ══ -->
+<section class="cta">
+  <div class="wrap">
+    <div class="cta-card rv">
+      <div class="cta-icon" style="background:var(--blue);padding:14px;border-radius:18px"><svg width="36" height="36" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M28 68 L28 132 L70 162 L70 38 Z" fill="#2152cc"/>
+  <path d="M172 68 L172 132 L130 162 L130 38 Z" fill="#2152cc"/>
+  <path d="M28 68 L70 38 L100 22 L70 38 Z" fill="#2152cc"/>
+  <path d="M172 68 L130 38 L100 22 L130 38 Z" fill="#2152cc"/>
+  <path d="M28 132 L70 162 L100 178 L70 162 Z" fill="#2152cc"/>
+  <path d="M172 132 L130 162 L100 178 L130 162 Z" fill="#2152cc"/>
+  <path d="M70 36 L100 20 L130 36 L130 164 L100 180 L70 164 Z" fill="#4a7fd4"/>
+  <ellipse cx="100" cy="152" rx="13" ry="4.5" fill="white" opacity="0.9"/>
+  <rect x="98" y="72" width="4" height="80" rx="2" fill="white"/>
+  <ellipse cx="100" cy="72" rx="4.5" ry="3" fill="white"/>
+  <path d="M96.5 72 Q100 63 103.5 72" fill="white"/>
+  <path d="M50 94 Q100 87 150 94" stroke="white" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+  <circle cx="54" cy="94" r="3.5" fill="white"/>
+  <circle cx="146" cy="94" r="3.5" fill="white"/>
+  <line x1="54" y1="97" x2="48" y2="116" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+  <line x1="66" y1="97" x2="72" y2="116" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M46 116 Q59 112 74 116" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  <path d="M46 116 Q59 128 74 116" stroke="white" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.5"/>
+  <line x1="146" y1="97" x2="140" y2="116" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+  <line x1="134" y1="97" x2="128" y2="116" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M126 116 Q139 112 154 116" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  <path d="M126 116 Q139 128 154 116" stroke="white" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.5"/>
+</svg></div>
+      <h2 class="cta-title">ابدأ البحث في القوانين المغربية الآن</h2>
+      <p class="cta-desc">انضم لآلاف المحامين والطلاب والمواطنين — مجاناً، بدون تسجيل.</p>
+      <div class="cta-btns">
+        <a href="https://modawana.app" class="cta-store">
+          <span class="cta-store-icon">🌐</span>
+          <div class="cta-store-text">
+            <span class="cta-store-label">افتح الموقع</span>
+            <span class="cta-store-name">modawana.app</span>
+          </div>
+        </a>
+        <a href="#install" class="cta-store" style="background:#1a1a2e">
+          <span class="cta-store-icon">📱</span>
+          <div class="cta-store-text">
+            <span class="cta-store-label">ثبّت التطبيق</span>
+            <span class="cta-store-name">iOS & Android</span>
+          </div>
+        </a>
+        <a href="https://modawana.app" class="cta-store" style="background:var(--green)">
+          <span class="cta-store-icon">▶</span>
+          <div class="cta-store-text">
+            <span class="cta-store-label">قريباً</span>
+            <span class="cta-store-name">Google Play</span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ FOOTER ══ -->
+<footer>
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-logo">
+          <div style="display:flex;align-items:center"><svg width="200" height="44" viewBox="0 0 280 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(226,0) scale(0.3)">
+    <path d="M28 68 L28 132 L70 162 L70 38 Z" fill="rgba(255,255,255,0.2)"/>
+    <path d="M172 68 L172 132 L130 162 L130 38 Z" fill="rgba(255,255,255,0.2)"/>
+    <path d="M28 68 L70 38 L100 22 L70 38 Z" fill="rgba(255,255,255,0.2)"/>
+    <path d="M172 68 L130 38 L100 22 L130 38 Z" fill="rgba(255,255,255,0.2)"/>
+    <path d="M28 132 L70 162 L100 178 L70 162 Z" fill="rgba(255,255,255,0.2)"/>
+    <path d="M172 132 L130 162 L100 178 L130 162 Z" fill="rgba(255,255,255,0.2)"/>
+    <path d="M70 36 L100 20 L130 36 L130 164 L100 180 L70 164 Z" fill="rgba(255,255,255,0.32)"/>
+    <ellipse cx="100" cy="152" rx="13" ry="4.5" fill="white" opacity="0.9"/>
+    <rect x="98" y="72" width="4" height="80" rx="2" fill="white"/>
+    <ellipse cx="100" cy="72" rx="4.5" ry="3" fill="white"/>
+    <path d="M96.5 72 Q100 63 103.5 72" fill="white"/>
+    <path d="M50 94 Q100 87 150 94" stroke="white" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+    <circle cx="54" cy="94" r="3.5" fill="white"/>
+    <circle cx="146" cy="94" r="3.5" fill="white"/>
+    <line x1="54" y1="97" x2="48" y2="116" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+    <line x1="66" y1="97" x2="72" y2="116" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M46 116 Q59 112 74 116" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+    <line x1="146" y1="97" x2="140" y2="116" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+    <line x1="134" y1="97" x2="128" y2="116" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M126 116 Q139 112 154 116" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  </g>
+  <text x="218" y="38" font-family="Amiri, serif" font-size="32" font-weight="700" fill="white" text-anchor="end" direction="rtl">المدوّنة</text>
+  <text x="218" y="52" font-family="monospace" font-size="8" fill="rgba(255,255,255,0.55)" text-anchor="end" letter-spacing="2">AL-MUDAWWANA</text>
+</svg></div>
+        </div>
+        <p class="footer-desc">موسوعة قانونية مغربية — نصوص رسمية، بحث ذكي، قراءة بدون إنترنت. مجاني للجميع دائماً.</p>
+        <p class="footer-disclaimer">⚠ هذا الموقع لا يحل محل النصوص الرسمية في الجريدة الرسمية للمملكة المغربية ولا يُعدّ استشارة قانونية.</p>
+      </div>
+      <div>
+        <div class="footer-col-title">روابط</div>
+        <ul class="footer-links">
+          <li><a href="https://modawana.app" class="footer-link">الرئيسية</a></li>
+          <li><a href="https://modawana.app/codes" class="footer-link">القوانين</a></li>
+          <li><a href="https://modawana.app/search" class="footer-link">البحث</a></li>
+          <li><a href="#install" class="footer-link">تثبيت التطبيق</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-col-title">تواصل</div>
+        <ul class="footer-links">
+          <li><a href="https://modawana.app" class="footer-link">حول المدوّنة</a></li>
+          <li><a href="https://modawana.app" class="footer-link">طلب إضافة قانون</a></li>
+          <li><a href="https://modawana.app" class="footer-link">تواصل معنا</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span class="footer-copy">© 2026 المدوّنة</span>
+      <a href="https://modawana.app" class="footer-domain">modawana.app →</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+// Navbar scroll
+const nav = document.getElementById('nav');
+addEventListener('scroll', () => {
+  const dark = scrollY > 60;
+  nav.classList.toggle('dark', dark);
+  document.getElementById('logo-light').style.display = dark ? 'none' : 'flex';
+  document.getElementById('logo-dark').style.display  = dark ? 'flex' : 'none';
+});
+
+// Hamburger
+document.getElementById('ham').onclick = () => document.getElementById('mob').classList.toggle('open');
+document.getElementById('mob').querySelectorAll('a').forEach(a => a.onclick = () => document.getElementById('mob').classList.remove('open'));
+
+// Reveal on scroll
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('in'); obs.unobserve(e.target); }});
+}, {threshold:.1, rootMargin:'0px 0px -30px 0px'});
+document.querySelectorAll('.rv').forEach(el => obs.observe(el));
+
+// PWA tabs
+function tab(id, btn){
+  document.querySelectorAll('.pwa-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.pwa-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+
+// Smooth scroll
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.onclick = e => {
+    const t = document.querySelector(a.getAttribute('href'));
+    if(t){ e.preventDefault(); window.scrollTo({top: t.getBoundingClientRect().top + scrollY - 74, behavior:'smooth'}); }
+  };
+});
+</script>
+</body>
+</html>
