@@ -31,11 +31,6 @@ export const metadata: Metadata = {
   alternates: { canonical: `${BASE_URL}/codes` },
 }
 
-// Color key → dot class mapping (mirrors CodesGrid COLOR_CLS)
-const COLOR_DOT: Record<string, string> = {
-  blue: 'bg-blue-400', teal: 'bg-teal-400', violet: 'bg-violet-400',
-  amber: 'bg-amber-400', green: 'bg-green-400', red: 'bg-red-400', slate: 'bg-slate-400',
-};
 
 async function getAllCodes() {
   try {
@@ -73,14 +68,7 @@ export default async function CodesPage() {
   ]);
 
   const totalArticles = allCodes.reduce((s: number, c: any) => s + (c.total_articles ?? 0), 0);
-
-  // Hero pills — types with ≥1 code that has articles
-  const heroPills = codeTypes
-    .map(ct => ({
-      ...ct,
-      count: allCodes.filter((c: any) => c.type === ct.slug && (c.total_articles ?? 0) > 0).length,
-    }))
-    .filter(ct => ct.count > 0);
+  const codesWithArticles = allCodes.filter((c: any) => (c.total_articles ?? 0) > 0).length;
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col" dir="rtl">
@@ -114,24 +102,10 @@ export default async function CodesPage() {
             />
           </div>
           <p className="text-blue-200 text-sm max-w-xl leading-relaxed">
-            {allCodes.filter((c: any) => (c.total_articles ?? 0) > 0).length} قانون ومدونة تضم أكثر من{' '}
+            {codesWithArticles} قانون ومدونة تضم أكثر من{' '}
             <span className="text-white font-bold">{totalArticles.toLocaleString('en')}</span>{' '}
             مادة قانونية — المصدر: الجريدة الرسمية المغربية
           </p>
-
-          {/* Hero pills from code_types */}
-          {heroPills.length > 0 && (
-            <div className="mt-4 flex flex-wrap gap-2">
-              {heroPills.map(ct => (
-                <a key={ct.slug} href={`#${ct.slug}`}
-                   className="flex items-center gap-1.5 text-xs bg-white/10 hover:bg-white/20
-                              border border-white/15 text-blue-100 px-3 py-1.5 rounded-full transition-colors">
-                  <span className={`w-1.5 h-1.5 rounded-full ${COLOR_DOT[ct.color] ?? 'bg-slate-400'}`} />
-                  {ct.name_ar} ({ct.count})
-                </a>
-              ))}
-            </div>
-          )}
         </div>
       </div>
 
