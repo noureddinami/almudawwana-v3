@@ -7,6 +7,7 @@ import {
   Users, BookOpen, FileText, Eye, TrendingUp, AlertCircle,
   MessageSquare, CheckCircle, XCircle, Clock, UserCheck,
   BarChart2, Activity, FilePlus2, Smartphone,
+  Search, Download, Globe, Zap, LayoutList,
 } from 'lucide-react';
 
 /* ── helpers ─────────────────────────────────────────────────────────── */
@@ -111,15 +112,102 @@ function ActivityChart({ data }: { data: { date: string; count: number }[] }) {
   );
 }
 
+/* ── Analytics sub-components ───────────────────────────────────────── */
+
+interface AnalyticsStats {
+  today_views:     number;
+  today_searches:  number;
+  today_downloads: number;
+  views30d:        { date: string; count: number }[];
+  topPages:        { path: string; count: number }[];
+  topSearches:     { query: string; count: number }[];
+  events:          { type: string; label: string; sub?: string; created_at: string }[];
+}
+
+function Views30dChart({ data }: { data: { date: string; count: number }[] }) {
+  const max = Math.max(...data.map(d => d.count), 1);
+  // Show every ~5th label to avoid clutter
+  return (
+    <div className="flex items-end gap-px h-24 w-full">
+      {data.map((d, i) => {
+        const pct = Math.max((d.count / max) * 100, d.count > 0 ? 3 : 1);
+        const showLabel = i === 0 || i === 14 || i === 29 || d.count === max;
+        return (
+          <div key={d.date} className="flex-1 flex flex-col items-center gap-px group relative">
+            <div
+              className="w-full rounded-t-sm bg-blue-500 group-hover:bg-blue-400 transition-colors cursor-default"
+              style={{ height: `${pct}%` }}
+            />
+            {showLabel && (
+              <span className="absolute -bottom-4 text-[8px] text-slate-400 whitespace-nowrap">
+                {d.date.slice(5)}
+              </span>
+            )}
+            {/* tooltip */}
+            <div className="absolute bottom-full mb-1 hidden group-hover:flex bg-slate-800 text-white
+                            text-[10px] px-1.5 py-0.5 rounded whitespace-nowrap z-10">
+              {d.date} · {d.count}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function EventFeed({ events }: { events: AnalyticsStats['events'] }) {
+  const icons: Record<string, { icon: React.ElementType; cls: string; label: string }> = {
+    search:   { icon: Search,   cls: 'bg-violet-50 text-violet-600', label: 'بحث'      },
+    download: { icon: Download, cls: 'bg-emerald-50 text-emerald-600', label: 'تحميل'  },
+    view:     { icon: Eye,      cls: 'bg-blue-50 text-blue-600',      label: 'زيارة'   },
+  };
+
+  function timeAgoShort(iso: string) {
+    const diff = Date.now() - new Date(iso).getTime();
+    const m = Math.floor(diff / 60000);
+    if (m < 1)  return 'الآن';
+    if (m < 60) return `${m}د`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}س`;
+    return `${Math.floor(h / 24)}ي`;
+  }
+
+  if (!events.length) return (
+    <p className="text-sm text-slate-400 text-center py-6">لا توجد أحداث بعد</p>
+  );
+
+  return (
+    <ul className="space-y-2">
+      {events.map((ev, i) => {
+        const meta = icons[ev.type] ?? icons.view;
+        const Icon = meta.icon;
+        return (
+          <li key={i} className="flex items-center gap-3">
+            <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${meta.cls}`}>
+              <Icon className="w-3.5 h-3.5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-slate-800 truncate font-medium">{ev.label}</p>
+              {ev.sub && <p className="text-[10px] text-slate-400">{ev.sub}</p>}
+            </div>
+            <span className="text-[10px] text-slate-400 shrink-0">{timeAgoShort(ev.created_at)}</span>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 /* ── main page ───────────────────────────────────────────────────────── */
 
 interface PwaStats { total: number; ios: number; android: number; desktop: number; month: number; }
 
 export default function AdminDashboard() {
-  const [stats, setStats]       = useState<DashboardStats | null>(null);
-  const [pwaStats, setPwaStats] = useState<PwaStats | null>(null);
-  const [error, setError]       = useState('');
-  const [loading, setLoading]   = useState(true);
+  const [stats, setStats]             = useState<DashboardStats | null>(null);
+  const [pwaStats, setPwaStats]       = useState<PwaStats | null>(null);
+  const [analytics, setAnalytics]     = useState<AnalyticsStats | null>(null);
+  const [error, setError]             = useState('');
+  const [loading, setLoading]         = useState(true);
   const [approvingId, setApprovingId] = useState<string | null>(null);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [dismissed, setDismissed]     = useState<Set<string>>(new Set());
@@ -128,8 +216,13 @@ export default function AdminDashboard() {
     Promise.all([
       adminStats.dashboard(),
       fetch('/api/admin/pwa-stats').then(r => r.ok ? r.json() : null),
+      fetch('/api/admin/analytics-stats').then(r => r.ok ? r.json() : null),
     ])
-      .then(([dash, pwa]) => { setStats(dash); if (pwa) setPwaStats(pwa); })
+      .then(([dash, pwa, ana]) => {
+        setStats(dash);
+        if (pwa) setPwaStats(pwa);
+        if (ana) setAnalytics(ana);
+      })
       .catch(e => setError(e.message))
       .finally(() => setLoading(false));
   }, []);
@@ -455,6 +548,132 @@ export default function AdminDashboard() {
           })}
         </div>
       </section>
+
+      {/* ════════════════════════════════════════════════════════════════════
+          Analytics section — only renders once tables exist
+      ════════════════════════════════════════════════════════════════════ */}
+      {analytics && (
+        <>
+          {/* ── Analytics KPIs (today) ── */}
+          <div className="flex items-center gap-2 pt-2">
+            <Zap className="w-4 h-4 text-blue-500" />
+            <h2 className="font-kufi text-lg font-bold text-slate-800">الإحصائيات اليوم</h2>
+            <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            {[
+              { label: 'زيارات اليوم',   value: analytics.today_views,     icon: Globe,    color: 'bg-blue-50 text-blue-600'    },
+              { label: 'بحث اليوم',      value: analytics.today_searches,   icon: Search,   color: 'bg-violet-50 text-violet-600' },
+              { label: 'تحميلات اليوم',  value: analytics.today_downloads,  icon: Download, color: 'bg-emerald-50 text-emerald-600' },
+            ].map(s => {
+              const Icon = s.icon;
+              return (
+                <div key={s.label} className="bg-white rounded-xl border border-slate-200 p-4 flex gap-3 items-center">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${s.color}`}>
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-slate-900">{fmt(s.value)}</p>
+                    <p className="text-xs text-slate-500">{s.label}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* ── Row: 30-day chart + event feed ── */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            {/* 30-day visitors chart */}
+            <section className="lg:col-span-2 bg-white rounded-xl border border-slate-200 p-5">
+              <div className="flex items-center gap-2 mb-6">
+                <Activity className="w-4 h-4 text-blue-500" />
+                <h2 className="font-semibold text-slate-800">الزيارات — 30 يوماً</h2>
+                <span className="mr-auto text-xs text-slate-400">
+                  {fmt(analytics.views30d.reduce((s, d) => s + d.count, 0))} زيارة إجمالاً
+                </span>
+              </div>
+              <Views30dChart data={analytics.views30d} />
+              <div className="mt-6" /> {/* space for date labels */}
+            </section>
+
+            {/* Live event feed */}
+            <section className="bg-white rounded-xl border border-slate-200 p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <h2 className="font-semibold text-slate-800">آخر الأحداث</h2>
+              </div>
+              <EventFeed events={analytics.events} />
+            </section>
+          </div>
+
+          {/* ── Row: top pages + top searches ── */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+            {/* Top pages */}
+            <section className="bg-white rounded-xl border border-slate-200 p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <LayoutList className="w-4 h-4 text-blue-500" />
+                <h2 className="font-semibold text-slate-800">أكثر الصفحات زيارة</h2>
+                <span className="mr-auto text-xs text-slate-400">آخر 30 يوماً</span>
+              </div>
+              {analytics.topPages.length === 0
+                ? <p className="text-sm text-slate-400 text-center py-4">لا توجد بيانات بعد</p>
+                : (
+                <ul className="space-y-2.5">
+                  {analytics.topPages.map((p, i) => {
+                    const max = analytics.topPages[0]?.count ?? 1;
+                    const pct = Math.round((p.count / max) * 100);
+                    // shorten path display
+                    const label = p.path.length > 45 ? '…' + p.path.slice(-42) : p.path;
+                    return (
+                      <li key={i}>
+                        <div className="flex items-center justify-between mb-0.5">
+                          <span className="text-xs text-slate-700 truncate max-w-[75%]" dir="ltr">{label}</span>
+                          <span className="text-xs text-slate-500 font-medium">{fmt(p.count)}</span>
+                        </div>
+                        <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                          <div className="h-full bg-blue-400 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </section>
+
+            {/* Top search queries */}
+            <section className="bg-white rounded-xl border border-slate-200 p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Search className="w-4 h-4 text-violet-500" />
+                <h2 className="font-semibold text-slate-800">أكثر كلمات البحث</h2>
+                <span className="mr-auto text-xs text-slate-400">آخر 30 يوماً</span>
+              </div>
+              {analytics.topSearches.length === 0
+                ? <p className="text-sm text-slate-400 text-center py-4">لا توجد بيانات بعد</p>
+                : (
+                <ul className="space-y-2.5">
+                  {analytics.topSearches.map((s, i) => {
+                    const max = analytics.topSearches[0]?.count ?? 1;
+                    const pct = Math.round((s.count / max) * 100);
+                    return (
+                      <li key={i}>
+                        <div className="flex items-center justify-between mb-0.5">
+                          <span className="text-xs text-slate-700 truncate max-w-[75%]">{s.query}</span>
+                          <span className="text-xs text-slate-500 font-medium">{fmt(s.count)}</span>
+                        </div>
+                        <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                          <div className="h-full bg-violet-400 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </section>
+          </div>
+        </>
+      )}
     </div>
   );
 }

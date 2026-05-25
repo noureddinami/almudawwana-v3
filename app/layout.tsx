@@ -10,6 +10,7 @@ import SplashScreen from '@/components/SplashScreen';
 import { OrganizationJsonLd } from '@/components/JsonLd';
 import PushNotificationSetup from '@/components/PushNotificationSetup';
 import PwaInstallTracker from '@/components/PwaInstallTracker';
+import PageViewTracker from '@/components/PageViewTracker';
 
 const GA_ID = 'G-FVBMSK5TD2';
 
@@ -180,6 +181,7 @@ export default function RootLayout({
         <ServiceWorkerRegister />
         <PushNotificationSetup />
         <PwaInstallTracker />
+        <PageViewTracker />
         <Toaster
           position="top-center"
           toastOptions={{
