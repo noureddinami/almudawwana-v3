@@ -61,9 +61,9 @@ export default function CodesGrid({
     [codeTypes],
   );
 
-  // Filter: skip codes with 0 articles, then apply query
+  // Filter: skip codes explicitly set to 0 articles; show codes with null/unknown count
   const filtered = useMemo(() => {
-    const visible = codes.filter(c => (c.total_articles ?? 0) > 0);
+    const visible = codes.filter(c => c.total_articles == null || c.total_articles > 0);
     if (!query.trim()) return visible;
     const q = query.trim().toLowerCase();
     return visible.filter(c =>
