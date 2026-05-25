@@ -255,6 +255,37 @@ export default function AdminDashboard() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-slate-900 font-kufi">لوحة التحكم</h1>
 
+      {/* ── الإحصائيات اليوم (analytics KPIs) — shown at top when available ── */}
+      {analytics && (
+        <>
+          <div className="flex items-center gap-2">
+            <Zap className="w-4 h-4 text-blue-500" />
+            <h2 className="font-kufi text-lg font-bold text-slate-800">الإحصائيات اليوم</h2>
+            <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          </div>
+          <div className="grid grid-cols-3 gap-4 -mt-2">
+            {[
+              { label: 'زيارات اليوم',   value: analytics.today_views,     icon: Globe,    color: 'bg-blue-50 text-blue-600'       },
+              { label: 'بحث اليوم',      value: analytics.today_searches,   icon: Search,   color: 'bg-violet-50 text-violet-600'   },
+              { label: 'تحميلات اليوم',  value: analytics.today_downloads,  icon: Download, color: 'bg-emerald-50 text-emerald-600' },
+            ].map(s => {
+              const Icon = s.icon;
+              return (
+                <div key={s.label} className="bg-white rounded-xl border border-slate-200 p-4 flex gap-3 items-center">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${s.color}`}>
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-slate-900">{fmt(s.value)}</p>
+                    <p className="text-xs text-slate-500">{s.label}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+
       {/* ── PWA installs banner ── */}
       {pwaStats && (
         <div className="bg-white rounded-xl border border-slate-200 p-5">
@@ -554,33 +585,6 @@ export default function AdminDashboard() {
       ════════════════════════════════════════════════════════════════════ */}
       {analytics && (
         <>
-          {/* ── Analytics KPIs (today) ── */}
-          <div className="flex items-center gap-2 pt-2">
-            <Zap className="w-4 h-4 text-blue-500" />
-            <h2 className="font-kufi text-lg font-bold text-slate-800">الإحصائيات اليوم</h2>
-            <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          </div>
-          <div className="grid grid-cols-3 gap-4">
-            {[
-              { label: 'زيارات اليوم',   value: analytics.today_views,     icon: Globe,    color: 'bg-blue-50 text-blue-600'    },
-              { label: 'بحث اليوم',      value: analytics.today_searches,   icon: Search,   color: 'bg-violet-50 text-violet-600' },
-              { label: 'تحميلات اليوم',  value: analytics.today_downloads,  icon: Download, color: 'bg-emerald-50 text-emerald-600' },
-            ].map(s => {
-              const Icon = s.icon;
-              return (
-                <div key={s.label} className="bg-white rounded-xl border border-slate-200 p-4 flex gap-3 items-center">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${s.color}`}>
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-slate-900">{fmt(s.value)}</p>
-                    <p className="text-xs text-slate-500">{s.label}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
           {/* ── Row: 30-day chart + event feed ── */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
