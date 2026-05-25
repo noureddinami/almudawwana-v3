@@ -67,11 +67,11 @@ export default async function CodesPage() {
 
   const totalArticles = allCodes.reduce((s: number, c: any) => s + (c.total_articles ?? 0), 0);
 
-  // Hero pills — only types with ≥1 visible code, ordered by sort_order
+  // Hero pills — all types with ≥1 code
   const heroPills = codeTypes
     .map(ct => ({
       ...ct,
-      count: allCodes.filter((c: any) => c.type === ct.slug && (c.total_articles == null || c.total_articles > 0)).length,
+      count: allCodes.filter((c: any) => c.type === ct.slug).length,
     }))
     .filter(ct => ct.count > 0);
 
@@ -107,7 +107,7 @@ export default async function CodesPage() {
             />
           </div>
           <p className="text-blue-200 text-sm max-w-xl leading-relaxed">
-            {allCodes.filter((c: any) => c.total_articles == null || c.total_articles > 0).length} قانون ومدونة تضم أكثر من{' '}
+            {allCodes.length} قانون ومدونة تضم أكثر من{' '}
             <span className="text-white font-bold">{totalArticles.toLocaleString('en')}</span>{' '}
             مادة قانونية — المصدر: الجريدة الرسمية المغربية
           </p>

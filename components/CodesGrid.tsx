@@ -61,9 +61,9 @@ export default function CodesGrid({
     [codeTypes],
   );
 
-  // Filter: skip codes explicitly set to 0 articles; show codes with null/unknown count
+  // Filter codes by query (show all — total_articles is not reliably synced in Supabase)
   const filtered = useMemo(() => {
-    const visible = codes.filter(c => c.total_articles == null || c.total_articles > 0);
+    const visible = codes;
     if (!query.trim()) return visible;
     const q = query.trim().toLowerCase();
     return visible.filter(c =>
