@@ -42,9 +42,16 @@ async function getAllCodes() {
     const supabase = createPublicClient()
     const { data } = await supabase
       .from('codes')
-      .select('id, slug, title_ar, title_fr, type, status, total_articles, promulgation_date, official_number, keywords')
-      .order('total_articles', { ascending: false })
-    return data ?? []
+      .select('id, slug, title_ar, title_fr, type, status, promulgation_date, official_number, keywords, articles(count)')
+      .order('slug', { ascending: true })
+    // Replace total_articles with the real count from the articles table, sort desc
+    return (data ?? [])
+      .map((c: any) => ({
+        ...c,
+        total_articles: (c.articles as { count: number }[])?.[0]?.count ?? 0,
+        articles: undefined,
+      }))
+      .sort((a: any, b: any) => b.total_articles - a.total_articles)
   } catch { return [] }
 }
 
@@ -67,11 +74,11 @@ export default async function CodesPage() {
 
   const totalArticles = allCodes.reduce((s: number, c: any) => s + (c.total_articles ?? 0), 0);
 
-  // Hero pills — all types with ≥1 code
+  // Hero pills — types with ≥1 code that has articles
   const heroPills = codeTypes
     .map(ct => ({
       ...ct,
-      count: allCodes.filter((c: any) => c.type === ct.slug).length,
+      count: allCodes.filter((c: any) => c.type === ct.slug && (c.total_articles ?? 0) > 0).length,
     }))
     .filter(ct => ct.count > 0);
 
@@ -107,7 +114,7 @@ export default async function CodesPage() {
             />
           </div>
           <p className="text-blue-200 text-sm max-w-xl leading-relaxed">
-            {allCodes.length} قانون ومدونة تضم أكثر من{' '}
+            {allCodes.filter((c: any) => (c.total_articles ?? 0) > 0).length} قانون ومدونة تضم أكثر من{' '}
             <span className="text-white font-bold">{totalArticles.toLocaleString('en')}</span>{' '}
             مادة قانونية — المصدر: الجريدة الرسمية المغربية
           </p>
