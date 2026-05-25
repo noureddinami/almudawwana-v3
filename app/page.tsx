@@ -9,9 +9,10 @@ import {
   BookOpen, FileText, Scale, ChevronLeft, Search,
   MessageSquare, StickyNote, CheckCircle, Hash,
   AlignLeft, Tags, Shield, Smartphone, Zap, BookMarked,
-  Sparkles, Clock, Share2,
+  Sparkles, Clock,
 } from 'lucide-react';
 import ShareButton from '@/components/ShareButton';
+import { COLOR_PALETTE, FALLBACK_PALETTE, getTypeIcon } from '@/lib/codeTypeUtils';
 
 export const dynamic = 'force-dynamic'
 
@@ -72,6 +73,17 @@ async function getLatestCodes() {
   } catch { return [] }
 }
 
+async function getCodeTypes() {
+  try {
+    const supabase = createPublicClient()
+    const { data } = await supabase
+      .from('code_types')
+      .select('id, slug, name_ar, color, sort_order')
+      .order('sort_order', { ascending: true })
+    return (data ?? []) as { id: number; slug: string; name_ar: string; color: string; sort_order: number }[]
+  } catch { return [] }
+}
+
 async function getRecentNotes(): Promise<RecentNote[]> {
   try {
     const supabase = createPublicClient()
@@ -109,8 +121,9 @@ function typeLabel(type: string) {
 }
 
 export default async function HomePage() {
-  const [codesList, latestCodes, recentNotes, totalArticles] = await Promise.all([
+  const [codesList, codeTypes, latestCodes, recentNotes, totalArticles] = await Promise.all([
     getCodes(),
+    getCodeTypes(),
     getLatestCodes(),
     getRecentNotes(),
     getTotalArticles(),
@@ -189,7 +202,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── 1. القوانين المتاحة — carousel ────────────────── */}
+      {/* ── 1. القوانين المتاحة — type categories grid ──────── */}
       <section id="codes" className="max-w-6xl mx-auto px-4 py-8 sm:py-12 w-full">
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -204,112 +217,62 @@ export default async function HomePage() {
           </Link>
         </div>
 
-        {codesList.length === 0 ? (
-          <div className="text-center py-20 text-slate-400">
-            <BookOpen className="w-12 h-12 mx-auto mb-3 opacity-40" />
-            <p>لا توجد قوانين متاحة حالياً</p>
+        {codeTypes.length === 0 ? (
+          <div className="text-center py-12 text-slate-400">
+            <BookOpen className="w-10 h-10 mx-auto mb-3 opacity-40" />
+            <p className="text-sm">لا توجد تصنيفات متاحة</p>
           </div>
-        ) : (() => {
-          const perCol = 7;
-          // Split into groups of 7 for carousel pages
-          const columns: any[][] = [];
-          for (let i = 0; i < codesList.length; i += perCol) {
-            columns.push(codesList.slice(i, i + perCol));
-          }
-
-          const CodeItem = ({ code }: { code: any }) => {
-            const badge = typeLabel(code.type);
-            return (
-              <Link
-                href={`/codes/${code.slug}`}
-                className="flex items-center gap-3 px-4 py-2.5 hover:bg-blue-50/50 transition-colors group"
-              >
-                <span className={`text-[10px] sm:text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${badge.cls}`}>
-                  {badge.label}
-                </span>
-                <span className="flex-1 min-w-0 text-sm font-medium text-slate-800 group-hover:text-blue-700 transition-colors truncate">
-                  {code.title_ar}
-                </span>
-                <ChevronLeft className="w-3.5 h-3.5 text-slate-300 group-hover:text-blue-400 shrink-0" />
-              </Link>
-            );
-          };
-
-          const CodeColumn = ({ codes }: { codes: any[] }) => (
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm divide-y divide-slate-100 overflow-hidden
-                            min-w-[280px] sm:min-w-0 shrink-0 snap-start w-[85vw] sm:w-auto">
-              {codes.map((code: any) => (
-                <CodeItem key={code.id} code={code} />
-              ))}
+        ) : (
+          <>
+            {/* Grid: 3 cols mobile → 6 cols desktop */}
+            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
+              {codeTypes.map(ct => {
+                const palette  = COLOR_PALETTE[ct.color] ?? FALLBACK_PALETTE;
+                const Icon     = getTypeIcon(ct.slug, ct.name_ar);
+                const count    = codesList.filter((c: any) => c.type === ct.slug).length;
+                if (count === 0) return null;
+                return (
+                  <Link
+                    key={ct.slug}
+                    href={`/codes?type=${ct.slug}`}
+                    className={`flex flex-col items-center gap-2 sm:gap-2.5 p-3 sm:p-4
+                                bg-white rounded-2xl border-2 ${palette.border}
+                                hover:shadow-md hover:scale-[1.03] active:scale-[0.98]
+                                transition-all duration-200 group`}
+                  >
+                    {/* Circle icon */}
+                    <div className={`w-11 h-11 sm:w-14 sm:h-14 rounded-full flex items-center justify-center
+                                     ${palette.iconBg} group-hover:opacity-90 transition-opacity`}>
+                      <Icon className={`w-5 h-5 sm:w-7 sm:h-7 ${palette.iconText}`} />
+                    </div>
+                    {/* Name */}
+                    <span className="font-kufi text-[11px] sm:text-xs font-bold text-center text-slate-800
+                                     leading-tight group-hover:text-slate-900">
+                      {ct.name_ar}
+                    </span>
+                    {/* Count */}
+                    <span className={`text-[10px] sm:text-[11px] font-semibold px-1.5 sm:px-2
+                                      py-0.5 rounded-full ${palette.badge} ${palette.badgeText}`}>
+                      {count}
+                    </span>
+                  </Link>
+                );
+              })}
             </div>
-          );
 
-          // Desktop: show 3 columns per view, carousel horizontally
-          // Group columns into pages of 3 for desktop
-          const desktopPages: any[][][] = [];
-          for (let i = 0; i < columns.length; i += 3) {
-            desktopPages.push(columns.slice(i, i + 3));
-          }
-
-          return (
-            <>
-              {/* Desktop: 3 columns per view, horizontal scroll */}
-              <div className="hidden sm:flex overflow-x-auto snap-x snap-mandatory gap-4 pb-3
-                              scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent"
-                   style={{ scrollbarWidth: 'thin' }}>
-                {desktopPages.map((page, pi) => (
-                  <div key={pi} className="grid grid-cols-3 gap-4 snap-start min-w-full shrink-0">
-                    {page.map((col, ci) => (
-                      <CodeColumn key={ci} codes={col} />
-                    ))}
-                    {/* Fill empty columns if last page has < 3 */}
-                    {page.length < 3 && Array.from({ length: 3 - page.length }).map((_, ei) => (
-                      <div key={`empty-${ei}`} />
-                    ))}
-                  </div>
-                ))}
-              </div>
-
-              {/* Desktop dots indicator */}
-              {desktopPages.length > 1 && (
-                <div className="hidden sm:flex items-center justify-center gap-1.5 mt-4">
-                  {desktopPages.map((_, i) => (
-                    <div key={i} className="w-2 h-2 rounded-full bg-slate-300" />
-                  ))}
-                </div>
-              )}
-
-              {/* Mobile: single list per view, horizontal scroll */}
-              <div className="sm:hidden flex overflow-x-auto snap-x snap-mandatory gap-3 pb-3 -mx-1 px-1 no-scrollbar">
-                {columns.map((col, i) => (
-                  <CodeColumn key={i} codes={col} />
-                ))}
-              </div>
-
-              {/* Mobile dots indicator */}
-              {columns.length > 1 && (
-                <div className="sm:hidden flex items-center justify-center gap-1.5 mt-3">
-                  {columns.map((_, i) => (
-                    <div key={i} className="w-1.5 h-1.5 rounded-full bg-slate-300" />
-                  ))}
-                </div>
-              )}
-
-              {/* Show all button */}
-              <div className="mt-5 text-center">
-                <Link
-                  href="/codes"
-                  className="inline-flex items-center gap-2 bg-white border border-slate-200
-                             hover:border-blue-300 hover:shadow-md text-slate-700 hover:text-blue-700
-                             px-8 py-3 rounded-xl text-sm font-medium transition-all shadow-sm"
-                >
-                  <BookOpen className="w-4 h-4" />
-                  عرض جميع القوانين ({codesList.length})
-                </Link>
-              </div>
-            </>
-          );
-        })()}
+            <div className="mt-5 text-center">
+              <Link
+                href="/codes"
+                className="inline-flex items-center gap-2 bg-white border border-slate-200
+                           hover:border-blue-300 hover:shadow-md text-slate-700 hover:text-blue-700
+                           px-8 py-3 rounded-xl text-sm font-medium transition-all shadow-sm"
+              >
+                <BookOpen className="w-4 h-4" />
+                عرض جميع القوانين ({codesList.length})
+              </Link>
+            </div>
+          </>
+        )}
       </section>
 
       {/* ── 1b. آخر الإضافات ─────────────────────────────────── */}

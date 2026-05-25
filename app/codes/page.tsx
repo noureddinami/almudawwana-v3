@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { Suspense } from 'react';
 import { createPublicClient } from '@/lib/supabase/server';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -127,7 +128,9 @@ export default async function CodesPage() {
 
       {/* ── Main content ───────────────────────────────────── */}
       <main className="max-w-5xl mx-auto px-4 py-10 flex-1 w-full space-y-4">
-        <CodesGrid codes={allCodes} codeTypes={codeTypes} />
+        <Suspense fallback={<div className="py-20 text-center text-slate-400 text-sm">جاري التحميل...</div>}>
+          <CodesGrid codes={allCodes} codeTypes={codeTypes} />
+        </Suspense>
 
         {allCodes.length === 0 && (
           <div className="text-center py-24 text-slate-400">

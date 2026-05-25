@@ -1,13 +1,10 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import {
-  FileText, ChevronLeft, Search, X, BookOpen,
-  Landmark, ScrollText, Gavel, Users, Briefcase,
-  Scale, Building2, Heart, FileCheck, ShieldCheck,
-  Layers, Globe, Truck, Droplets, Trees,
-} from 'lucide-react';
+import { FileText, ChevronLeft, Search, X, BookOpen } from 'lucide-react';
+import { COLOR_PALETTE, FALLBACK_PALETTE, getTypeIcon } from '@/lib/codeTypeUtils';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -17,49 +14,6 @@ export interface PublicCodeType {
   name_ar: string;
   color: string;
   sort_order: number;
-}
-
-// ─── Color palettes per code_types.color key ──────────────────────────────────
-
-const COLOR_PALETTE: Record<string, {
-  iconBg: string; iconText: string;
-  activeBg: string; activeText: string;
-  badge: string; badgeText: string;
-  dot: string; border: string;
-}> = {
-  blue:   { iconBg: 'bg-blue-100',   iconText: 'text-blue-600',   activeBg: 'bg-blue-600',   activeText: 'text-white', badge: 'bg-blue-50',   badgeText: 'text-blue-700',   dot: 'bg-blue-400',   border: 'border-blue-200'   },
-  teal:   { iconBg: 'bg-teal-100',   iconText: 'text-teal-600',   activeBg: 'bg-teal-600',   activeText: 'text-white', badge: 'bg-teal-50',   badgeText: 'text-teal-700',   dot: 'bg-teal-400',   border: 'border-teal-200'   },
-  violet: { iconBg: 'bg-violet-100', iconText: 'text-violet-600', activeBg: 'bg-violet-600', activeText: 'text-white', badge: 'bg-violet-50', badgeText: 'text-violet-700', dot: 'bg-violet-400', border: 'border-violet-200' },
-  amber:  { iconBg: 'bg-amber-100',  iconText: 'text-amber-600',  activeBg: 'bg-amber-500',  activeText: 'text-white', badge: 'bg-amber-50',  badgeText: 'text-amber-700',  dot: 'bg-amber-400',  border: 'border-amber-200'  },
-  green:  { iconBg: 'bg-green-100',  iconText: 'text-green-600',  activeBg: 'bg-green-600',  activeText: 'text-white', badge: 'bg-green-50',  badgeText: 'text-green-700',  dot: 'bg-green-400',  border: 'border-green-200'  },
-  red:    { iconBg: 'bg-red-100',    iconText: 'text-red-600',    activeBg: 'bg-red-600',    activeText: 'text-white', badge: 'bg-red-50',    badgeText: 'text-red-700',    dot: 'bg-red-400',    border: 'border-red-200'    },
-  slate:  { iconBg: 'bg-slate-100',  iconText: 'text-slate-500',  activeBg: 'bg-slate-600',  activeText: 'text-white', badge: 'bg-slate-100', badgeText: 'text-slate-600',  dot: 'bg-slate-400',  border: 'border-slate-200'  },
-};
-const FALLBACK_PALETTE = COLOR_PALETTE.slate;
-
-// ─── Icon mapping (by slug or name_ar keywords) ───────────────────────────────
-
-function getTypeIcon(slug: string, nameAr: string): React.ElementType {
-  const s = slug.toLowerCase();
-  const n = nameAr;
-  if (s.includes('constitu') || n.includes('دستور'))                           return Landmark;
-  if (s.includes('organic') || n.includes('تنظيمي'))                          return ScrollText;
-  if (s.includes('criminal') || s.includes('penal') || n.includes('جنائي') || n.includes('جزائي')) return Gavel;
-  if (s.includes('family') || n.includes('أسرة') || n.includes('أسري'))       return Users;
-  if (s.includes('commercial') || s.includes('trade') || n.includes('تجار'))  return Briefcase;
-  if (s.includes('civil') || n.includes('مدن') || n.includes('الإلتزام'))     return Scale;
-  if (s.includes('labor') || s.includes('work') || n.includes('شغل') || n.includes('عمل')) return ShieldCheck;
-  if (s.includes('admin') || n.includes('إدار'))                               return Building2;
-  if (s.includes('social') || n.includes('اجتماع'))                           return Heart;
-  if (s.includes('decree') || n.includes('مرسوم'))                            return FileCheck;
-  if (s.includes('transport') || n.includes('سير') || n.includes('نقل'))      return Truck;
-  if (s.includes('water') || n.includes('ماء') || n.includes('مائ'))          return Droplets;
-  if (s.includes('environ') || n.includes('بيئ') || n.includes('غاب'))        return Trees;
-  if (s.includes('ordinary') || n.includes('عادي'))                           return FileText;
-  if (s.includes('code') || n.includes('مدونة'))                              return BookOpen;
-  if (n.includes('دولي') || n.includes('خارج'))                               return Globe;
-  if (n.includes('مسطرة') || n.includes('إجراء'))                             return Layers;
-  return FileText;
 }
 
 // ─── Highlight helper ─────────────────────────────────────────────────────────
@@ -88,8 +42,15 @@ export default function CodesGrid({
   codes: any[];
   codeTypes: PublicCodeType[];
 }) {
+  const searchParams   = useSearchParams();
   const [query, setQuery]           = useState('');
   const [activeType, setActiveType] = useState<string | null>(null);
+
+  // Pre-select type from URL param ?type=slug
+  useEffect(() => {
+    const t = searchParams.get('type');
+    if (t) setActiveType(t);
+  }, [searchParams]);
 
   // slug → type lookup
   const typeMap = useMemo(
@@ -110,7 +71,7 @@ export default function CodesGrid({
     return map;
   }, [visible]);
 
-  // Types that have at least 1 code, ordered by sort_order
+  // Types with ≥1 code, ordered by sort_order
   const activeTypes = useMemo(
     () => [...codeTypes]
       .sort((a, b) => a.sort_order - b.sort_order)
@@ -157,29 +118,18 @@ export default function CodesGrid({
                   : `bg-white ${palette.border} hover:shadow-md hover:scale-[1.02]`}
               `}
             >
-              {/* Circle icon */}
               <div className={`
                 w-14 h-14 rounded-full flex items-center justify-center transition-colors
                 ${isActive ? 'bg-white/20' : palette.iconBg}
               `}>
                 <Icon className={`w-7 h-7 ${isActive ? 'text-white' : palette.iconText}`} />
               </div>
-
-              {/* Name */}
-              <span className={`
-                font-kufi text-xs font-bold text-center leading-tight
-                ${isActive ? 'text-white' : 'text-slate-800'}
-              `}>
+              <span className={`font-kufi text-xs font-bold text-center leading-tight
+                ${isActive ? 'text-white' : 'text-slate-800'}`}>
                 {ct.name_ar}
               </span>
-
-              {/* Count badge */}
-              <span className={`
-                text-[11px] font-semibold px-2 py-0.5 rounded-full
-                ${isActive
-                  ? 'bg-white/25 text-white'
-                  : `${palette.badge} ${palette.badgeText}`}
-              `}>
+              <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full
+                ${isActive ? 'bg-white/25 text-white' : `${palette.badge} ${palette.badgeText}`}`}>
                 {countByType[ct.slug] ?? 0}
               </span>
             </button>
