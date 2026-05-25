@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { adminCodes, AdminCode } from '@/lib/adminApi';
+import { adminCodes, AdminCode, adminCodeTypes, CodeType } from '@/lib/adminApi';
 import { PaginatedResponse } from '@/lib/api';
 import {
   Search, ChevronLeft, ChevronRight, RefreshCw, Plus,
@@ -12,15 +12,6 @@ import toast from 'react-hot-toast';
 import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
 import { sendPushNotification } from '@/lib/pushNotification';
 
-const TYPES = [
-  'constitution','organic_law','ordinary_law','code',
-  'decree_law','decree','order','circular','international_treaty',
-];
-const TYPE_LABEL: Record<string, string> = {
-  constitution: 'دستور', organic_law: 'قانون تنظيمي', ordinary_law: 'قانون عادي',
-  code: 'مدونة', decree_law: 'قانون-مرسوم', decree: 'مرسوم',
-  order: 'قرار', circular: 'منشور', international_treaty: 'معاهدة دولية',
-};
 const STATUSES = ['in_force','abrogated','amended','draft'];
 const STATUS_LABEL: Record<string, string> = {
   in_force: 'ساري', abrogated: 'ملغى', amended: 'معدَّل', draft: 'مسودة',
@@ -70,6 +61,18 @@ export default function AdminCodesPage() {
   const [form, setForm]           = useState<FormState>(emptyForm);
   const [saving, setSaving]       = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<AdminCode | null>(null);
+  const [codeTypes, setCodeTypes] = useState<CodeType[]>([]);
+
+  // fetch code types once on mount
+  useEffect(() => {
+    adminCodeTypes.list()
+      .then(types => {
+        setCodeTypes(types);
+        // set default type to first in list if available
+        setForm(f => ({ ...f, type: f.type || types[0]?.slug || 'code' }));
+      })
+      .catch(() => { /* silently fallback to empty */ });
+  }, []);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -80,6 +83,10 @@ export default function AdminCodesPage() {
   }, [q, status, page]);
 
   useEffect(() => { load(); }, [load]);
+
+  /** Returns label for a type slug, using fetched types or slug as fallback */
+  const typeLabel = (slug: string) =>
+    codeTypes.find(t => t.slug === slug)?.name_ar ?? slug;
 
   const openCreate = () => {
     setEditing(null);
@@ -255,7 +262,7 @@ export default function AdminCodesPage() {
                     </td>
                     <td className="px-4 py-3 text-center">
                       <span className="text-xs text-slate-600">
-                        {TYPE_LABEL[c.type] ?? c.type}
+                        {typeLabel(c.type)}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-center text-sm font-medium text-slate-700">
@@ -415,9 +422,12 @@ export default function AdminCodesPage() {
                     className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg
                                focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    {TYPES.map(t => (
-                      <option key={t} value={t}>{TYPE_LABEL[t] ?? t}</option>
-                    ))}
+                    {codeTypes.length > 0
+                      ? codeTypes.map(t => (
+                          <option key={t.id} value={t.slug}>{t.name_ar}</option>
+                        ))
+                      : <option value={form.type}>{form.type}</option>
+                    }
                   </select>
                 </div>
                 <div>
