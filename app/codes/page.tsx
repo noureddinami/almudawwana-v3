@@ -9,7 +9,7 @@ import { Scale, ChevronLeft, Search, BookOpen } from 'lucide-react';
 import ShareButton from '@/components/ShareButton';
 import CacheHydrator from '@/components/CacheHydrator';
 import { BreadcrumbJsonLd, CollectionPageJsonLd } from '@/components/JsonLd';
-import CodesGrid from '@/components/CodesGrid';
+import CodesGrid, { type PublicCodeType } from '@/components/CodesGrid';
 
 const BASE_URL = 'https://modawana.app'
 
@@ -28,19 +28,13 @@ export const metadata: Metadata = {
     title: 'جميع القوانين المغربية | المدوّنة',
     description: 'المسطرة الجنائية، القانون الجنائي، مدونة الأسرة، مدونة الشغل — نصوص رسمية مجاناً.',
   },
-  alternates: {
-    canonical: `${BASE_URL}/codes`,
-  },
+  alternates: { canonical: `${BASE_URL}/codes` },
 }
 
-const TYPE_ORDER = ['constitution', 'organic_law', 'ordinary_law', 'code', 'decree_law'];
-
-const TYPE_META: Record<string, { plural: string; dot: string }> = {
-  constitution: { plural: 'الدساتير',            dot: 'bg-amber-400'  },
-  organic_law:  { plural: 'القوانين التنظيمية',  dot: 'bg-violet-400' },
-  ordinary_law: { plural: 'القوانين العادية',     dot: 'bg-teal-400'   },
-  code:         { plural: 'المدونات',             dot: 'bg-blue-400'   },
-  decree_law:   { plural: 'المراسيم بقوانين',    dot: 'bg-slate-400'  },
+// Color key → dot class mapping (mirrors CodesGrid COLOR_CLS)
+const COLOR_DOT: Record<string, string> = {
+  blue: 'bg-blue-400', teal: 'bg-teal-400', violet: 'bg-violet-400',
+  amber: 'bg-amber-400', green: 'bg-green-400', red: 'bg-red-400', slate: 'bg-slate-400',
 };
 
 async function getAllCodes() {
@@ -54,16 +48,32 @@ async function getAllCodes() {
   } catch { return [] }
 }
 
+async function getAllCodeTypes(): Promise<PublicCodeType[]> {
+  try {
+    const supabase = createPublicClient()
+    const { data } = await supabase
+      .from('code_types')
+      .select('id, slug, name_ar, color, sort_order')
+      .order('sort_order', { ascending: true })
+    return (data ?? []) as PublicCodeType[]
+  } catch { return [] }
+}
+
 export default async function CodesPage() {
-  const allCodes      = await getAllCodes();
+  const [allCodes, codeTypes] = await Promise.all([
+    getAllCodes(),
+    getAllCodeTypes(),
+  ]);
+
   const totalArticles = allCodes.reduce((s: number, c: any) => s + (c.total_articles ?? 0), 0);
 
-  /* Group by type for hero pills only */
-  const grouped = TYPE_ORDER.reduce<Record<string, any[]>>((acc, type) => {
-    const items = allCodes.filter((c: any) => c.type === type);
-    if (items.length) acc[type] = items;
-    return acc;
-  }, {});
+  // Hero pills — only types with ≥1 code that has articles, ordered by sort_order
+  const heroPills = codeTypes
+    .map(ct => ({
+      ...ct,
+      count: allCodes.filter((c: any) => c.type === ct.slug && (c.total_articles ?? 0) > 0).length,
+    }))
+    .filter(ct => ct.count > 0);
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col" dir="rtl">
@@ -97,23 +107,24 @@ export default async function CodesPage() {
             />
           </div>
           <p className="text-blue-200 text-sm max-w-xl leading-relaxed">
-            {allCodes.length} قانون ومدونة تضم أكثر من{' '}
+            {allCodes.filter((c: any) => (c.total_articles ?? 0) > 0).length} قانون ومدونة تضم أكثر من{' '}
             <span className="text-white font-bold">{totalArticles.toLocaleString('en')}</span>{' '}
             مادة قانونية — المصدر: الجريدة الرسمية المغربية
           </p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {Object.entries(grouped).map(([type, items]) => {
-              const meta = TYPE_META[type] ?? { plural: type, dot: 'bg-slate-400' };
-              return (
-                <a key={type} href={`#${type}`}
+
+          {/* Hero pills from code_types */}
+          {heroPills.length > 0 && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {heroPills.map(ct => (
+                <a key={ct.slug} href={`#${ct.slug}`}
                    className="flex items-center gap-1.5 text-xs bg-white/10 hover:bg-white/20
                               border border-white/15 text-blue-100 px-3 py-1.5 rounded-full transition-colors">
-                  <span className={`w-1.5 h-1.5 rounded-full ${meta.dot}`} />
-                  {meta.plural} ({items.length})
+                  <span className={`w-1.5 h-1.5 rounded-full ${COLOR_DOT[ct.color] ?? 'bg-slate-400'}`} />
+                  {ct.name_ar} ({ct.count})
                 </a>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -135,7 +146,7 @@ export default async function CodesPage() {
 
       {/* ── Main content ───────────────────────────────────── */}
       <main className="max-w-5xl mx-auto px-4 py-10 flex-1 w-full space-y-4">
-        <CodesGrid codes={allCodes} />
+        <CodesGrid codes={allCodes} codeTypes={codeTypes} />
 
         {allCodes.length === 0 && (
           <div className="text-center py-24 text-slate-400">

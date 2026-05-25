@@ -69,15 +69,20 @@ async function getPdfs(codeId: string) {
   } catch { return [] }
 }
 
-const BASE_URL = 'https://modawana.app'
-
-const TYPE_LABELS: Record<string, string> = {
-  constitution: 'دستور',
-  organic_law: 'قانون تنظيمي',
-  ordinary_law: 'قانون',
-  code: 'مدونة',
-  decree_law: 'مرسوم بقانون',
+async function getCodeTypeName(typeSlug: string | null): Promise<string | null> {
+  if (!typeSlug) return null
+  try {
+    const supabase = createPublicClient()
+    const { data } = await supabase
+      .from('code_types')
+      .select('name_ar')
+      .eq('slug', typeSlug)
+      .maybeSingle()
+    return data?.name_ar ?? null
+  } catch { return null }
 }
+
+const BASE_URL = 'https://modawana.app'
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug: codeSlug } = await params
@@ -123,9 +128,10 @@ export default async function CodePage({ params, searchParams }: Props) {
   const code = await getCode(codeSlug);
   if (!code) notFound();
 
-  const [articlesData, pdfs] = await Promise.all([
+  const [articlesData, pdfs, codeTypeName] = await Promise.all([
     getArticles(code.id, page),
     getPdfs(code.id),
+    getCodeTypeName(code.type),
   ]);
 
   const articles = articlesData?.data ?? [];
@@ -144,7 +150,7 @@ export default async function CodePage({ params, searchParams }: Props) {
         nameFr={code.title_fr}
         url={`${BASE_URL}/codes/${code.slug}`}
         datePublished={code.promulgation_date}
-        legislationType={TYPE_LABELS[code.type ?? ''] ?? undefined}
+        legislationType={codeTypeName ?? undefined}
         totalArticles={pagination?.total}
       />
       <BreadcrumbJsonLd
@@ -184,6 +190,11 @@ export default async function CodePage({ params, searchParams }: Props) {
                 {pagination && (
                   <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full font-medium text-xs">
                     {pagination.total} مادة
+                  </span>
+                )}
+                {codeTypeName && (
+                  <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-xs font-medium">
+                    {codeTypeName}
                   </span>
                 )}
                 {code.promulgation_date && (

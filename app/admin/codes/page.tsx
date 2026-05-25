@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { adminCodes, AdminCode, adminCodeTypes, CodeType } from '@/lib/adminApi';
 import { PaginatedResponse } from '@/lib/api';
 import {
   Search, ChevronLeft, ChevronRight, RefreshCw, Plus,
   BookOpen, Pencil, Trash2, X, CheckCircle, Upload, ExternalLink,
+  ChevronsUpDown, ChevronUp, ChevronDown,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
@@ -49,6 +50,34 @@ function autoSlug(text: string): string {
     || '';
 }
 
+type SortKey = 'title_ar' | 'type' | 'total_articles' | 'status';
+type SortDir = 'asc' | 'desc';
+
+function SortableTh({
+  label, sortKey, current, dir, onSort,
+}: {
+  label: string; sortKey: SortKey;
+  current: SortKey | null; dir: SortDir;
+  onSort: (k: SortKey) => void;
+}) {
+  const active = current === sortKey;
+  return (
+    <th
+      className="px-4 py-3 text-center font-medium text-slate-600 cursor-pointer select-none hover:bg-slate-100 transition-colors"
+      onClick={() => onSort(sortKey)}
+    >
+      <span className="inline-flex items-center justify-center gap-1">
+        {label}
+        {active
+          ? (dir === 'asc'
+              ? <ChevronUp className="w-3 h-3 text-blue-600" />
+              : <ChevronDown className="w-3 h-3 text-blue-600" />)
+          : <ChevronsUpDown className="w-3 h-3 text-slate-300" />}
+      </span>
+    </th>
+  );
+}
+
 export default function AdminCodesPage() {
   const router = useRouter();
   const [data, setData]           = useState<PaginatedResponse<AdminCode> | null>(null);
@@ -62,6 +91,8 @@ export default function AdminCodesPage() {
   const [saving, setSaving]       = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<AdminCode | null>(null);
   const [codeTypes, setCodeTypes] = useState<CodeType[]>([]);
+  const [sortKey, setSortKey]     = useState<SortKey | null>(null);
+  const [sortDir, setSortDir]     = useState<SortDir>('asc');
 
   // fetch code types once on mount
   useEffect(() => {
@@ -87,6 +118,32 @@ export default function AdminCodesPage() {
   /** Returns label for a type slug, using fetched types or slug as fallback */
   const typeLabel = (slug: string) =>
     codeTypes.find(t => t.slug === slug)?.name_ar ?? slug;
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortDir('asc');
+    }
+  };
+
+  const sortedRows = useMemo(() => {
+    const rows = [...(data?.data ?? [])];
+    if (!sortKey) return rows;
+    return rows.sort((a, b) => {
+      let av: any, bv: any;
+      if (sortKey === 'title_ar') { av = a.title_ar ?? ''; bv = b.title_ar ?? ''; }
+      else if (sortKey === 'type') { av = typeLabel(a.type); bv = typeLabel(b.type); }
+      else if (sortKey === 'total_articles') { av = a.total_articles ?? 0; bv = b.total_articles ?? 0; }
+      else if (sortKey === 'status') { av = a.status ?? ''; bv = b.status ?? ''; }
+      if (typeof av === 'number') return sortDir === 'asc' ? av - bv : bv - av;
+      return sortDir === 'asc'
+        ? String(av).localeCompare(String(bv), 'ar')
+        : String(bv).localeCompare(String(av), 'ar');
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, sortKey, sortDir, codeTypes]);
 
   const openCreate = () => {
     setEditing(null);
@@ -223,15 +280,25 @@ export default function AdminCodesPage() {
             <table className="w-full text-sm">
               <thead className="bg-slate-50 border-b border-slate-200">
                 <tr>
-                  <th className="px-4 py-3 text-right font-medium text-slate-600">العنوان</th>
-                  <th className="px-4 py-3 text-center font-medium text-slate-600">النوع</th>
-                  <th className="px-4 py-3 text-center font-medium text-slate-600">المواد</th>
-                  <th className="px-4 py-3 text-center font-medium text-slate-600">الحالة</th>
+                  <th
+                    className="px-4 py-3 text-right font-medium text-slate-600 cursor-pointer select-none hover:bg-slate-100 transition-colors"
+                    onClick={() => handleSort('title_ar')}
+                  >
+                    <span className="inline-flex items-center gap-1">
+                      العنوان
+                      {sortKey === 'title_ar'
+                        ? (sortDir === 'asc' ? <ChevronUp className="w-3 h-3 text-blue-600" /> : <ChevronDown className="w-3 h-3 text-blue-600" />)
+                        : <ChevronsUpDown className="w-3 h-3 text-slate-300" />}
+                    </span>
+                  </th>
+                  <SortableTh label="النوع" sortKey="type" current={sortKey} dir={sortDir} onSort={handleSort} />
+                  <SortableTh label="المواد" sortKey="total_articles" current={sortKey} dir={sortDir} onSort={handleSort} />
+                  <SortableTh label="الحالة" sortKey="status" current={sortKey} dir={sortDir} onSort={handleSort} />
                   <th className="px-4 py-3 text-center font-medium text-slate-600">إجراءات</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {data?.data.map(c => (
+                {sortedRows.map(c => (
                   <tr key={c.id} className="hover:bg-slate-50">
                     <td className="px-4 py-3">
                       <p className="font-medium text-slate-900">{c.title_ar}</p>

@@ -4,15 +4,30 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { FileText, ChevronLeft, Search, X, BookOpen } from 'lucide-react';
 
-const TYPE_ORDER = ['constitution', 'organic_law', 'ordinary_law', 'code', 'decree_law'];
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-const TYPE_META: Record<string, { label: string; plural: string; cls: string; dot: string }> = {
-  constitution: { label: 'دستور',        plural: 'الدساتير',            cls: 'bg-amber-50  text-amber-700',   dot: 'bg-amber-400'  },
-  organic_law:  { label: 'قانون تنظيمي', plural: 'القوانين التنظيمية',  cls: 'bg-violet-50 text-violet-700',  dot: 'bg-violet-400' },
-  ordinary_law: { label: 'قانون',        plural: 'القوانين العادية',     cls: 'bg-teal-50   text-teal-700',    dot: 'bg-teal-400'   },
-  code:         { label: 'مدونة',        plural: 'المدونات',             cls: 'bg-blue-50   text-blue-700',    dot: 'bg-blue-400'   },
-  decree_law:   { label: 'مرسوم بقانون', plural: 'المراسيم بقوانين',    cls: 'bg-slate-100 text-slate-600',   dot: 'bg-slate-400'  },
+export interface PublicCodeType {
+  id: number;
+  slug: string;
+  name_ar: string;
+  color: string;
+  sort_order: number;
+}
+
+// ─── Color mapping (from code_types.color key → Tailwind classes) ─────────────
+
+const COLOR_CLS: Record<string, { cls: string; dot: string }> = {
+  blue:   { cls: 'bg-blue-50   text-blue-700',   dot: 'bg-blue-400'   },
+  teal:   { cls: 'bg-teal-50   text-teal-700',   dot: 'bg-teal-400'   },
+  violet: { cls: 'bg-violet-50 text-violet-700', dot: 'bg-violet-400' },
+  amber:  { cls: 'bg-amber-50  text-amber-700',  dot: 'bg-amber-400'  },
+  green:  { cls: 'bg-green-50  text-green-700',  dot: 'bg-green-400'  },
+  red:    { cls: 'bg-red-50    text-red-700',     dot: 'bg-red-400'    },
+  slate:  { cls: 'bg-slate-100 text-slate-600',  dot: 'bg-slate-400'  },
 };
+const FALLBACK = { cls: 'bg-slate-100 text-slate-600', dot: 'bg-slate-400' };
+
+// ─── Highlight ────────────────────────────────────────────────────────────────
 
 function highlight(text: string, query: string) {
   if (!query) return text;
@@ -21,41 +36,64 @@ function highlight(text: string, query: string) {
   return (
     <>
       {text.slice(0, idx)}
-      <mark className="bg-yellow-200 text-yellow-900 rounded-sm">{text.slice(idx, idx + query.length)}</mark>
+      <mark className="bg-yellow-200 text-yellow-900 rounded-sm">
+        {text.slice(idx, idx + query.length)}
+      </mark>
       {text.slice(idx + query.length)}
     </>
   );
 }
 
-export default function CodesGrid({ codes }: { codes: any[] }) {
+// ─── Component ────────────────────────────────────────────────────────────────
+
+export default function CodesGrid({
+  codes,
+  codeTypes,
+}: {
+  codes: any[];
+  codeTypes: PublicCodeType[];
+}) {
   const [query, setQuery] = useState('');
 
+  // Build slug → type lookup
+  const typeMap = useMemo(
+    () => Object.fromEntries(codeTypes.map(t => [t.slug, t])),
+    [codeTypes],
+  );
+
+  // Filter: skip codes with 0 articles, then apply query
   const filtered = useMemo(() => {
-    if (!query.trim()) return codes;
+    const visible = codes.filter(c => (c.total_articles ?? 0) > 0);
+    if (!query.trim()) return visible;
     const q = query.trim().toLowerCase();
-    return codes.filter(c =>
+    return visible.filter(c =>
       c.title_ar?.toLowerCase().includes(q) ||
       c.title_fr?.toLowerCase().includes(q) ||
       c.official_number?.toLowerCase().includes(q) ||
-      (Array.isArray(c.keywords) && c.keywords.some((k: string) => k.toLowerCase().includes(q)))
+      (Array.isArray(c.keywords) && c.keywords.some((k: string) => k.toLowerCase().includes(q))),
     );
   }, [codes, query]);
 
+  // Group by type, ordered by sort_order (from code_types) then unknown
   const grouped = useMemo(() => {
-    const order = [...TYPE_ORDER];
-    // add unknown types at the end
-    filtered.forEach(c => { if (!order.includes(c.type)) order.push(c.type); });
+    const known = [...codeTypes].sort((a, b) => a.sort_order - b.sort_order);
+    const knownSlugs = new Set(known.map(t => t.slug));
+    const extraSlugs = [...new Set(
+      filtered.map(c => c.type as string).filter(t => !knownSlugs.has(t)),
+    )];
+    const order = [...known.map(t => t.slug), ...extraSlugs];
 
-    return order.reduce<Record<string, any[]>>((acc, type) => {
-      const items = filtered.filter(c => c.type === type);
-      if (items.length) acc[type] = items;
+    return order.reduce<Record<string, any[]>>((acc, slug) => {
+      const items = filtered.filter(c => c.type === slug);
+      if (items.length) acc[slug] = items;
       return acc;
     }, {});
-  }, [filtered]);
+  }, [filtered, codeTypes]);
 
   return (
     <div className="space-y-12">
-      {/* ── Search bar ──────────────────────────────────────── */}
+
+      {/* ── Search bar ────────────────────────────────────────────────── */}
       <div className="relative">
         <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
         <input
@@ -80,7 +118,7 @@ export default function CodesGrid({ codes }: { codes: any[] }) {
         )}
       </div>
 
-      {/* ── Result count when filtering ────────────────────── */}
+      {/* ── Result count ──────────────────────────────────────────────── */}
       {query && (
         <p className="text-sm text-slate-500 -mt-8">
           {filtered.length === 0
@@ -89,7 +127,7 @@ export default function CodesGrid({ codes }: { codes: any[] }) {
         </p>
       )}
 
-      {/* ── No results ─────────────────────────────────────── */}
+      {/* ── No results ────────────────────────────────────────────────── */}
       {filtered.length === 0 && (
         <div className="text-center py-20 text-slate-400">
           <BookOpen className="w-12 h-12 mx-auto mb-3 opacity-40" />
@@ -103,17 +141,17 @@ export default function CodesGrid({ codes }: { codes: any[] }) {
         </div>
       )}
 
-      {/* ── Grouped sections ───────────────────────────────── */}
-      {Object.entries(grouped).map(([type, items]) => {
-        const meta = TYPE_META[type] ?? {
-          label: type, plural: type,
-          cls: 'bg-slate-100 text-slate-600', dot: 'bg-slate-400',
-        };
+      {/* ── Grouped sections ──────────────────────────────────────────── */}
+      {Object.entries(grouped).map(([typeSlug, items]) => {
+        const ct = typeMap[typeSlug];
+        const colors = ct ? (COLOR_CLS[ct.color] ?? FALLBACK) : FALLBACK;
+        const label  = ct?.name_ar ?? typeSlug;
+
         return (
-          <section key={type} id={query ? undefined : type}>
+          <section key={typeSlug} id={query ? undefined : typeSlug}>
             <div className="flex items-center gap-3 mb-5">
-              <span className={`w-3 h-3 rounded-full shrink-0 ${meta.dot}`} />
-              <h2 className="font-kufi text-xl font-bold text-slate-900">{meta.plural}</h2>
+              <span className={`w-3 h-3 rounded-full shrink-0 ${colors.dot}`} />
+              <h2 className="font-kufi text-xl font-bold text-slate-900">{label}</h2>
               <span className="text-xs text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full">
                 {items.length}
               </span>
@@ -150,21 +188,20 @@ export default function CodesGrid({ codes }: { codes: any[] }) {
                   </div>
 
                   <div className="mt-3 flex items-center gap-2 flex-wrap">
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${meta.cls}`}>
-                      {meta.label}
+                    {/* Type badge — name_ar from code_types */}
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${colors.cls}`}>
+                      {label}
                     </span>
+                    {/* Official number badge */}
                     {code.official_number && (
-                      <span className="text-xs bg-slate-50 text-slate-500 px-2 py-0.5 rounded-full border border-slate-200" dir="ltr">
+                      <span className="text-xs bg-slate-50 text-slate-500 px-2 py-0.5 rounded-full border border-slate-200"
+                            dir="ltr">
                         {highlight(code.official_number, query)}
                       </span>
                     )}
-                    {code.total_articles > 0 ? (
-                      <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">
-                        {code.total_articles} مادة
-                      </span>
-                    ) : (
-                      <span className="text-xs text-slate-400 italic">قريباً</span>
-                    )}
+                    <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">
+                      {code.total_articles} مادة
+                    </span>
                     {code.promulgation_date && (
                       <span className="text-xs text-slate-400 mr-auto">
                         {new Date(code.promulgation_date).getFullYear()}

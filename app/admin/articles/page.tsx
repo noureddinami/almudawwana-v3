@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { adminArticles, AdminArticle, adminCodes, AdminCode, adminNotes, AdminNote } from '@/lib/adminApi';
 import { PaginatedResponse } from '@/lib/api';
 import {
   Search, ChevronLeft, ChevronRight, RefreshCw,
-  FileText, Pencil, Trash2, X, CheckSquare, Square, ChevronDown,
-  StickyNote, Send, Loader2, Plus, Save, Sparkles,
+  FileText, Pencil, Trash2, X, CheckSquare, Square, ChevronDown, ChevronUp,
+  StickyNote, Send, Loader2, Plus, Save, Sparkles, ChevronsUpDown,
 } from 'lucide-react';
 import { extractKeywords, autoDescription } from '@/lib/seoKeywords';
 import toast from 'react-hot-toast';
@@ -24,6 +24,35 @@ const STATUS_COLOR: Record<string, string> = {
   draft:     'bg-slate-100 text-slate-600',
 };
 
+type ArticleSortKey = 'number' | 'code' | 'status' | 'view_count';
+type SortDir = 'asc' | 'desc';
+
+function SortableTh({
+  label, sortKey, current, dir, onSort, align = 'center',
+}: {
+  label: string; sortKey: ArticleSortKey;
+  current: ArticleSortKey | null; dir: SortDir;
+  onSort: (k: ArticleSortKey) => void;
+  align?: 'right' | 'center';
+}) {
+  const active = current === sortKey;
+  return (
+    <th
+      className={`px-4 py-3 font-medium text-slate-600 cursor-pointer select-none hover:bg-slate-100 transition-colors text-${align}`}
+      onClick={() => onSort(sortKey)}
+    >
+      <span className={`inline-flex items-center gap-1 ${align === 'center' ? 'justify-center' : ''}`}>
+        {label}
+        {active
+          ? (dir === 'asc'
+              ? <ChevronUp className="w-3 h-3 text-blue-600" />
+              : <ChevronDown className="w-3 h-3 text-blue-600" />)
+          : <ChevronsUpDown className="w-3 h-3 text-slate-300" />}
+      </span>
+    </th>
+  );
+}
+
 export default function AdminArticlesPage() {
   const [data, setData]           = useState<PaginatedResponse<AdminArticle> | null>(null);
   const [loading, setLoading]     = useState(true);
@@ -39,6 +68,8 @@ export default function AdminArticlesPage() {
   const [codeSearch, setCodeSearch] = useState('');
   const [codeDropOpen, setCodeDropOpen] = useState(false);
   const codeDropRef = useRef<HTMLDivElement>(null);
+  const [sortKey, setSortKey]     = useState<ArticleSortKey | null>(null);
+  const [sortDir, setSortDir]     = useState<SortDir>('asc');
 
   // delete confirmation state
   type DeleteTarget =
@@ -244,6 +275,40 @@ export default function AdminArticlesPage() {
     }
   };
 
+  const handleSort = (key: ArticleSortKey) => {
+    if (sortKey === key) {
+      setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortDir('asc');
+    }
+  };
+
+  const sortedRows = useMemo(() => {
+    const rows = [...(data?.data ?? [])];
+    if (!sortKey) return rows;
+    return rows.sort((a, b) => {
+      let av: any, bv: any;
+      if (sortKey === 'number') {
+        // sort numerically if possible
+        const an = parseFloat(String(a.number)); const bn = parseFloat(String(b.number));
+        av = isNaN(an) ? a.number ?? '' : an;
+        bv = isNaN(bn) ? b.number ?? '' : bn;
+      } else if (sortKey === 'code') {
+        av = (a as any).code?.title_ar ?? '';
+        bv = (b as any).code?.title_ar ?? '';
+      } else if (sortKey === 'status') {
+        av = a.status ?? ''; bv = b.status ?? '';
+      } else if (sortKey === 'view_count') {
+        av = a.view_count ?? 0; bv = b.view_count ?? 0;
+      }
+      if (typeof av === 'number') return sortDir === 'asc' ? av - bv : bv - av;
+      return sortDir === 'asc'
+        ? String(av).localeCompare(String(bv), 'ar')
+        : String(bv).localeCompare(String(av), 'ar');
+    });
+  }, [data, sortKey, sortDir]);
+
   const allSelected = data ? selected.size === data.data.length && data.data.length > 0 : false;
 
   return (
@@ -416,15 +481,15 @@ export default function AdminArticlesPage() {
                       {allSelected ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
                     </button>
                   </th>
-                  <th className="px-4 py-3 text-right font-medium text-slate-600">المادة</th>
-                  <th className="px-4 py-3 text-right font-medium text-slate-600">القانون</th>
-                  <th className="px-4 py-3 text-center font-medium text-slate-600">الحالة</th>
-                  <th className="px-4 py-3 text-center font-medium text-slate-600">المشاهدات</th>
+                  <SortableTh label="المادة" sortKey="number" current={sortKey} dir={sortDir} onSort={handleSort} align="right" />
+                  <SortableTh label="القانون" sortKey="code" current={sortKey} dir={sortDir} onSort={handleSort} align="right" />
+                  <SortableTh label="الحالة" sortKey="status" current={sortKey} dir={sortDir} onSort={handleSort} />
+                  <SortableTh label="المشاهدات" sortKey="view_count" current={sortKey} dir={sortDir} onSort={handleSort} />
                   <th className="px-4 py-3 text-center font-medium text-slate-600">إجراءات</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {data?.data.map(a => (
+                {sortedRows.map(a => (
                   <tr key={a.id} className={`hover:bg-slate-50 ${selected.has(a.id) ? 'bg-blue-50' : ''}`}>
                     <td className="px-3 py-3 text-center">
                       <button
