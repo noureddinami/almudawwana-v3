@@ -10,7 +10,8 @@ import toast from 'react-hot-toast';
 const NAV_LINKS = [
   { href: '/',              label: 'الرئيسية',            anchor: false },
   { href: '/why',           label: 'حول المدوّنة',          anchor: false, blank: true },
-  { href: '/codes',         label: 'النصوص القانونية',    anchor: false },
+  { href: '/codes',          label: 'النصوص القانونية',    anchor: false },
+  { href: '/jurisprudence', label: 'الاجتهاد القضائي',    anchor: false },
   { href: '/#latest',       label: 'آخر الإضافات',        anchor: true  },
   { href: '/search',        label: 'البحث',               anchor: false },
   { href: '/request-code',  label: 'طلب إضافة نص قانوني', anchor: false },
