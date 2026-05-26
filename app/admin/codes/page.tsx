@@ -50,7 +50,7 @@ function autoSlug(text: string): string {
     || '';
 }
 
-type SortKey = 'title_ar' | 'type' | 'total_articles' | 'status';
+type SortKey = 'title_ar' | 'type' | 'article_count' | 'status' | 'created_at';
 type SortDir = 'asc' | 'desc';
 
 function SortableTh({
@@ -133,10 +133,11 @@ export default function AdminCodesPage() {
     if (!sortKey) return rows;
     return rows.sort((a, b) => {
       let av: any, bv: any;
-      if (sortKey === 'title_ar') { av = a.title_ar ?? ''; bv = b.title_ar ?? ''; }
-      else if (sortKey === 'type') { av = typeLabel(a.type); bv = typeLabel(b.type); }
-      else if (sortKey === 'total_articles') { av = a.total_articles ?? 0; bv = b.total_articles ?? 0; }
-      else if (sortKey === 'status') { av = a.status ?? ''; bv = b.status ?? ''; }
+      if (sortKey === 'title_ar')    { av = a.title_ar ?? ''; bv = b.title_ar ?? ''; }
+      else if (sortKey === 'type')         { av = typeLabel(a.type); bv = typeLabel(b.type); }
+      else if (sortKey === 'article_count'){ av = a.article_count ?? 0; bv = b.article_count ?? 0; }
+      else if (sortKey === 'status')       { av = a.status ?? ''; bv = b.status ?? ''; }
+      else if (sortKey === 'created_at')   { av = a.created_at ?? ''; bv = b.created_at ?? ''; }
       if (typeof av === 'number') return sortDir === 'asc' ? av - bv : bv - av;
       return sortDir === 'asc'
         ? String(av).localeCompare(String(bv), 'ar')
@@ -292,8 +293,9 @@ export default function AdminCodesPage() {
                     </span>
                   </th>
                   <SortableTh label="النوع" sortKey="type" current={sortKey} dir={sortDir} onSort={handleSort} />
-                  <SortableTh label="المواد" sortKey="total_articles" current={sortKey} dir={sortDir} onSort={handleSort} />
+                  <SortableTh label="المواد" sortKey="article_count" current={sortKey} dir={sortDir} onSort={handleSort} />
                   <SortableTh label="الحالة" sortKey="status" current={sortKey} dir={sortDir} onSort={handleSort} />
+                  <SortableTh label="تاريخ الإضافة" sortKey="created_at" current={sortKey} dir={sortDir} onSort={handleSort} />
                   <th className="px-4 py-3 text-center font-medium text-slate-600">إجراءات</th>
                 </tr>
               </thead>
@@ -333,7 +335,7 @@ export default function AdminCodesPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-center text-sm font-medium text-slate-700">
-                      {c.total_articles.toLocaleString('ar-MA')}
+                      {(c.article_count ?? 0).toLocaleString('ar-MA')}
                     </td>
                     <td className="px-4 py-3 text-center">
                       <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5
@@ -341,6 +343,9 @@ export default function AdminCodesPage() {
                         {c.status === 'in_force' && <CheckCircle className="w-3 h-3" />}
                         {STATUS_LABEL[c.status] ?? c.status}
                       </span>
+                    </td>
+                    <td className="px-4 py-3 text-center text-xs text-slate-500 whitespace-nowrap" dir="ltr">
+                      {c.created_at ? new Date(c.created_at).toLocaleDateString('fr-MA', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'}
                     </td>
                     <td className="px-4 py-3 text-center">
                       <div className="flex items-center justify-center gap-2">
@@ -398,8 +403,8 @@ export default function AdminCodesPage() {
         <ConfirmDeleteModal
           title={`حذف "${deleteTarget.title_ar}"`}
           warning={
-            deleteTarget.total_articles > 0
-              ? `سيتم حذف ${deleteTarget.total_articles} مادة مرتبطة بهذا القانون بشكل نهائي.`
+            (deleteTarget.article_count ?? 0) > 0
+              ? `سيتم حذف ${deleteTarget.article_count} مادة مرتبطة بهذا القانون بشكل نهائي.`
               : undefined
           }
           onConfirm={confirmDeleteCode}

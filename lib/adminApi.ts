@@ -70,6 +70,7 @@ export interface AdminCode extends Code {
   meta_description: string | null
   keywords: string[] | null
   created_at: string
+  article_count: number
 }
 
 export interface AdminArticle {

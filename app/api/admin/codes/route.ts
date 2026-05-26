@@ -19,15 +19,24 @@ export async function GET(req: NextRequest) {
 
   let query = supabase
     .from('codes')
-    .select('id, slug, title_ar, title_fr, type, status, official_number, total_articles, promulgation_date, source_url, meta_description, keywords, created_at', { count: 'exact' })
+    .select('id, slug, title_ar, title_fr, type, status, official_number, promulgation_date, source_url, meta_description, keywords, created_at, articles(count)', { count: 'exact' })
 
   if (q)      query = query.or(`title_ar.ilike.%${q}%,title_fr.ilike.%${q}%`)
   if (status) query = query.eq('status', status)
 
-  const { data, count, error } = await query.order('title_ar').range(from, to)
+  const { data, count, error } = await query
+    .order('created_at', { ascending: false })
+    .range(from, to)
   if (error) return NextResponse.json({ message: error.message }, { status: 500 })
 
-  return NextResponse.json(paginatedResponse(data ?? [], count ?? 0, page, perPage))
+  // Flatten embedded article count into article_count field
+  const rows = (data ?? []).map((c: any) => ({
+    ...c,
+    article_count: (c.articles as { count: number }[])?.[0]?.count ?? 0,
+    articles: undefined,
+  }))
+
+  return NextResponse.json(paginatedResponse(rows, count ?? 0, page, perPage))
 }
 
 export async function POST(req: NextRequest) {
