@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { FileText, ChevronLeft, Search, X, BookOpen } from 'lucide-react';
@@ -43,14 +43,31 @@ export default function CodesGrid({
   codeTypes: PublicCodeType[];
 }) {
   const searchParams   = useSearchParams();
+  const resultsRef     = useRef<HTMLDivElement>(null);
   const [query, setQuery]           = useState('');
   const [activeType, setActiveType] = useState<string | null>(null);
 
-  // Pre-select type from URL param ?type=slug
+  // Pre-select type from URL param ?type=slug + scroll on load
   useEffect(() => {
     const t = searchParams.get('type');
-    if (t) setActiveType(t);
+    if (t) {
+      setActiveType(t);
+      // small delay so the DOM has rendered before scrolling
+      setTimeout(() => {
+        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 120);
+    }
   }, [searchParams]);
+
+  // Scroll to results when user clicks a type card
+  const selectType = (slug: string | null) => {
+    setActiveType(slug);
+    if (slug) {
+      setTimeout(() => {
+        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 50);
+    }
+  };
 
   // slug → type lookup
   const typeMap = useMemo(
@@ -110,7 +127,7 @@ export default function CodesGrid({
           return (
             <button
               key={ct.slug}
-              onClick={() => setActiveType(isActive ? null : ct.slug)}
+              onClick={() => selectType(isActive ? null : ct.slug)}
               className={`
                 group flex flex-col items-center gap-2.5 p-4 rounded-2xl border-2 transition-all duration-200
                 ${isActive
@@ -136,6 +153,9 @@ export default function CodesGrid({
           );
         })}
       </div>
+
+      {/* ══ Scroll anchor ════════════════════════════════════════════════ */}
+      <div ref={resultsRef} className="scroll-mt-4" />
 
       {/* ══ Active type header ═══════════════════════════════════════════ */}
       {activeType && typeMap[activeType] && (
@@ -197,7 +217,7 @@ export default function CodesGrid({
           <BookOpen className="w-12 h-12 mx-auto mb-3 opacity-40" />
           <p>{query ? 'لا توجد قوانين تطابق بحثك' : 'لا توجد قوانين في هذا التصنيف'}</p>
           <button
-            onClick={() => { setQuery(''); setActiveType(null); }}
+            onClick={() => { setQuery(''); selectType(null); }}
             className="mt-3 text-sm text-blue-600 hover:underline"
           >
             عرض جميع القوانين
