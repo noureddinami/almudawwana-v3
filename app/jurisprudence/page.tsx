@@ -5,7 +5,7 @@ import { Scale } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { countDecisions } from '@/lib/jurisprudence'
-import { CHAMBER_LABELS, CHAMBER_COLORS } from '@/lib/jurisprudence'
+import { CHAMBER_LABELS } from '@/lib/jurisprudence-types'
 import JurisprudenceList from './JurisprudenceList'
 
 const BASE_URL = 'https://modawana.app'

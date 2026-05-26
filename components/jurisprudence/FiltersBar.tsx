@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Search, X } from 'lucide-react';
-import { CHAMBER_LABELS } from '@/lib/jurisprudence';
+import { CHAMBER_LABELS } from '@/lib/jurisprudence-types';
 
 export interface JurisFilters {
   search:  string

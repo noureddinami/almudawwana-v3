@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import type { JurisTag } from '@/lib/jurisprudence';
+import type { JurisTag } from '@/lib/jurisprudence-types';
 
 interface Props {
   tag: Pick<JurisTag, 'code_slug' | 'article_number' | 'display_label'>

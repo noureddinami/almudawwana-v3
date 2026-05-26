@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Scale, Lock, ArrowLeft, FileText, Calendar, Hash } from 'lucide-react';
-import type { Decision } from '@/lib/jurisprudence';
-import { CHAMBER_LABELS, chamberColor } from '@/lib/jurisprudence';
+import type { Decision } from '@/lib/jurisprudence-types';
+import { CHAMBER_LABELS, chamberColor } from '@/lib/jurisprudence-types';
 import ArticleTag from './ArticleTag';
 
 const FREE_LIMIT = 3;

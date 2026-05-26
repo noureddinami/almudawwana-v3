@@ -7,7 +7,8 @@ import { Scale, FileText, Calendar, Hash, ChevronLeft, ArrowRight } from 'lucide
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import ArticleTag from '@/components/jurisprudence/ArticleTag'
-import { getDecision, CHAMBER_LABELS, chamberColor } from '@/lib/jurisprudence'
+import { getDecision } from '@/lib/jurisprudence'
+import { CHAMBER_LABELS, chamberColor } from '@/lib/jurisprudence-types'
 
 const BASE_URL = 'https://modawana.app'
 

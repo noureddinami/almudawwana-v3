@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { FileText, Calendar, Hash, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
-import type { Decision } from '@/lib/jurisprudence';
-import { CHAMBER_LABELS, chamberColor } from '@/lib/jurisprudence';
+import type { Decision } from '@/lib/jurisprudence-types';
+import { CHAMBER_LABELS, chamberColor } from '@/lib/jurisprudence-types';
 import ArticleTag from './ArticleTag';
 
 interface Props {

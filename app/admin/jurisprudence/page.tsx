@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
-import { CHAMBER_LABELS } from '@/lib/jurisprudence';
+import { CHAMBER_LABELS } from '@/lib/jurisprudence-types';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 

@@ -1,0 +1,378 @@
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
+
+CREATE TABLE public.article_relations (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  source_article_id uuid NOT NULL,
+  target_article_id uuid NOT NULL,
+  relation_type USER-DEFINED NOT NULL,
+  notes text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT article_relations_pkey PRIMARY KEY (id),
+  CONSTRAINT article_relations_source_article_id_fkey FOREIGN KEY (source_article_id) REFERENCES public.articles(id),
+  CONSTRAINT article_relations_target_article_id_fkey FOREIGN KEY (target_article_id) REFERENCES public.articles(id)
+);
+CREATE TABLE public.article_reports (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  article_id uuid NOT NULL,
+  user_id uuid,
+  reason text NOT NULL CHECK (reason = ANY (ARRAY['spelling_error'::text, 'outdated'::text, 'numbering_error'::text, 'incomplete'::text, 'conflict'::text, 'other'::text])),
+  description text,
+  status text NOT NULL DEFAULT 'pending'::text CHECK (status = ANY (ARRAY['pending'::text, 'reviewed'::text, 'resolved'::text, 'dismissed'::text])),
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT article_reports_pkey PRIMARY KEY (id),
+  CONSTRAINT article_reports_article_id_fkey FOREIGN KEY (article_id) REFERENCES public.articles(id),
+  CONSTRAINT article_reports_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
+);
+CREATE TABLE public.article_tags (
+  article_id uuid NOT NULL,
+  tag_id uuid NOT NULL,
+  CONSTRAINT article_tags_pkey PRIMARY KEY (article_id, tag_id),
+  CONSTRAINT article_tags_article_id_fkey FOREIGN KEY (article_id) REFERENCES public.articles(id),
+  CONSTRAINT article_tags_tag_id_fkey FOREIGN KEY (tag_id) REFERENCES public.tags(id)
+);
+CREATE TABLE public.article_versions (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  article_id uuid NOT NULL,
+  version_number integer NOT NULL,
+  content_ar text NOT NULL,
+  amendment_law character varying,
+  amendment_bo character varying,
+  amendment_date date,
+  change_summary text,
+  is_current boolean NOT NULL DEFAULT false,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT article_versions_pkey PRIMARY KEY (id),
+  CONSTRAINT article_versions_article_id_fkey FOREIGN KEY (article_id) REFERENCES public.articles(id)
+);
+CREATE TABLE public.articles (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  code_id uuid NOT NULL,
+  section_id uuid,
+  number character varying NOT NULL,
+  number_int integer,
+  slug character varying NOT NULL UNIQUE,
+  content_ar text NOT NULL,
+  content_fr text,
+  status USER-DEFINED NOT NULL DEFAULT 'in_force'::article_status,
+  current_version integer NOT NULL DEFAULT 1,
+  view_count integer NOT NULL DEFAULT 0,
+  bookmark_count integer NOT NULL DEFAULT 0,
+  comment_count integer NOT NULL DEFAULT 0,
+  last_amended_date date,
+  abrogated_date date,
+  source character varying NOT NULL DEFAULT 'sgg.gov.ma'::character varying,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  meta_description text,
+  keywords ARRAY,
+  CONSTRAINT articles_pkey PRIMARY KEY (id),
+  CONSTRAINT articles_code_id_fkey FOREIGN KEY (code_id) REFERENCES public.codes(id),
+  CONSTRAINT articles_section_id_fkey FOREIGN KEY (section_id) REFERENCES public.sections(id)
+);
+CREATE TABLE public.bookmarks (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  article_id uuid,
+  code_id uuid,
+  folder_name character varying,
+  notes text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT bookmarks_pkey PRIMARY KEY (id),
+  CONSTRAINT bookmarks_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id),
+  CONSTRAINT bookmarks_article_id_fkey FOREIGN KEY (article_id) REFERENCES public.articles(id),
+  CONSTRAINT bookmarks_code_id_fkey FOREIGN KEY (code_id) REFERENCES public.codes(id)
+);
+CREATE TABLE public.books (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  code_id uuid NOT NULL,
+  number integer NOT NULL,
+  title_ar character varying NOT NULL,
+  title_fr character varying,
+  display_order integer NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT books_pkey PRIMARY KEY (id),
+  CONSTRAINT books_code_id_fkey FOREIGN KEY (code_id) REFERENCES public.codes(id)
+);
+CREATE TABLE public.code_requests (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  email text NOT NULL,
+  code_title text NOT NULL,
+  code_link text,
+  notes text,
+  status text NOT NULL DEFAULT 'pending'::text CHECK (status = ANY (ARRAY['pending'::text, 'reviewed'::text, 'added'::text, 'rejected'::text])),
+  admin_notes text,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT code_requests_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.code_types (
+  id bigint NOT NULL DEFAULT nextval('code_types_id_seq'::regclass),
+  slug character varying NOT NULL UNIQUE,
+  name_ar character varying NOT NULL,
+  name_fr character varying,
+  color character varying NOT NULL DEFAULT 'slate'::character varying,
+  sort_order smallint NOT NULL DEFAULT 0,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT code_types_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.codes (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  slug character varying NOT NULL UNIQUE,
+  title_ar character varying NOT NULL,
+  title_fr character varying,
+  description_ar text,
+  type character varying NOT NULL,
+  status USER-DEFINED NOT NULL DEFAULT 'in_force'::code_status,
+  official_number character varying,
+  bo_number character varying,
+  bo_date date,
+  promulgation_date date,
+  effective_date date,
+  total_articles integer NOT NULL DEFAULT 0,
+  pdf_official_url text,
+  source_url text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  meta_description text,
+  keywords ARRAY,
+  CONSTRAINT codes_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.commentaries (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  article_id uuid NOT NULL,
+  author_id uuid NOT NULL,
+  title_ar character varying,
+  content_ar text NOT NULL,
+  type USER-DEFINED NOT NULL DEFAULT 'commentary'::commentary_type,
+  status USER-DEFINED NOT NULL DEFAULT 'pending'::commentary_status,
+  reviewed_by uuid,
+  reviewed_at timestamp with time zone,
+  rejection_reason text,
+  upvotes integer NOT NULL DEFAULT 0,
+  downvotes integer NOT NULL DEFAULT 0,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT commentaries_pkey PRIMARY KEY (id),
+  CONSTRAINT commentaries_article_id_fkey FOREIGN KEY (article_id) REFERENCES public.articles(id),
+  CONSTRAINT commentaries_author_id_fkey FOREIGN KEY (author_id) REFERENCES public.profiles(id),
+  CONSTRAINT commentaries_reviewed_by_fkey FOREIGN KEY (reviewed_by) REFERENCES public.profiles(id)
+);
+CREATE TABLE public.commentary_revisions (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  commentary_id uuid NOT NULL,
+  editor_id uuid NOT NULL,
+  content_ar text NOT NULL,
+  edit_summary character varying,
+  revision_number integer NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT commentary_revisions_pkey PRIMARY KEY (id),
+  CONSTRAINT commentary_revisions_commentary_id_fkey FOREIGN KEY (commentary_id) REFERENCES public.commentaries(id),
+  CONSTRAINT commentary_revisions_editor_id_fkey FOREIGN KEY (editor_id) REFERENCES public.profiles(id)
+);
+CREATE TABLE public.contact_messages (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  email text NOT NULL,
+  subject text,
+  message text NOT NULL,
+  status text NOT NULL DEFAULT 'new'::text CHECK (status = ANY (ARRAY['new'::text, 'read'::text, 'replied'::text, 'archived'::text])),
+  admin_notes text,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT contact_messages_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.discussions (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  article_id uuid NOT NULL,
+  author_id uuid NOT NULL,
+  parent_id uuid,
+  title character varying,
+  content_ar text NOT NULL,
+  is_resolved boolean NOT NULL DEFAULT false,
+  upvotes integer NOT NULL DEFAULT 0,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT discussions_pkey PRIMARY KEY (id),
+  CONSTRAINT discussions_article_id_fkey FOREIGN KEY (article_id) REFERENCES public.articles(id),
+  CONSTRAINT discussions_author_id_fkey FOREIGN KEY (author_id) REFERENCES public.profiles(id),
+  CONSTRAINT discussions_parent_id_fkey FOREIGN KEY (parent_id) REFERENCES public.discussions(id)
+);
+CREATE TABLE public.download_logs (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  code_slug text NOT NULL,
+  article_id uuid,
+  format text DEFAULT 'pdf'::text,
+  device_id text,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT download_logs_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.jurisprudence (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  case_number character varying NOT NULL,
+  decision_date date NOT NULL,
+  court_type USER-DEFINED NOT NULL,
+  court_name character varying,
+  title_ar character varying,
+  summary_ar text,
+  full_text_ar text,
+  pdf_url text,
+  source character varying,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT jurisprudence_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.jurisprudence_articles (
+  jurisprudence_id uuid NOT NULL,
+  article_id uuid NOT NULL,
+  relevance_note text,
+  CONSTRAINT jurisprudence_articles_pkey PRIMARY KEY (jurisprudence_id, article_id),
+  CONSTRAINT jurisprudence_articles_jurisprudence_id_fkey FOREIGN KEY (jurisprudence_id) REFERENCES public.jurisprudence(id),
+  CONSTRAINT jurisprudence_articles_article_id_fkey FOREIGN KEY (article_id) REFERENCES public.articles(id)
+);
+CREATE TABLE public.moderation_logs (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  moderator_id uuid NOT NULL,
+  target_type character varying NOT NULL,
+  target_id uuid NOT NULL,
+  action character varying NOT NULL,
+  reason text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT moderation_logs_pkey PRIMARY KEY (id),
+  CONSTRAINT moderation_logs_moderator_id_fkey FOREIGN KEY (moderator_id) REFERENCES public.profiles(id)
+);
+CREATE TABLE public.notifications (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  type character varying NOT NULL,
+  title character varying,
+  message text,
+  link_url text,
+  is_read boolean NOT NULL DEFAULT false,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT notifications_pkey PRIMARY KEY (id),
+  CONSTRAINT notifications_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
+);
+CREATE TABLE public.page_views (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  path text NOT NULL,
+  country text,
+  platform text,
+  device_id text,
+  session_id text,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT page_views_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.pdf_documents (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  code_id uuid,
+  uploaded_by uuid,
+  title_ar character varying NOT NULL,
+  title_fr character varying,
+  original_filename character varying NOT NULL,
+  stored_filename character varying NOT NULL,
+  file_size bigint NOT NULL DEFAULT 0,
+  status USER-DEFINED NOT NULL DEFAULT 'pending'::pdf_status,
+  articles_extracted integer NOT NULL DEFAULT 0,
+  extraction_log text,
+  source_url character varying,
+  document_type USER-DEFINED NOT NULL DEFAULT 'code'::pdf_doc_type,
+  is_public boolean NOT NULL DEFAULT true,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT pdf_documents_pkey PRIMARY KEY (id),
+  CONSTRAINT pdf_documents_code_id_fkey FOREIGN KEY (code_id) REFERENCES public.codes(id),
+  CONSTRAINT pdf_documents_uploaded_by_fkey FOREIGN KEY (uploaded_by) REFERENCES public.profiles(id)
+);
+CREATE TABLE public.profiles (
+  id uuid NOT NULL,
+  email text NOT NULL,
+  username character varying UNIQUE,
+  full_name character varying,
+  full_name_ar character varying,
+  google_id character varying UNIQUE,
+  google_avatar text,
+  auth_provider USER-DEFINED NOT NULL DEFAULT 'email'::auth_provider,
+  avatar_url text,
+  bio text,
+  profession character varying,
+  role USER-DEFINED NOT NULL DEFAULT 'reader'::user_role,
+  status USER-DEFINED NOT NULL DEFAULT 'pending'::user_status,
+  karma_points integer NOT NULL DEFAULT 0,
+  is_verified_jurist boolean NOT NULL DEFAULT false,
+  email_verified_at timestamp with time zone,
+  last_login_at timestamp with time zone,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT profiles_pkey PRIMARY KEY (id),
+  CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.push_subscriptions (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  endpoint text NOT NULL UNIQUE,
+  p256dh text NOT NULL,
+  auth text NOT NULL,
+  user_id uuid,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT push_subscriptions_pkey PRIMARY KEY (id),
+  CONSTRAINT push_subscriptions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
+);
+CREATE TABLE public.pwa_installs (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  device_id text NOT NULL UNIQUE,
+  platform text NOT NULL CHECK (platform = ANY (ARRAY['ios'::text, 'android'::text, 'desktop'::text, 'unknown'::text])),
+  source text NOT NULL CHECK (source = ANY (ARRAY['appinstalled'::text, 'standalone_launch'::text])),
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT pwa_installs_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.search_logs (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  query text NOT NULL,
+  results_count integer DEFAULT 0,
+  search_type text DEFAULT 'text'::text,
+  code_slug text,
+  device_id text,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT search_logs_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.sections (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  code_id uuid NOT NULL,
+  book_id uuid,
+  parent_id uuid,
+  number character varying NOT NULL,
+  title_ar character varying NOT NULL,
+  title_fr character varying,
+  level smallint NOT NULL DEFAULT 1,
+  display_order integer NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT sections_pkey PRIMARY KEY (id),
+  CONSTRAINT sections_code_id_fkey FOREIGN KEY (code_id) REFERENCES public.codes(id),
+  CONSTRAINT sections_book_id_fkey FOREIGN KEY (book_id) REFERENCES public.books(id),
+  CONSTRAINT sections_parent_id_fkey FOREIGN KEY (parent_id) REFERENCES public.sections(id)
+);
+CREATE TABLE public.tags (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name_ar character varying NOT NULL UNIQUE,
+  name_fr character varying,
+  slug character varying NOT NULL UNIQUE,
+  description text,
+  article_count integer NOT NULL DEFAULT 0,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT tags_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.votes (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  commentary_id uuid,
+  discussion_id uuid,
+  vote_type smallint NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT votes_pkey PRIMARY KEY (id),
+  CONSTRAINT votes_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id),
+  CONSTRAINT votes_commentary_id_fkey FOREIGN KEY (commentary_id) REFERENCES public.commentaries(id),
+  CONSTRAINT votes_discussion_id_fkey FOREIGN KEY (discussion_id) REFERENCES public.discussions(id)
+);

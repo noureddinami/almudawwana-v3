@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { ChevronLeft, ChevronRight, BookOpen } from 'lucide-react';
 import DecisionCard from '@/components/jurisprudence/DecisionCard';
 import FiltersBar, { JurisFilters } from '@/components/jurisprudence/FiltersBar';
-import type { Decision, DecisionsPage } from '@/lib/jurisprudence';
+import type { Decision, DecisionsPage } from '@/lib/jurisprudence-types';
 
 export default function JurisprudenceList() {
   const [result,  setResult]  = useState<DecisionsPage | null>(null);
