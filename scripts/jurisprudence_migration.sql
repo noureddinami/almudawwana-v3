@@ -1,37 +1,36 @@
 -- ══════════════════════════════════════════════════════════════════════════════
--- Migration Jurisprudence — compatible création ET mise à jour
+-- Migration Jurisprudence — entièrement idempotente
 -- ▶ Exécuter dans : Supabase → SQL Editor
 -- ══════════════════════════════════════════════════════════════════════════════
 
--- ── 1. Table principale (création si elle n'existe pas) ───────────────────────
+-- ── 1. Créer la table si elle n'existe pas ────────────────────────────────────
 
 CREATE TABLE IF NOT EXISTS jurisprudence (
-  id               UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  case_number      TEXT        NOT NULL,
-  chamber          TEXT,
-  decision_nature  TEXT,
-  subject          TEXT,
-  decision_date    DATE,
-  pdf_url          TEXT,
-  keywords         TEXT[],
-  summary_ar       TEXT,
-  source           TEXT        NOT NULL DEFAULT 'huquqai.ma',
-  created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- ── 2. Ajouter les colonnes manquantes (idempotent) ───────────────────────────
+-- ── 2. Ajouter TOUTES les colonnes (ADD COLUMN IF NOT EXISTS) ─────────────────
 
-ALTER TABLE jurisprudence ADD COLUMN IF NOT EXISTS chamber_slug    TEXT;
-ALTER TABLE jurisprudence ADD COLUMN IF NOT EXISTS subject_short   TEXT;
-ALTER TABLE jurisprudence ADD COLUMN IF NOT EXISTS import_batch    TEXT;
+ALTER TABLE jurisprudence ADD COLUMN IF NOT EXISTS case_number      TEXT;
+ALTER TABLE jurisprudence ADD COLUMN IF NOT EXISTS chamber          TEXT;
+ALTER TABLE jurisprudence ADD COLUMN IF NOT EXISTS chamber_slug     TEXT;
+ALTER TABLE jurisprudence ADD COLUMN IF NOT EXISTS decision_nature  TEXT;
+ALTER TABLE jurisprudence ADD COLUMN IF NOT EXISTS subject          TEXT;
+ALTER TABLE jurisprudence ADD COLUMN IF NOT EXISTS subject_short    TEXT;
+ALTER TABLE jurisprudence ADD COLUMN IF NOT EXISTS decision_date    DATE;
+ALTER TABLE jurisprudence ADD COLUMN IF NOT EXISTS pdf_url          TEXT;
+ALTER TABLE jurisprudence ADD COLUMN IF NOT EXISTS keywords         TEXT[];
+ALTER TABLE jurisprudence ADD COLUMN IF NOT EXISTS summary_ar       TEXT;
+ALTER TABLE jurisprudence ADD COLUMN IF NOT EXISTS source           TEXT DEFAULT 'huquqai.ma';
+ALTER TABLE jurisprudence ADD COLUMN IF NOT EXISTS import_batch     TEXT;
+ALTER TABLE jurisprudence ADD COLUMN IF NOT EXISTS updated_at       TIMESTAMPTZ DEFAULT NOW();
 
--- Contrainte UNIQUE sur case_number (idempotent)
+-- Contrainte UNIQUE sur case_number
 DO $$
 BEGIN
   IF NOT EXISTS (
-    SELECT 1 FROM pg_constraint
-    WHERE conname = 'jurisprudence_case_number_unique'
+    SELECT 1 FROM pg_constraint WHERE conname = 'jurisprudence_case_number_unique'
   ) THEN
     ALTER TABLE jurisprudence ADD CONSTRAINT jurisprudence_case_number_unique UNIQUE (case_number);
   END IF;
@@ -53,24 +52,26 @@ CREATE TABLE IF NOT EXISTS jurisprudence_tags (
   UNIQUE(jurisprudence_id, code_slug, article_number)
 );
 
--- ── 4. Index ──────────────────────────────────────────────────────────────────
+-- ── 4. Index simples ──────────────────────────────────────────────────────────
 
 CREATE INDEX IF NOT EXISTS idx_juris_case    ON jurisprudence(case_number);
 CREATE INDEX IF NOT EXISTS idx_juris_chamber ON jurisprudence(chamber_slug);
 CREATE INDEX IF NOT EXISTS idx_juris_date    ON jurisprudence(decision_date DESC);
 CREATE INDEX IF NOT EXISTS idx_juris_batch   ON jurisprudence(import_batch);
 
--- Full-text search arabe (utilise subject_short si subject vide)
-CREATE INDEX IF NOT EXISTS idx_juris_fts ON jurisprudence
-  USING GIN(to_tsvector('arabic',
-    coalesce(subject,'') || ' ' || coalesce(subject_short,'')
-  ));
-
 CREATE INDEX IF NOT EXISTS idx_tags_article ON jurisprudence_tags(article_id);
 CREATE INDEX IF NOT EXISTS idx_tags_code    ON jurisprudence_tags(code_slug, article_number);
 CREATE INDEX IF NOT EXISTS idx_tags_juris   ON jurisprudence_tags(jurisprudence_id);
 
--- ── 5. RLS ────────────────────────────────────────────────────────────────────
+-- ── 5. Index FTS (créé séparément, après que les colonnes existent) ───────────
+
+DROP INDEX IF EXISTS idx_juris_fts;
+CREATE INDEX idx_juris_fts ON jurisprudence
+  USING GIN(to_tsvector('simple',
+    coalesce(subject,'') || ' ' || coalesce(subject_short,'')
+  ));
+
+-- ── 6. RLS ────────────────────────────────────────────────────────────────────
 
 ALTER TABLE jurisprudence      ENABLE ROW LEVEL SECURITY;
 ALTER TABLE jurisprudence_tags ENABLE ROW LEVEL SECURITY;
