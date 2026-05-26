@@ -47,27 +47,23 @@ export default function CodesGrid({
   const [query, setQuery]           = useState('');
   const [activeType, setActiveType] = useState<string | null>(null);
 
-  // Pre-select type from URL param ?type=slug + scroll on load
+  // Pre-select type from URL param ?type=slug
   useEffect(() => {
     const t = searchParams.get('type');
-    if (t) {
-      setActiveType(t);
-      // small delay so the DOM has rendered before scrolling
-      setTimeout(() => {
-        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 120);
-    }
+    if (t) setActiveType(t);
   }, [searchParams]);
 
-  // Scroll to results when user clicks a type card
-  const selectType = (slug: string | null) => {
-    setActiveType(slug);
-    if (slug) {
-      setTimeout(() => {
-        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 50);
-    }
-  };
+  // Scroll to results after React renders the filtered list
+  useEffect(() => {
+    if (!activeType) return;
+    // requestAnimationFrame ensures the DOM has painted before scrolling
+    const raf = requestAnimationFrame(() => {
+      resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [activeType]);
+
+  const selectType = (slug: string | null) => setActiveType(slug);
 
   // slug → type lookup
   const typeMap = useMemo(
