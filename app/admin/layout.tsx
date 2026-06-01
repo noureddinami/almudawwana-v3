@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { auth, clearToken, User, getUser, saveUser } from '@/lib/api';
 import {
   LayoutDashboard, Users, BookOpen, FileText, LogOut, Menu, X,
-  ChevronRight, Scale, Upload, MessageSquare, Tag, FilePlus2, Mail, Flag, Gavel,
+  ChevronRight, Scale, Upload, MessageSquare, Tag, FilePlus2, Mail, Flag, Gavel, Settings,
 } from 'lucide-react';
 
 const NAV = [
@@ -21,6 +21,7 @@ const NAV = [
   { href: '/admin/reports',         label: 'بلاغات المواد',  icon: Flag },
   { href: '/admin/pdfs',            label: 'استيراد PDF',   icon: Upload },
   { href: '/admin/jurisprudence',   label: 'الاجتهاد القضائي', icon: Gavel },
+  { href: '/admin/settings',        label: 'الإعدادات',       icon: Settings },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

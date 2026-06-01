@@ -26,6 +26,10 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [headerHidden, setHeaderHidden] = useState(false);
+  const [hiddenLinks, setHiddenLinks] = useState<string[]>(() => {
+    if (typeof window === 'undefined') return [];
+    try { return JSON.parse(sessionStorage.getItem('nav_hidden') ?? '[]'); } catch { return []; }
+  });
   const lastScrollY = useRef(0);
 
   useEffect(() => {
@@ -34,6 +38,17 @@ export default function Navbar() {
         .then((r: any) => setUser(r.user ?? r))
         .catch(() => clearToken());
     }
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/settings/nav')
+      .then(r => r.json())
+      .then((d: { hidden?: string[] }) => {
+        const h = d.hidden ?? [];
+        setHiddenLinks(h);
+        try { sessionStorage.setItem('nav_hidden', JSON.stringify(h)); } catch {}
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => { setMenuOpen(false); setMobileSearchOpen(false); }, [pathname]);
@@ -133,7 +148,7 @@ export default function Navbar() {
 
             {/* Nav links (desktop) */}
             <div className="hidden lg:flex items-center gap-0.5 flex-1">
-              {NAV_LINKS.map(link => (
+              {NAV_LINKS.filter(l => !hiddenLinks.includes(l.href)).map(link => (
                 <a
                   key={link.href}
                   href={link.href}
@@ -246,7 +261,7 @@ export default function Navbar() {
             ${menuOpen ? 'max-h-[700px] opacity-100' : 'max-h-0 opacity-0'}
           `}>
             <div className="py-3 border-t border-slate-100 pb-4 space-y-1">
-              {NAV_LINKS.map(link => {
+              {NAV_LINKS.filter(l => !hiddenLinks.includes(l.href)).map(link => {
                 const isRequest = link.href === '/request-code';
                 const isContact = link.href === '/contact';
                 const isAbout = link.href === '/about';
