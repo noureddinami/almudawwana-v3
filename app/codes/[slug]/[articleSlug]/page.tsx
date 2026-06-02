@@ -12,7 +12,6 @@ import CacheHydrator from '@/components/CacheHydrator';
 import { LegalArticleJsonLd, BreadcrumbJsonLd } from '@/components/JsonLd';
 import { extractKeywords, autoDescription } from '@/lib/seoKeywords';
 import ArticleReader from '@/components/ArticleReader'
-import JurisprudenceSection from '@/components/jurisprudence/JurisprudenceSection';
 
 const BASE_URL = 'https://modawana.app'
 
@@ -240,9 +239,6 @@ export default async function ArticlePage({ params }: Props) {
           prev={neighbors.prev}
           next={neighbors.next}
         />
-
-        {/* Jurisprudence liée */}
-        <JurisprudenceSection articleId={article.id} />
 
         {/* Admin notes */}
         {article.admin_notes && article.admin_notes.length > 0 && (

@@ -12,19 +12,20 @@ export async function GET(req: NextRequest) {
   const page    = Math.max(1, parseInt(searchParams.get('page') ?? '1'))
   const perPage = 20
   const q       = searchParams.get('q') ?? ''
-  const chamber = searchParams.get('chamber') ?? ''
 
   const { from, to } = paginationRange(page, perPage)
 
   let query = supabase
     .from('jurisprudence')
-    .select('id, case_number, chamber, chamber_slug, decision_nature, subject_short, decision_date, pdf_url, import_batch, created_at', { count: 'exact' })
+    .select(
+      'id, case_number, file_number, decision_date, case_type, result, pdf_url, import_batch, created_at',
+      { count: 'exact' }
+    )
 
-  if (chamber) query = query.eq('chamber_slug', chamber)
-  if (q)       query = query.or(`case_number.ilike.%${q}%,subject.ilike.%${q}%,subject_short.ilike.%${q}%`)
+  if (q) query = query.or(`case_number.ilike.%${q}%,file_number.ilike.%${q}%,subject.ilike.%${q}%`)
 
   const { data, count, error } = await query
-    .order('created_at', { ascending: false })
+    .order('decision_date', { ascending: false })
     .range(from, to)
 
   if (error) return NextResponse.json({ message: error.message }, { status: 500 })
@@ -37,29 +38,24 @@ export async function POST(req: NextRequest) {
   if (authResult instanceof NextResponse) return authResult
 
   const supabase = createServiceClient()
-  const body = await req.json()
+  const body     = await req.json()
 
-  const { case_number, chamber, chamber_slug, decision_nature, subject,
-          decision_date, pdf_url, keywords, summary_ar } = body
+  const { case_number, file_number, decision_date, case_type, subject, result, pdf_url } = body
 
-  if (!case_number) return NextResponse.json({ message: 'رقم الملف مطلوب' }, { status: 422 })
-
-  const subject_short = (subject ?? '').slice(0, 150).trim()
+  if (!case_number) return NextResponse.json({ message: 'رقم القرار مطلوب' }, { status: 422 })
+  if (!file_number)  return NextResponse.json({ message: 'رقم الملف مطلوب' }, { status: 422 })
 
   const { data, error } = await supabase
     .from('jurisprudence')
     .insert({
-      case_number: String(case_number).trim(),
-      chamber:       chamber || null,
-      chamber_slug:  chamber_slug || null,
-      decision_nature: decision_nature || null,
-      subject:       subject || null,
-      subject_short: subject_short || null,
+      case_number:   String(case_number).trim(),
+      file_number:   String(file_number).trim(),
       decision_date: decision_date || null,
-      pdf_url:       pdf_url || null,
-      keywords:      keywords?.length ? keywords : null,
-      summary_ar:    summary_ar || null,
-      import_batch:  new Date().toISOString().slice(0, 10),
+      case_type:     case_type || null,
+      subject:       subject   || null,
+      result:        result    || null,
+      pdf_url:       pdf_url   || null,
+      import_batch:  'manual',
     })
     .select()
     .single()

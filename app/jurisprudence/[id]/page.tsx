@@ -3,12 +3,11 @@ export const dynamic = 'force-dynamic'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { Scale, FileText, Calendar, Hash, ChevronLeft, ArrowRight } from 'lucide-react'
+import { Scale, FileText, Calendar, Hash, ChevronLeft, ArrowRight, Tag } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
-import ArticleTag from '@/components/jurisprudence/ArticleTag'
 import { getDecision } from '@/lib/jurisprudence'
-import { CHAMBER_LABELS, chamberColor } from '@/lib/jurisprudence-types'
+import { caseTypeColor, resultColor } from '@/lib/jurisprudence-types'
 
 const BASE_URL = 'https://modawana.app'
 
@@ -19,8 +18,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const d = await getDecision(id)
   if (!d) return { title: 'قرار غير موجود' }
 
-  const title = `ملف ${d.case_number} — ${CHAMBER_LABELS[d.chamber_slug ?? ''] ?? 'محكمة النقض'}`
-  const desc  = d.subject_short ?? 'قرار محكمة النقض المغربية'
+  const title = `ملف ${d.file_number} — قرار ${d.case_number}`
+  const desc  = (d.subject ?? '').slice(0, 160) || 'قرار محكمة النقض المغربية'
 
   return {
     title,
@@ -41,9 +40,8 @@ export default async function DecisionPage({ params }: Props) {
   const d = await getDecision(id)
   if (!d) notFound()
 
-  const colors  = chamberColor(d.chamber_slug)
-  const chamber = CHAMBER_LABELS[d.chamber_slug ?? ''] ?? 'غير محدد'
-  const tags    = d.tags ?? []
+  const tc = caseTypeColor(d.case_type)
+  const rc = resultColor(d.result)
 
   const formattedDate = d.decision_date
     ? new Date(d.decision_date).toLocaleDateString('ar-MA', {
@@ -63,33 +61,39 @@ export default async function DecisionPage({ params }: Props) {
             الاجتهاد القضائي
           </Link>
           <ChevronLeft className="w-3.5 h-3.5 text-slate-300" />
-          <span className="text-slate-800 font-medium">ملف {d.case_number}</span>
+          <span className="text-slate-800 font-medium font-mono">{d.file_number}</span>
         </div>
       </div>
 
       <div className="flex-1 max-w-4xl mx-auto w-full px-4 py-8">
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
           {/* Color bar */}
-          <div className={`h-1.5 ${colors.bar}`} />
+          <div className={`h-1.5 ${tc.bar}`} />
 
           <div className="p-6 sm:p-8">
             {/* Header */}
             <div className="flex items-start justify-between gap-4 flex-wrap mb-6">
               <div>
-                <div className="flex items-center gap-2 flex-wrap mb-2">
-                  <span className={`text-sm px-3 py-1 rounded-full border font-medium ${colors.bg} ${colors.text} ${colors.border}`}>
-                    {chamber}
-                  </span>
-                  {d.decision_nature && (
-                    <span className="text-sm bg-slate-100 text-slate-600 px-3 py-1 rounded-full border border-slate-200">
-                      {d.decision_nature}
+                <div className="flex items-center gap-2 flex-wrap mb-3">
+                  {d.case_type && (
+                    <span className={`text-sm px-3 py-1 rounded-full border font-medium ${tc.bg} ${tc.text} ${tc.border}`}>
+                      {d.case_type}
+                    </span>
+                  )}
+                  {d.result && (
+                    <span className={`text-sm px-3 py-1 rounded-full border ${rc.bg} ${rc.text} ${rc.border}`}>
+                      <Tag className="w-3 h-3 inline ml-1 -mt-0.5" />
+                      {d.result}
                     </span>
                   )}
                 </div>
-                <div className="flex items-center gap-4 text-sm text-slate-500 mt-1">
+                <div className="flex items-center flex-wrap gap-4 text-sm text-slate-500">
                   <span className="flex items-center gap-1.5 font-mono">
                     <Hash className="w-3.5 h-3.5" />
-                    <strong className="text-slate-800">{d.case_number}</strong>
+                    رقم الملف: <strong className="text-slate-800">{d.file_number}</strong>
+                  </span>
+                  <span className="flex items-center gap-1.5 font-mono">
+                    رقم القرار: <strong className="text-slate-700">{d.case_number}</strong>
                   </span>
                   {formattedDate && (
                     <span className="flex items-center gap-1.5">
@@ -106,7 +110,7 @@ export default async function DecisionPage({ params }: Props) {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 bg-[#2152cc] hover:bg-[#1a43a8]
-                             text-white px-4 py-2 rounded-xl font-medium text-sm transition-colors"
+                             text-white px-4 py-2 rounded-xl font-medium text-sm transition-colors shrink-0"
                 >
                   <FileText className="w-4 h-4" />
                   نص القرار PDF
@@ -117,8 +121,10 @@ export default async function DecisionPage({ params }: Props) {
             {/* Subject */}
             {d.subject && (
               <div className="mb-6">
-                <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">موضوع القرار</h2>
-                <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">
+                  الموضوع — القاعدة القانونية
+                </h2>
+                <div className="bg-slate-50 rounded-xl p-5 border border-slate-100">
                   <p className="text-base text-slate-800 leading-loose font-amiri whitespace-pre-wrap">
                     {d.subject}
                   </p>
@@ -126,36 +132,9 @@ export default async function DecisionPage({ params }: Props) {
               </div>
             )}
 
-            {/* Summary */}
-            {d.summary_ar && (
-              <div className="mb-6">
-                <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">الملخص</h2>
-                <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
-                  <p className="text-sm text-slate-700 leading-loose font-amiri whitespace-pre-wrap">
-                    {d.summary_ar}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Article tags */}
-            {tags.length > 0 && (
-              <div className="mb-6">
-                <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">
-                  المواد المرجعية
-                </h2>
-                <div className="flex flex-wrap gap-2">
-                  {tags.map(tag => (
-                    <ArticleTag key={tag.id} tag={tag} size="md" />
-                  ))}
-                </div>
-              </div>
-            )}
-
             {/* Meta */}
-            <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
-              <span>المصدر: {d.source}</span>
-              <span>{new Date(d.created_at).toLocaleDateString('ar-MA')}</span>
+            <div className="pt-4 border-t border-slate-100 text-xs text-slate-400">
+              <span>المصدر: huquqai.ma</span>
             </div>
           </div>
         </div>
