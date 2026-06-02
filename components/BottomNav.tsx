@@ -127,23 +127,25 @@ export default function BottomNav() {
           {TABS.map(tab => {
             const Icon = tab.icon;
             const active = isActive(tab.href);
+            const isCodes = tab.href === '/codes';
+            const isJuris = tab.href === '/jurisprudence';
+            const color = active
+              ? isCodes ? 'text-blue-600' : isJuris ? 'text-purple-600' : 'text-blue-600'
+              : isCodes ? 'text-blue-500' : isJuris ? 'text-purple-500' : 'text-slate-400';
+            const barColor = isCodes ? 'bg-blue-600' : isJuris ? 'bg-purple-600' : 'bg-blue-600';
             return (
               <Link
                 key={tab.href}
                 href={tab.href}
                 className={`flex-1 flex flex-col items-center justify-center gap-0.5
-                            active:scale-95 transition-all duration-150
-                            ${active
-                              ? 'text-blue-600'
-                              : 'text-slate-400 active:text-slate-600'}`}
+                            active:scale-95 transition-all duration-150 ${color}`}
               >
-                <Icon className={`w-5 h-5 ${active ? 'stroke-[2.5]' : 'stroke-[1.5]'}`} />
-                <span className={`text-[10px] leading-none font-medium
-                                 ${active ? 'text-blue-600' : 'text-slate-400'}`}>
+                <Icon className={`w-5 h-5 ${active || isCodes || isJuris ? 'stroke-[2]' : 'stroke-[1.5]'}`} />
+                <span className={`text-[10px] leading-none ${isCodes || isJuris ? 'font-bold' : 'font-medium'}`}>
                   {tab.label}
                 </span>
                 {active && (
-                  <div className="absolute top-0 w-8 h-0.5 bg-blue-600 rounded-full" />
+                  <div className={`absolute top-0 w-8 h-0.5 rounded-full ${barColor}`} />
                 )}
               </Link>
             );

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
 import { auth, clearToken, hasToken, User } from '@/lib/api';
-import { Search, LogOut, Menu, X, UserPlus, FilePlus2, Mail, Info } from 'lucide-react';
+import { Search, LogOut, Menu, X, UserPlus, FilePlus2, Mail, Info, BookOpen, Gavel } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const NAV_LINKS = [
@@ -17,6 +17,49 @@ const NAV_LINKS = [
   { href: '/request-code',  label: 'طلب إضافة نص قانوني', anchor: false },
   { href: '/contact',       label: 'تواصل معنا',          anchor: false },
 ];
+
+// ── Styles des liens mis en valeur ────────────────────────────────────────────
+function linkClass(href: string, active: boolean): string {
+  if (href === '/codes') {
+    return active
+      ? 'bg-blue-600 text-white shadow-sm shadow-blue-200'
+      : 'bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white hover:shadow-sm hover:shadow-blue-200'
+  }
+  if (href === '/jurisprudence') {
+    return active
+      ? 'bg-purple-600 text-white shadow-sm shadow-purple-200'
+      : 'bg-purple-50 text-purple-700 hover:bg-purple-600 hover:text-white hover:shadow-sm hover:shadow-purple-200'
+  }
+  if (href === '/request-code') {
+    return active
+      ? 'bg-emerald-50 text-emerald-700'
+      : 'text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50'
+  }
+  return active
+    ? 'bg-slate-100 text-slate-900'
+    : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
+}
+
+function mobileLinkClass(href: string, active: boolean): string {
+  if (href === '/codes') {
+    return active
+      ? 'bg-blue-600 text-white font-bold'
+      : 'bg-blue-50 text-blue-700 font-bold hover:bg-blue-100'
+  }
+  if (href === '/jurisprudence') {
+    return active
+      ? 'bg-purple-600 text-white font-bold'
+      : 'bg-purple-50 text-purple-700 font-bold hover:bg-purple-100'
+  }
+  if (href === '/request-code') {
+    return active
+      ? 'bg-emerald-50 text-emerald-700 font-medium'
+      : 'text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50'
+  }
+  return active
+    ? 'bg-slate-100 text-slate-900 font-medium'
+    : 'text-slate-700 hover:text-blue-600 hover:bg-slate-50'
+}
 
 export default function Navbar() {
   const router   = useRouter();
@@ -53,10 +96,9 @@ export default function Navbar() {
 
   useEffect(() => { setMenuOpen(false); setMobileSearchOpen(false); }, [pathname]);
 
-  // Hide header on scroll down, show on scroll up (mobile only)
   useEffect(() => {
     const onScroll = () => {
-      if (window.innerWidth >= 640) { setHeaderHidden(false); return; } // sm+ always visible
+      if (window.innerWidth >= 640) { setHeaderHidden(false); return; }
       const y = window.scrollY;
       if (y > lastScrollY.current && y > 60) setHeaderHidden(true);
       else setHeaderHidden(false);
@@ -105,9 +147,11 @@ export default function Navbar() {
     return pathname.startsWith(base);
   };
 
+  const visibleLinks = NAV_LINKS.filter(l => !hiddenLinks.includes(l.href));
+
   return (
     <header dir="rtl" className="sticky top-0 z-50 hidden sm:block">
-      {/* Bandeau disclaimer — desktop uniquement */}
+      {/* Bandeau disclaimer */}
       <div className="bg-blue-900 text-blue-100 text-center py-1.5 text-xs hidden md:block">
         📋 النصوص الرسمية متاحة على{' '}
         <a href="https://www.sgg.gov.ma" target="_blank" rel="noopener noreferrer"
@@ -143,36 +187,39 @@ export default function Navbar() {
               </span>
             </Link>
 
-            {/* Divider desktop */}
             <div className="hidden lg:block w-px h-6 bg-slate-200 mx-1" />
 
             {/* Nav links (desktop) */}
-            <div className="hidden lg:flex items-center gap-0.5 flex-1">
-              {NAV_LINKS.filter(l => !hiddenLinks.includes(l.href)).map(link => (
-                <a
-                  key={link.href}
-                  href={link.href}
-                  target={(link as any).blank ? '_blank' : undefined}
-                  rel={(link as any).blank ? 'noopener noreferrer' : undefined}
-                  onClick={e => handleAnchorClick(e, link.href, link.anchor)}
-                  className={`
-                    px-3 py-2 text-sm rounded-lg transition-colors whitespace-nowrap font-medium
-                    ${link.href === '/request-code'
-                      ? isActive(link.href)
-                        ? 'bg-emerald-50 text-emerald-700'
-                        : 'text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50'
-                      : isActive(link.href)
-                        ? 'bg-blue-50 text-blue-700'
-                        : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}
-                  `}
-                >
-                  {link.href === '/request-code' && <FilePlus2 className="w-3.5 h-3.5 inline ml-1 -mt-0.5" />}
-                  {link.label}
-                </a>
-              ))}
+            <div className="hidden lg:flex items-center gap-1 flex-1">
+              {visibleLinks.map(link => {
+                const active = isActive(link.href)
+                const isCodes = link.href === '/codes'
+                const isJuris = link.href === '/jurisprudence'
+                const isHighlight = isCodes || isJuris
+                return (
+                  <a
+                    key={link.href}
+                    href={link.href}
+                    target={(link as any).blank ? '_blank' : undefined}
+                    rel={(link as any).blank ? 'noopener noreferrer' : undefined}
+                    onClick={e => handleAnchorClick(e, link.href, link.anchor)}
+                    className={`
+                      flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all duration-150
+                      whitespace-nowrap
+                      ${isHighlight ? 'text-sm font-bold' : 'text-sm font-medium'}
+                      ${linkClass(link.href, active)}
+                    `}
+                  >
+                    {isCodes && <BookOpen className="w-3.5 h-3.5 shrink-0" />}
+                    {isJuris && <Gavel    className="w-3.5 h-3.5 shrink-0" />}
+                    {link.href === '/request-code' && <FilePlus2 className="w-3.5 h-3.5 shrink-0" />}
+                    {link.label}
+                  </a>
+                )
+              })}
             </div>
 
-            {/* Mobile: search toggle button */}
+            {/* Mobile: search toggle */}
             <button
               className="sm:hidden mr-auto p-2 text-slate-500 hover:text-blue-600
                          rounded-xl hover:bg-slate-50 transition-colors"
@@ -226,7 +273,7 @@ export default function Navbar() {
               )}
             </div>
 
-            {/* Hamburger (mobile + tablet) */}
+            {/* Hamburger */}
             <button
               className="lg:hidden text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
               onClick={() => setMenuOpen(o => !o)}
@@ -236,7 +283,7 @@ export default function Navbar() {
             </button>
           </div>
 
-          {/* ── Mobile search bar (slide down) ─────────────────── */}
+          {/* Mobile search bar */}
           <div className={`sm:hidden overflow-hidden transition-all duration-200 ease-in-out
             ${mobileSearchOpen ? 'max-h-20 opacity-100 pb-3' : 'max-h-0 opacity-0'}`}>
             <form onSubmit={handleSearch} className="flex gap-2">
@@ -255,16 +302,18 @@ export default function Navbar() {
             </form>
           </div>
 
-          {/* ── Mobile / Tablet collapse menu ────────────────── */}
+          {/* Mobile / Tablet collapse menu */}
           <div className={`
             lg:hidden overflow-hidden transition-all duration-200 ease-in-out
             ${menuOpen ? 'max-h-[700px] opacity-100' : 'max-h-0 opacity-0'}
           `}>
-            <div className="py-3 border-t border-slate-100 pb-4 space-y-1">
-              {NAV_LINKS.filter(l => !hiddenLinks.includes(l.href)).map(link => {
-                const isRequest = link.href === '/request-code';
-                const isContact = link.href === '/contact';
-                const isAbout = link.href === '/about';
+            <div className="py-3 border-t border-slate-100 pb-4 space-y-1.5">
+              {visibleLinks.map(link => {
+                const active  = isActive(link.href)
+                const isCodes = link.href === '/codes'
+                const isJuris = link.href === '/jurisprudence'
+                const isContact = link.href === '/contact'
+                const isAbout   = link.href === '/about'
                 return (
                   <a
                     key={link.href}
@@ -273,25 +322,21 @@ export default function Navbar() {
                     rel={(link as any).blank ? 'noopener noreferrer' : undefined}
                     onClick={e => handleAnchorClick(e, link.href, link.anchor)}
                     className={`
-                      flex items-center gap-2 px-3 py-2.5 text-sm rounded-lg transition-colors
-                      ${isActive(link.href)
-                        ? isRequest
-                          ? 'bg-emerald-50 text-emerald-700 font-medium'
-                          : 'bg-blue-50 text-blue-700 font-medium'
-                        : isRequest
-                          ? 'text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50'
-                          : 'text-slate-700 hover:text-blue-600 hover:bg-slate-50'}
+                      flex items-center gap-3 px-3 py-3 text-sm rounded-xl transition-colors
+                      ${mobileLinkClass(link.href, active)}
                     `}
                   >
-                    {isRequest && <FilePlus2 className="w-4 h-4" />}
-                    {isContact && <Mail className="w-4 h-4" />}
-                    {isAbout && <Info className="w-4 h-4" />}
+                    {isCodes   && <BookOpen className="w-5 h-5 shrink-0" />}
+                    {isJuris   && <Gavel    className="w-5 h-5 shrink-0" />}
+                    {link.href === '/request-code' && <FilePlus2 className="w-4 h-4 shrink-0" />}
+                    {isContact && <Mail     className="w-4 h-4 shrink-0" />}
+                    {isAbout   && <Info     className="w-4 h-4 shrink-0" />}
                     {link.label}
                   </a>
-                );
+                )
               })}
 
-              {/* Auth links in mobile menu */}
+              {/* Auth */}
               <div className="border-t border-slate-100 pt-2 mt-2 sm:hidden">
                 {user ? (
                   <div className="flex items-center justify-between px-3 py-2.5">
