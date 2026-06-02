@@ -4,16 +4,16 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import {
-  Home, Scale, Search, Download, MoreHorizontal,
+  Home, Scale, Gavel, Download, MoreHorizontal,
   FilePlus2, Mail, User, X, Info,
 } from 'lucide-react';
 import NotificationBell from '@/components/NotificationBell';
 
 const TABS = [
-  { href: '/',        label: 'الرئيسية', icon: Home     },
-  { href: '/codes',   label: 'القوانين',  icon: Scale    },
-  { href: '/search',  label: 'البحث',     icon: Search   },
-  { href: '/offline', label: 'المحمّلة',   icon: Download },
+  { href: '/',              label: 'الرئيسية',  icon: Home     },
+  { href: '/codes',         label: 'القوانين',   icon: Scale    },
+  { href: '/jurisprudence', label: 'الاجتهاد',   icon: Gavel    },
+  { href: '/offline',       label: 'المحمّلة',   icon: Download },
 ];
 
 const MORE_LINKS = [
