@@ -2,13 +2,13 @@
 // Fonctions de lecture — SERVER ONLY (utilise createPublicClient / next/headers)
 // Pour les composants client, importer lib/jurisprudence-types.ts
 
-import { createPublicClient } from './supabase/server'
+import { createServiceClient } from './supabase/server'
 export type { Decision, DecisionsPage } from './jurisprudence-types'
 export { caseTypeColor, resultColor } from './jurisprudence-types'
 import type { Decision } from './jurisprudence-types'
 
 export async function getDecision(id: string): Promise<Decision | null> {
-  const supabase = createPublicClient()
+  const supabase = createServiceClient()
   const { data, error } = await supabase
     .from('jurisprudence')
     .select('*')
@@ -23,7 +23,7 @@ export async function countDecisions(): Promise<{
   total: number
   byType: Record<string, number>
 }> {
-  const supabase = createPublicClient()
+  const supabase = createServiceClient()
 
   const { count: total } = await supabase
     .from('jurisprudence')

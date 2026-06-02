@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createPublicClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
   const dateFrom  = searchParams.get('date_from') ?? ''
   const dateTo    = searchParams.get('date_to')   ?? ''
 
-  const supabase = createPublicClient()
+  const supabase = createServiceClient()
   let query = supabase
     .from('jurisprudence')
     .select('*', { count: 'exact' })
