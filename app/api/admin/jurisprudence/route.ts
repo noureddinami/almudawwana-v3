@@ -6,8 +6,8 @@ import { createServiceClient } from '@/lib/supabase/server'
 export async function GET(req: NextRequest) {
   const authResult = await requireAdmin(req)
   if (authResult instanceof NextResponse) return authResult
-  const { supabase } = authResult
 
+  const supabase = createServiceClient()   // bypass RLS — service role for reads too
   const { searchParams } = new URL(req.url)
   const page    = Math.max(1, parseInt(searchParams.get('page') ?? '1'))
   const perPage = 20

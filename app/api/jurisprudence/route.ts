@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
   if (hasKw) {
     // Fetch up to 1000 pre-filtered rows, then apply 60% rule in JS
     const { data: allData, error } = await query.range(0, 999)
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error) { console.error('[jurisprudence] hasKw error:', error.message); return NextResponse.json({ error: error.message }, { status: 500 }) }
 
     const THRESHOLD = 0.6
     const filtered = (allData ?? []).filter(d => {
@@ -66,7 +66,7 @@ export async function GET(req: NextRequest) {
   const to   = from + perPage - 1
   const { data, count, error } = await query.range(from, to)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) { console.error('[jurisprudence] list error:', error.message); return NextResponse.json({ error: error.message }, { status: 500 }) }
 
   return NextResponse.json({
     data:         data ?? [],
