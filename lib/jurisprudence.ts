@@ -4,7 +4,7 @@
 
 import { createPublicClient } from './supabase/server'
 export type { Decision, DecisionsPage } from './jurisprudence-types'
-export { extractKeywords, caseTypeColor, resultColor } from './jurisprudence-types'
+export { caseTypeColor, resultColor } from './jurisprudence-types'
 import type { Decision } from './jurisprudence-types'
 
 export async function getDecision(id: string): Promise<Decision | null> {
