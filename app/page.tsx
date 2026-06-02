@@ -161,12 +161,12 @@ export default async function HomePage() {
 
           <h1 className="font-kufi text-4xl sm:text-6xl font-bold mb-3 sm:mb-4 tracking-wide">المدوّنة</h1>
           <p className="text-blue-100 text-base sm:text-xl mb-2 sm:mb-3 leading-relaxed">
-            الوصول السهل إلى القانون المغربي
+            الوصول السهل إلى القانون والاجتهاد القضائي المغربي
           </p>
           <p className="text-blue-200 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed px-2">
             ابحث وتصفّح أكثر من{' '}
             <span className="font-bold text-white text-base sm:text-lg">{totalArticles.toLocaleString('en')}</span>{' '}
-            مادة قانونية من القوانين والمدونات المغربية الرسمية
+            مادة قانونية وآلاف القرارات القضائية من المصادر المغربية الرسمية — مجاناً
           </p>
 
           {/* Search CTA */}
