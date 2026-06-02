@@ -124,12 +124,16 @@ function ImportModal({ onClose, onDone }: { onClose: () => void; onDone: () => v
               </div>
               <div className="grid grid-cols-3 gap-3">
                 {[
-                  { label: 'إجمالي', value: result.total },
+                  { label: 'صفوف Excel',      value: result.parsed   ?? result.total },
                   { label: 'مُضاف / مُحدَّث', value: result.inserted },
-                  { label: 'أخطاء', value: result.errors },
+                  { label: 'أخطاء',           value: result.errors   },
                 ].map(s => (
-                  <div key={s.label} className="bg-slate-50 rounded-xl p-3 text-center">
-                    <p className="text-2xl font-bold text-slate-900">{s.value ?? 0}</p>
+                  <div key={s.label} className={`rounded-xl p-3 text-center
+                    ${s.label === 'أخطاء' && s.value > 0 ? 'bg-red-50' : 'bg-slate-50'}`}>
+                    <p className={`text-2xl font-bold
+                      ${s.label === 'أخطاء' && s.value > 0 ? 'text-red-600' : 'text-slate-900'}`}>
+                      {s.value ?? 0}
+                    </p>
                     <p className="text-xs text-slate-500 mt-0.5">{s.label}</p>
                   </div>
                 ))}
@@ -137,8 +141,20 @@ function ImportModal({ onClose, onDone }: { onClose: () => void; onDone: () => v
               {result.errors > 0 && (
                 <div className="flex items-start gap-2 text-amber-700 bg-amber-50 rounded-xl p-3 text-xs">
                   <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                  بعض الصفوف لم تُستورَد (file_number أو case_number فارغ)
+                  <div>
+                    <p>{result.errors} صف لم يُستورَد</p>
+                    {result.errorMsgs?.[0] && (
+                      <p className="mt-1 font-mono text-[10px] text-slate-500 break-all">
+                        {result.errorMsgs[0]}
+                      </p>
+                    )}
+                  </div>
                 </div>
+              )}
+              {result.parsed !== result.inserted && result.errors === 0 && (
+                <p className="text-xs text-blue-600 bg-blue-50 rounded-lg p-2.5">
+                  ملاحظة: الفرق بين العدد المحلَّل ({result.parsed}) والمُضاف ({result.inserted}) يعني أن بعض الصفوف كانت موجودة مسبقاً وتم تحديثها.
+                </p>
               )}
               <button onClick={onClose}
                 className="w-full py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">

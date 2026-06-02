@@ -98,11 +98,12 @@ export async function POST(req: NextRequest) {
   if (!records.length)
     return NextResponse.json({ message: 'لا توجد صفوف صالحة (file_number وcase_number مطلوبان)' }, { status: 422 })
 
-  // Upsert in batches of 100
-  const supabase = createServiceClient()
-  let inserted   = 0
-  let errors     = 0
-  const BATCH    = 100
+  // Upsert in small batches — subject text can be very long, stay well under PostgREST body limit
+  const supabase    = createServiceClient()
+  let inserted      = 0
+  let errors        = 0
+  const errorMsgs: string[] = []
+  const BATCH       = 20   // small batches to avoid body-size limit on long Arabic text
 
   for (let i = 0; i < records.length; i += BATCH) {
     const chunk = records.slice(i, i + BATCH)
@@ -112,20 +113,20 @@ export async function POST(req: NextRequest) {
       .select('id')
 
     if (upsertErr) {
-      console.error('[import] upsert error:', upsertErr.message)
+      console.error(`[import] batch ${i}–${i + chunk.length} error:`, upsertErr.message)
       errors += chunk.length
-      if (i === 0) {
-        return NextResponse.json({
-          message: upsertErr.message,
-          code:    upsertErr.code,
-          hint:    upsertErr.hint ?? null,
-          sample:  chunk[0],
-        }, { status: 500 })
-      }
-      continue
+      errorMsgs.push(`batch ${i}: ${upsertErr.message}`)
+      continue   // keep going — don't abort on a single bad batch
     }
     inserted += (upserted ?? []).length
   }
 
-  return NextResponse.json({ ok: true, total: records.length, inserted, errors, batch: batchTag })
+  return NextResponse.json({
+    ok:         errors === 0,
+    parsed:     records.length,   // how many rows SheetJS found
+    inserted,
+    errors,
+    errorMsgs:  errorMsgs.length ? errorMsgs : undefined,
+    batch:      batchTag,
+  })
 }
