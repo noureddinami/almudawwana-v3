@@ -9,10 +9,11 @@ import {
   BookOpen, FileText, Scale, ChevronLeft, Search,
   MessageSquare, StickyNote, CheckCircle, Hash,
   AlignLeft, Tags, Shield, Smartphone, Zap, BookMarked,
-  Sparkles, Clock,
+  Sparkles, Clock, Gavel, CalendarDays, FileSearch,
 } from 'lucide-react';
 import ShareButton from '@/components/ShareButton';
 import { COLOR_PALETTE, FALLBACK_PALETTE, getTypeIcon } from '@/lib/codeTypeUtils';
+import { countDecisions } from '@/lib/jurisprudence';
 
 export const dynamic = 'force-dynamic'
 
@@ -121,12 +122,13 @@ function typeLabel(type: string) {
 }
 
 export default async function HomePage() {
-  const [codesList, codeTypes, latestCodes, recentNotes, totalArticles] = await Promise.all([
+  const [codesList, codeTypes, latestCodes, recentNotes, totalArticles, jurisStats] = await Promise.all([
     getCodes(),
     getCodeTypes(),
     getLatestCodes(),
     getRecentNotes(),
     getTotalArticles(),
+    countDecisions(),
   ]);
 
   return (
@@ -273,6 +275,162 @@ export default async function HomePage() {
             </div>
           </>
         )}
+      </section>
+
+      {/* ── 1b. الاجتهاد القضائي ────────────────────────────────── */}
+      <section className="relative overflow-hidden py-12 sm:py-16 px-4
+                          bg-gradient-to-l from-purple-900 via-purple-800 to-indigo-900 text-white">
+        {/* Blobs décoratifs */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 right-0 w-72 h-72 bg-purple-400/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-10 w-96 h-48 bg-indigo-400/10 rounded-full blur-3xl" />
+        </div>
+
+        <div className="relative max-w-6xl mx-auto">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-white/15 rounded-2xl flex items-center justify-center
+                              border border-white/20 backdrop-blur-sm shrink-0">
+                <Gavel className="w-7 h-7 text-white" />
+              </div>
+              <div>
+                <div className="inline-flex items-center gap-1.5 bg-white/10 border border-white/20
+                                text-purple-200 text-[11px] px-3 py-1 rounded-full mb-1">
+                  <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
+                  جديد على المنصة
+                </div>
+                <h2 className="font-kufi text-2xl sm:text-3xl font-bold leading-tight">
+                  الاجتهاد القضائي
+                </h2>
+                <p className="text-purple-200 text-sm mt-0.5">قرارات محكمة النقض المغربية</p>
+              </div>
+            </div>
+            <Link href="/jurisprudence"
+              className="shrink-0 flex items-center gap-2 bg-white text-purple-800 font-bold
+                         text-sm px-6 py-3 rounded-xl hover:bg-purple-50 transition-colors
+                         shadow-lg shadow-purple-900/30">
+              <Gavel className="w-4 h-4" />
+              تصفّح القرارات
+              <ChevronLeft className="w-4 h-4" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+            {/* Description + features */}
+            <div className="space-y-5">
+              <p className="text-purple-100 text-base leading-relaxed">
+                اكتشف قرارات محكمة النقض المغربية مرتّبة ومصنّفة — ابحث في مواضيعها القانونية،
+                تصفّح حسب نوع القضية والنتيجة، وتعمّق في الاجتهاد الذي يُشكّل القانون المغربي.
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {[
+                  {
+                    icon: Gavel,
+                    value: jurisStats.total > 0 ? jurisStats.total.toLocaleString('ar-MA') : '—',
+                    label: 'قرار قضائي',
+                    color: 'bg-white/10 border-white/15',
+                  },
+                  {
+                    icon: CalendarDays,
+                    value: Object.keys(jurisStats.byType).filter(t => t !== 'غير محدد').length > 0
+                      ? `${Object.keys(jurisStats.byType).filter(t => t !== 'غير محدد').length} أنواع`
+                      : 'مدني · جنائي',
+                    label: 'أنواع القضايا',
+                    color: 'bg-white/10 border-white/15',
+                  },
+                  {
+                    icon: FileSearch,
+                    value: 'مجاني',
+                    label: 'وصول حر للجميع',
+                    color: 'bg-white/10 border-white/15',
+                  },
+                ].map((s, i) => {
+                  const Icon = s.icon;
+                  return (
+                    <div key={i} className={`flex items-center gap-3 ${s.color} border
+                                             rounded-xl px-4 py-3 backdrop-blur-sm`}>
+                      <div className="w-9 h-9 bg-white/15 rounded-xl flex items-center justify-center shrink-0">
+                        <Icon className="w-4 h-4 text-white" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-white text-base font-kufi leading-tight">{s.value}</p>
+                        <p className="text-purple-200 text-[11px]">{s.label}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="flex flex-wrap gap-2 pt-1">
+                {[
+                  { icon: FileSearch, text: 'بحث في موضوع القرار' },
+                  { icon: CalendarDays, text: 'تصفية بالتاريخ' },
+                  { icon: Scale, text: 'حسب نوع القضية والنتيجة' },
+                ].map((f, i) => {
+                  const Icon = f.icon;
+                  return (
+                    <span key={i} className="flex items-center gap-1.5 text-xs text-purple-100
+                                              bg-white/10 border border-white/15 px-3 py-1.5 rounded-full">
+                      <Icon className="w-3 h-3" />
+                      {f.text}
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Mockup cards */}
+            <div className="space-y-3">
+              {[
+                {
+                  num: '2025/225', file: '2025/1/1/227',
+                  type: 'مدني', result: 'رفض',
+                  date: '14 أبريل 2025',
+                  subject: 'المولود نتاج علاقة غير شرعية — حق في التعويض جبراً للضرر في إطار المسؤولية التقصيرية',
+                  typeColor: 'bg-blue-500/20 text-blue-200 border-blue-400/30',
+                  resultColor: 'bg-red-500/20 text-red-200 border-red-400/30',
+                },
+                {
+                  num: '2024/920', file: '2024/1/6/8048',
+                  type: 'مدني', result: 'تأييد',
+                  date: '5 يونيو 2024',
+                  subject: 'الملكية — عقد مزور وحيازة مشتر حسن النية — مبدأ الحماية القانونية',
+                  typeColor: 'bg-blue-500/20 text-blue-200 border-blue-400/30',
+                  resultColor: 'bg-green-500/20 text-green-200 border-green-400/30',
+                },
+              ].map((d, i) => (
+                <div key={i} className="bg-white/10 border border-white/15 rounded-2xl p-4
+                                        backdrop-blur-sm hover:bg-white/15 transition-colors">
+                  <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[11px] px-2 py-0.5 rounded-full border font-medium ${d.typeColor}`}>
+                        {d.type}
+                      </span>
+                      <span className={`text-[11px] px-2 py-0.5 rounded-full border ${d.resultColor}`}>
+                        {d.result}
+                      </span>
+                    </div>
+                    <span className="text-purple-300 text-[11px] flex items-center gap-1">
+                      <CalendarDays className="w-3 h-3" />{d.date}
+                    </span>
+                  </div>
+                  <p className="text-xs font-mono text-purple-300 mb-1.5">{d.file} · {d.num}</p>
+                  <p className="text-white text-sm leading-relaxed font-amiri line-clamp-2">{d.subject}</p>
+                </div>
+              ))}
+
+              <Link href="/jurisprudence"
+                className="flex items-center justify-center gap-2 w-full py-3 text-sm font-medium
+                           text-purple-200 hover:text-white border border-white/15 rounded-2xl
+                           bg-white/5 hover:bg-white/10 transition-colors">
+                عرض جميع القرارات
+                <ChevronLeft className="w-4 h-4" />
+              </Link>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* ── 1b. آخر الإضافات ─────────────────────────────────── */}
