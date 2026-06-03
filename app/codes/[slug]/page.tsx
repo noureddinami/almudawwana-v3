@@ -117,6 +117,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
     alternates: {
       canonical: url,
+      languages: {
+        'ar-MA':    url,
+        'x-default': url,
+      },
     },
   }
 }

@@ -34,7 +34,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: 'article',
       locale: 'ar_MA',
     },
-    alternates: { canonical: `${BASE_URL}/jurisprudence/${id}` },
+    alternates: {
+      canonical: `${BASE_URL}/jurisprudence/${id}`,
+      languages: {
+        'ar-MA':    `${BASE_URL}/jurisprudence/${id}`,
+        'x-default': `${BASE_URL}/jurisprudence/${id}`,
+      },
+    },
   }
 }
 

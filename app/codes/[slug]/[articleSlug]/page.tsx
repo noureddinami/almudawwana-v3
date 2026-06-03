@@ -161,7 +161,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: `${title} | المدوّنة`,
       description: description.slice(0, 200),
     },
-    alternates: { canonical: url },
+    alternates: {
+      canonical: url,
+      languages: {
+        'ar-MA':    url,
+        'x-default': url,
+      },
+    },
   }
 }
 

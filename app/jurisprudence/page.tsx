@@ -25,7 +25,13 @@ export const metadata: Metadata = {
     images: [{ url: `${BASE_URL}/og-image.png`, width: 1200, height: 630 }],
   },
   twitter: { card: 'summary_large_image', title: 'الاجتهاد القضائي | المدوّنة' },
-  alternates: { canonical: `${BASE_URL}/jurisprudence` },
+  alternates: {
+    canonical: `${BASE_URL}/jurisprudence`,
+    languages: {
+      'ar-MA':    `${BASE_URL}/jurisprudence`,
+      'x-default': `${BASE_URL}/jurisprudence`,
+    },
+  },
 }
 
 export default async function JurisprudencePage() {
