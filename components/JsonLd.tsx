@@ -163,6 +163,64 @@ export function CollectionPageJsonLd({
   )
 }
 
+/* ── Jurisprudence (قرار محكمة النقض) ────────────────────────────── */
+export function JurisprudenceJsonLd({
+  id,
+  caseNumber,
+  fileNumber,
+  subject,
+  decisionDate,
+  caseType,
+  result,
+  url,
+}: {
+  id:           string
+  caseNumber:   string
+  fileNumber:   string
+  subject?:     string | null
+  decisionDate?: string | null
+  caseType?:    string | null
+  result?:      string | null
+  url:          string
+}) {
+  const data: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type':    'Article',
+    '@id':      url,
+    name:       `قرار رقم ${caseNumber} — ملف ${fileNumber}`,
+    headline:   `قرار محكمة النقض المغربية — ملف ${fileNumber}`,
+    url,
+    inLanguage:      'ar-MA',
+    articleSection:  caseType ?? 'الاجتهاد القضائي',
+    publisher: {
+      '@type': 'Organization',
+      '@id':   `${BASE_URL}/#organization`,
+    },
+    isPartOf: {
+      '@type': 'WebSite',
+      '@id':   `${BASE_URL}/#website`,
+    },
+    about: {
+      '@type':       'GovernmentOrganization',
+      name:          'محكمة النقض المغربية',
+      alternateName: 'Cour de cassation marocaine',
+      url:           'https://www.courdesappeaux.ma',
+    },
+  }
+
+  if (subject)      data.description = subject.slice(0, 300)
+  if (subject)      data.articleBody = subject
+  if (decisionDate) data.datePublished = decisionDate
+  if (result)       data.keywords = result
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+    />
+  )
+}
+
 /* ── LegalArticle (مادة قانونية) ──────────────────────────────────── */
 export function LegalArticleJsonLd({
   articleNumber,

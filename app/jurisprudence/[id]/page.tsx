@@ -9,6 +9,7 @@ import Footer from '@/components/Footer'
 import { getDecision } from '@/lib/jurisprudence'
 import { caseTypeColor, resultColor } from '@/lib/jurisprudence-types'
 import { PdfButtons } from '@/components/PdfButtons'
+import { JurisprudenceJsonLd, BreadcrumbJsonLd } from '@/components/JsonLd'
 
 const BASE_URL = 'https://modawana.app'
 
@@ -50,8 +51,28 @@ export default async function DecisionPage({ params }: Props) {
       })
     : null
 
+  const pageUrl = `${BASE_URL}/jurisprudence/${d.id}`
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col" dir="rtl">
+      {/* JSON-LD structured data */}
+      <JurisprudenceJsonLd
+        id={d.id}
+        caseNumber={d.case_number}
+        fileNumber={d.file_number}
+        subject={d.subject}
+        decisionDate={d.decision_date}
+        caseType={d.case_type}
+        result={d.result}
+        url={pageUrl}
+      />
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'الرئيسية',       url: BASE_URL },
+          { name: 'الاجتهاد القضائي', url: `${BASE_URL}/jurisprudence` },
+          { name: `ملف ${d.file_number}`, url: pageUrl },
+        ]}
+      />
       <Navbar />
 
       {/* Breadcrumb */}
