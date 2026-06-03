@@ -18,6 +18,20 @@ const STOPWORDS = new Set([
   'أيا','كذلك','وكذا','هكذا','بذلك','لذلك','لذا','وبذلك',
 ])
 
+// ── Préfixes arabes à supprimer (ordre : plus long en premier) ──────────────
+// Après normalisation des hamzat, "للأ" devient "للا" — on garde les deux
+// pour couvrir les deux cas (avant et après normalisation)
+const PREFIXES = ['للأ', 'للا', 'لل', 'بال', 'وال', 'فال', 'كال', 'ال']
+
+function stripPrefixes(word: string): string {
+  for (const prefix of PREFIXES) {
+    if (word.startsWith(prefix) && word.length > prefix.length + 2) {
+      return word.slice(prefix.length)
+    }
+  }
+  return word
+}
+
 /** Normalise les hamzat et alef madda → alef simple */
 function normalizeArabic(text: string): string {
   return text
@@ -33,6 +47,9 @@ export function extractKeywords(text: string): string[] {
     .replace(/[^ا-يa-zA-Z0-9\s]/g, ' ')   // keep Arabic + Latin + digits
     .split(/\s+/)
     .map(w => w.trim())
+    // Strip Arabic prefixes before stop-word check
+    .map(stripPrefixes)
+    // Keep words with length >= 3 AND not a stop word
     .filter(w => w.length >= 3 && !STOPWORDS.has(w))
     .filter((w, i, arr) => arr.indexOf(w) === i) // dedupe
 }
