@@ -1,11 +1,13 @@
-export const dynamic = 'force-dynamic'
+// ISR : revalidate toutes les heures — la liste initiale est dans le HTML
+export const revalidate = 3600
 
 import type { Metadata } from 'next'
 import { Scale } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
-import { countDecisions } from '@/lib/jurisprudence'
+import { countDecisions, getInitialDecisions } from '@/lib/jurisprudence'
 import JurisprudenceList from './JurisprudenceList'
+import type { Decision } from '@/lib/jurisprudence-types'
 
 const BASE_URL = 'https://modawana.app'
 
@@ -27,7 +29,11 @@ export const metadata: Metadata = {
 }
 
 export default async function JurisprudencePage() {
-  const stats = await countDecisions()
+  // Both fetches run in parallel — content lands in the initial HTML
+  const [stats, initialDecisions] = await Promise.all([
+    countDecisions(),
+    getInitialDecisions(50),
+  ])
 
   const typesWithData = Object.entries(stats.byType)
     .filter(([, count]) => count > 0)
@@ -68,9 +74,9 @@ export default async function JurisprudencePage() {
         </div>
       </div>
 
-      {/* List */}
+      {/* List — receives SSR data as initialData prop */}
       <div className="flex-1 max-w-5xl mx-auto w-full px-4 py-8">
-        <JurisprudenceList />
+        <JurisprudenceList initialData={initialDecisions as Decision[]} />
       </div>
 
       <Footer />

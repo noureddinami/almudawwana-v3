@@ -124,11 +124,22 @@ type JurisResponse = DecisionsPage & {
   mode?:     string
 }
 
+interface Props {
+  /** Pre-rendered decisions from the Server Component (SSR/ISR).
+   *  Shown immediately on first paint — no loading spinner, content in HTML. */
+  initialData?: Decision[]
+}
+
 // ── Main list ─────────────────────────────────────────────────────────────────
 
-export default function JurisprudenceList() {
-  const [result,   setResult]   = useState<JurisResponse | null>(null)
-  const [loading,  setLoading]  = useState(true)
+export default function JurisprudenceList({ initialData }: Props) {
+  // Seed state with SSR data so the initial render is filled (no skeleton)
+  const [result, setResult] = useState<JurisResponse | null>(
+    initialData?.length
+      ? { data: initialData, total: initialData.length, current_page: 1, last_page: 1, per_page: 50, mode: 'ssr' }
+      : null
+  )
+  const [loading,  setLoading]  = useState(false)   // false = SSR data already shown
   const [page,     setPage]     = useState(1)
 
   // Filters
@@ -160,6 +171,10 @@ export default function JurisprudenceList() {
   const load = useCallback(async (
     subj: string, dFrom: string, dTo: string, ct: string, rv: string, pg: number
   ) => {
+    // If no active filter and we have SSR data, skip the network round-trip
+    const noFilter = !subj && !dFrom && !dTo && !ct && !rv
+    if (noFilter && initialData?.length && pg === 1) return
+
     setLoading(true)
     const qs = new URLSearchParams({ page: String(pg) })
     if (subj)  qs.set('subject',   subj)
@@ -198,7 +213,7 @@ export default function JurisprudenceList() {
   }
 
   const hasFilters    = subject || dateFrom || dateTo || caseType || resultVal
-  const isRandom      = result?.mode === 'random' || result?.mode === 'latest'
+  const isRandom      = result?.mode === 'random' || result?.mode === 'latest' || result?.mode === 'ssr'
   const activeKeywords = result?.keywords ?? []
 
   return (

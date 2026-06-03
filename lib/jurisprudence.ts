@@ -19,6 +19,25 @@ export async function getDecision(id: string): Promise<Decision | null> {
   return data as Decision
 }
 
+/** Fetch initial decisions for SSR — tries RPC random, falls back to latest 50 */
+export async function getInitialDecisions(limit = 50): Promise<Decision[]> {
+  const supabase = createServiceClient()
+
+  // Try SQL random function first
+  try {
+    const { data, error } = await supabase.rpc('get_random_jurisprudence', { p_limit: limit })
+    if (!error && data?.length) return data as Decision[]
+  } catch { /* fall through */ }
+
+  // Fallback: latest by date
+  const { data } = await supabase
+    .from('jurisprudence')
+    .select('*')
+    .order('decision_date', { ascending: false })
+    .limit(limit)
+  return (data ?? []) as Decision[]
+}
+
 export async function countDecisions(): Promise<{
   total: number
   byType: Record<string, number>
