@@ -16,17 +16,29 @@ const BASE_URL = 'https://modawana.app'
 
 interface Props { params: Promise<{ id: string }> }
 
+// Threshold for thin content: subject shorter than this is just boilerplate
+const THIN_CONTENT_THRESHOLD = 100
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params
   const d = await getDecision(id)
   if (!d) return { title: 'قرار غير موجود' }
 
-  const title = `ملف ${d.file_number} — قرار ${d.case_number}`
-  const desc  = (d.subject ?? '').slice(0, 160) || 'قرار محكمة النقض المغربية'
+  const title        = `ملف ${d.file_number} — قرار ${d.case_number}`
+  const subjectLen   = (d.subject ?? '').length
+  const isThinContent = subjectLen < THIN_CONTENT_THRESHOLD
+  const desc         = isThinContent
+    ? `قرار محكمة النقض المغربية — ملف ${d.file_number}`
+    : (d.subject ?? '').slice(0, 160)
 
   return {
     title,
     description: desc,
+    // Noindex thin-content decisions — they dilute crawl budget and site quality.
+    // Google can still follow links from them (follow: true).
+    robots: isThinContent
+      ? { index: false, follow: true }
+      : { index: true,  follow: true },
     openGraph: {
       title: `${title} | المدوّنة`,
       description: desc,
@@ -49,8 +61,9 @@ export default async function DecisionPage({ params }: Props) {
   const d = await getDecision(id)
   if (!d) notFound()
 
-  const tc = caseTypeColor(d.case_type)
-  const rc = resultColor(d.result)
+  const tc            = caseTypeColor(d.case_type)
+  const rc            = resultColor(d.result)
+  const isThinContent = (d.subject ?? '').length < THIN_CONTENT_THRESHOLD
 
   const formattedDate = d.decision_date
     ? new Date(d.decision_date).toLocaleDateString('ar-MA', {
@@ -153,6 +166,23 @@ export default async function DecisionPage({ params }: Props) {
                     {d.subject}
                   </p>
                 </div>
+              </div>
+            )}
+
+            {/* Thin content notice */}
+            {isThinContent && (
+              <div className="mb-6 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3
+                              text-sm text-amber-800 flex items-start gap-2">
+                <span className="shrink-0 mt-0.5">⚠️</span>
+                <span>
+                  موضوع هذا القرار غير متاح بشكل كامل في المصدر الأصلي.
+                  للاطلاع على النص الكامل، يرجى مراجعة{' '}
+                  {d.pdf_url
+                    ? <a href={d.pdf_url} target="_blank" rel="noopener noreferrer"
+                         className="underline hover:text-amber-900">نص القرار PDF</a>
+                    : 'الوثيقة الأصلية'
+                  }.
+                </span>
               </div>
             )}
 
