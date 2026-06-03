@@ -3,11 +3,12 @@ export const dynamic = 'force-dynamic'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { Scale, FileText, Calendar, Hash, ChevronLeft, ArrowRight, Tag } from 'lucide-react'
+import { Scale, Calendar, Hash, ChevronLeft, ArrowRight, Tag } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { getDecision } from '@/lib/jurisprudence'
 import { caseTypeColor, resultColor } from '@/lib/jurisprudence-types'
+import { PdfButtons } from '@/components/PdfButtons'
 
 const BASE_URL = 'https://modawana.app'
 
@@ -105,16 +106,11 @@ export default async function DecisionPage({ params }: Props) {
               </div>
 
               {d.pdf_url && (
-                <a
-                  href={d.pdf_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 bg-[#2152cc] hover:bg-[#1a43a8]
-                             text-white px-4 py-2 rounded-xl font-medium text-sm transition-colors shrink-0"
-                >
-                  <FileText className="w-4 h-4" />
-                  نص القرار PDF
-                </a>
+                <PdfButtons
+                  url={d.pdf_url}
+                  title={`قرار ${d.case_number} — ملف ${d.file_number}`}
+                  size="md"
+                />
               )}
             </div>
 

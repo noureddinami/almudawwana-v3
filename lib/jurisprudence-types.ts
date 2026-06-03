@@ -13,6 +13,10 @@ export interface Decision {
   pdf_url:       string | null   // الرابط
   import_batch:  string | null
   created_at:    string
+  // Search scoring (optional — only present in keyword-search results)
+  score?:          number
+  matched_count?:  number
+  total_keywords?: number
 }
 
 export interface DecisionsPage {
