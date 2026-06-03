@@ -1,4 +1,5 @@
-export const dynamic = 'force-dynamic'
+// New articles may be added — revalidate every hour
+export const revalidate = 3600
 
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';

@@ -1,4 +1,5 @@
-export const dynamic = 'force-dynamic'
+// Court decisions are immutable — revalidate once a day is more than enough
+export const revalidate = 86400
 
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'

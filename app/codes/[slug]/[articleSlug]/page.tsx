@@ -1,4 +1,6 @@
-export const dynamic = 'force-dynamic'
+// Legal article text is stable — revalidate once a day
+// Comments section is client-side so no ISR conflict
+export const revalidate = 86400
 
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
