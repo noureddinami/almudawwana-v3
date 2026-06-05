@@ -35,25 +35,27 @@ jobs:
     - name: 📦 Install deps
       run: pip install supabase pandas
 
+    - name: 📅 Set backup date
+      run: |
+        echo "BACKUP_DATE=$(date +%Y-%m-%d_%H%M)" >> $GITHUB_ENV
+        mkdir -p backup backup/csv backup/assets
+
     - name: 🗄️ pg_dump Supabase
       env:
         SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
-      continue-on-error: true   # pg_dump peut échouer sans bloquer les CSV
+      continue-on-error: true
       run: |
-        DATE=$(date +%Y-%m-%d_%H%M)
-        mkdir -p backup
-        echo "🔍 Testing DB connection..."
         if [ -z "$SUPABASE_DB_URL" ]; then
-          echo "❌ SUPABASE_DB_URL secret is not set"
-          exit 1
+          echo "⚠️ SUPABASE_DB_URL not set — skipping pg_dump"
+          exit 0
         fi
+        echo "🔍 Connecting to Supabase..."
         pg_dump "$SUPABASE_DB_URL" \
           --no-owner --no-acl \
           --format=custom --compress=9 \
-          -f "backup/db_${DATE}.dump" \
+          -f "backup/db_${{ env.BACKUP_DATE }}.dump" \
         && echo "✅ pg_dump OK" \
-        || echo "⚠️ pg_dump failed (CSV backup will continue)"
-        echo "BACKUP_DATE=${DATE}" >> $GITHUB_ENV
+        || echo "⚠️ pg_dump failed — check SUPABASE_DB_URL format"
 
     - name: 📊 Export CSV toutes les tables
       env:
