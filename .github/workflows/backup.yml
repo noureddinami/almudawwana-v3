@@ -1,0 +1,117 @@
+name: 🗄️ Backup complet — المدوّنة
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # Chaque nuit à 2h UTC
+  workflow_dispatch:       # Déclenchement manuel possible
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+
+    - name: 📥 Checkout
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup PostgreSQL client
+      run: |
+        sudo apt-get update -qq
+        sudo apt-get install -y postgresql-client
+
+    - name: 🐍 Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: 📦 Install deps
+      run: pip install supabase pandas
+
+    - name: 🗄️ pg_dump Supabase
+      env:
+        SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      run: |
+        DATE=$(date +%Y-%m-%d_%H%M)
+        mkdir -p backup
+        pg_dump "$SUPABASE_DB_URL" \
+          --no-owner --no-acl \
+          --format=custom --compress=9 \
+          -f "backup/db_${DATE}.dump"
+        echo "BACKUP_DATE=${DATE}" >> $GITHUB_ENV
+
+    - name: 📊 Export CSV toutes les tables
+      env:
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+      run: |
+        python3 << 'PYEOF'
+        import os, csv, json
+        from supabase import create_client
+        from datetime import datetime
+
+        sb = create_client(os.environ['SUPABASE_URL'], os.environ['SUPABASE_SERVICE_KEY'])
+        TABLES = ['codes','articles','jurisprudence','jurisprudence_tags',
+                  'pwa_installs','search_logs','download_logs','page_views']
+
+        os.makedirs('backup/csv', exist_ok=True)
+        summary = {}
+
+        for table in TABLES:
+            try:
+                rows, page = [], 0
+                while True:
+                    r = sb.table(table).select('*').range(page*1000,(page+1)*1000-1).execute()
+                    rows.extend(r.data or [])
+                    if len(r.data or []) < 1000: break
+                    page += 1
+                if rows:
+                    with open(f'backup/csv/{table}.csv','w',newline='',encoding='utf-8-sig') as f:
+                        w = csv.DictWriter(f, fieldnames=rows[0].keys())
+                        w.writeheader(); w.writerows(rows)
+                summary[table] = len(rows)
+                print(f'✅ {table}: {len(rows)} lignes')
+            except Exception as e:
+                print(f'❌ {table}: {e}')
+                summary[table] = str(e)
+
+        with open('backup/csv/_summary.json','w') as f:
+            json.dump({'date': datetime.now().isoformat(), 'tables': summary}, f, indent=2)
+        PYEOF
+
+    - name: 📁 Backup fichiers projet
+      run: |
+        mkdir -p backup/assets
+        [ -d "public" ] && cp -r public backup/assets/
+        [ -d "scripts" ] && cp -r scripts backup/assets/
+        for f in CLAUDE.md jurisprudence.md; do
+          [ -f "$f" ] && cp "$f" backup/assets/
+        done
+
+    - name: 🗜️ Créer archive
+      run: |
+        tar -czf "modawana_backup_${{ env.BACKUP_DATE }}.tar.gz" backup/
+        echo "ARCHIVE=modawana_backup_${{ env.BACKUP_DATE }}.tar.gz" >> $GITHUB_ENV
+
+    - name: 🚀 Upload GitHub Releases
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: backup-${{ env.BACKUP_DATE }}
+        name: "🗄️ Backup ${{ env.BACKUP_DATE }}"
+        body: |
+          Backup automatique المدوّنة
+          - ✅ pg_dump base de données
+          - ✅ CSV toutes les tables
+          - ✅ Fichiers projet (public/, scripts/, CLAUDE.md)
+        files: ${{ env.ARCHIVE }}
+        token: ${{ secrets.GITHUB_TOKEN }}
+        prerelease: true
+
+    - name: 🧹 Garder seulement les 14 derniers backups
+      uses: dev-drprasad/delete-older-releases@v0.3.0
+      with:
+        keep_latest: 14
+        delete_tags: true
+        delete_tag_pattern: backup-
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
