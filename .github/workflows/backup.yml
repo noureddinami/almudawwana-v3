@@ -101,11 +101,12 @@ jobs:
     - name: 📁 Backup fichiers projet
       run: |
         mkdir -p backup/assets
-        [ -d "public" ] && cp -r public backup/assets/
-        [ -d "scripts" ] && cp -r scripts backup/assets/
+        [ -d "public" ]  && cp -r public  backup/assets/ || echo "⚠️ public/ not found"
+        [ -d "scripts" ] && cp -r scripts backup/assets/ || echo "⚠️ scripts/ not found"
         for f in CLAUDE.md jurisprudence.md; do
-          [ -f "$f" ] && cp "$f" backup/assets/
+          [ -f "$f" ] && cp "$f" backup/assets/ && echo "✅ $f copied" || echo "⚠️ $f not found"
         done
+        echo "✅ Fichiers backup OK"
 
     - name: 🗜️ Créer archive
       run: |
