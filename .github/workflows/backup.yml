@@ -38,13 +38,21 @@ jobs:
     - name: 🗄️ pg_dump Supabase
       env:
         SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      continue-on-error: true   # pg_dump peut échouer sans bloquer les CSV
       run: |
         DATE=$(date +%Y-%m-%d_%H%M)
         mkdir -p backup
+        echo "🔍 Testing DB connection..."
+        if [ -z "$SUPABASE_DB_URL" ]; then
+          echo "❌ SUPABASE_DB_URL secret is not set"
+          exit 1
+        fi
         pg_dump "$SUPABASE_DB_URL" \
           --no-owner --no-acl \
           --format=custom --compress=9 \
-          -f "backup/db_${DATE}.dump"
+          -f "backup/db_${DATE}.dump" \
+        && echo "✅ pg_dump OK" \
+        || echo "⚠️ pg_dump failed (CSV backup will continue)"
         echo "BACKUP_DATE=${DATE}" >> $GITHUB_ENV
 
     - name: 📊 Export CSV toutes les tables
@@ -52,6 +60,8 @@ jobs:
         SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
         SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
       run: |
+        echo "SUPABASE_URL set: ${{ secrets.SUPABASE_URL != '' }}"
+        echo "SUPABASE_SERVICE_KEY set: ${{ secrets.SUPABASE_SERVICE_KEY != '' }}"
         python3 << 'PYEOF'
         import os, csv, json
         from supabase import create_client
