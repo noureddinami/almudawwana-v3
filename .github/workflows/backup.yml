@@ -10,6 +10,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
+    # Permissions needed for creating releases and deleting old ones
+    permissions:
+      contents: write
+
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true   # Fix Node.js 24 deprecation warning
+
     steps:
 
     - name: 📥 Checkout
@@ -109,6 +116,7 @@ jobs:
 
     - name: 🧹 Garder seulement les 14 derniers backups
       uses: dev-drprasad/delete-older-releases@v0.3.0
+      continue-on-error: true   # Non-bloquant — le backup reste valide même si le nettoyage échoue
       with:
         keep_latest: 14
         delete_tags: true
