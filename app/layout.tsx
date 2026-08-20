@@ -11,7 +11,6 @@ import { OrganizationJsonLd } from '@/components/JsonLd';
 import PushNotificationSetup from '@/components/PushNotificationSetup';
 import PwaInstallTracker from '@/components/PwaInstallTracker';
 import PageViewTracker from '@/components/PageViewTracker';
-import Script from 'next/script'
 const GA_ID = 'G-FVBMSK5TD2';
 
 /* ── Amiri : corps des articles juridiques ─────────────────── */
