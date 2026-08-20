@@ -11,7 +11,7 @@ import { OrganizationJsonLd } from '@/components/JsonLd';
 import PushNotificationSetup from '@/components/PushNotificationSetup';
 import PwaInstallTracker from '@/components/PwaInstallTracker';
 import PageViewTracker from '@/components/PageViewTracker';
-
+import Script from 'next/script'
 const GA_ID = 'G-FVBMSK5TD2';
 
 /* ── Amiri : corps des articles juridiques ─────────────────── */
@@ -189,6 +189,18 @@ export default function RootLayout({
             duration: 3500,
           }}
         />
+        <Script
+  src="https://www.googletagmanager.com/gtag/js?id=AW-18401439468"
+  strategy="afterInteractive"
+/>
+<Script id="google-ads-tag" strategy="afterInteractive">
+  {`
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'AW-18401439468');
+  `}
+</Script>
       </body>
     </html>
   );
