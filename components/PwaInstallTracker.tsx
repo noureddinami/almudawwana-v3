@@ -1,8 +1,8 @@
 'use client';
-
 import { useEffect } from 'react';
 
 const TRACKED_KEY = 'pwa_install_tracked';
+const GA_CONVERSION_ID = 'AW-18401439468';
 
 function getDeviceId(): string {
   const existing = localStorage.getItem('pwa_device_id');
@@ -20,6 +20,24 @@ function getPlatform(): 'ios' | 'android' | 'desktop' | 'unknown' {
   return 'unknown';
 }
 
+// ── Google Ads conversion ──────────────────────────────────────
+function fireGoogleAdsConversion() {
+  try {
+    if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
+      window.gtag('event', 'conversion', {
+        send_to: GA_CONVERSION_ID,
+        value: 1.0,
+        currency: 'MAD',
+        event_category: 'PWA',
+        event_label: 'install',
+      });
+      console.log('[PwaInstallTracker] Google Ads conversion fired ✅');
+    }
+  } catch (e) {
+    console.warn('[PwaInstallTracker] Google Ads conversion failed:', e);
+  }
+}
+
 async function recordInstall(source: 'appinstalled' | 'standalone_launch') {
   try {
     const device_id = getDeviceId();
@@ -32,6 +50,8 @@ async function recordInstall(source: 'appinstalled' | 'standalone_launch') {
     if (res.ok) {
       localStorage.setItem(TRACKED_KEY, '1');
       sessionStorage.removeItem('pwa_just_installed');
+      // ── Déclencher la conversion Google Ads ──────────────────
+      fireGoogleAdsConversion();
     } else {
       const body = await res.json().catch(() => ({}));
       console.warn('[PwaInstallTracker] API error:', body);
@@ -63,7 +83,7 @@ export default function PwaInstallTracker() {
     const onInstalled = () => recordInstall('appinstalled');
     window.addEventListener('appinstalled', onInstalled);
 
-    // Signal 3: first launch in standalone mode (catches iOS + Android after install)
+    // Signal 3: first launch in standalone mode (iOS + Android after install)
     if (isStandalone()) {
       recordInstall('standalone_launch');
     }
